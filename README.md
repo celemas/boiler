@@ -1,4 +1,4 @@
-# Boiler
+# Celemas Boiler
 
 <!-- prettier-ignore-start -->
 [![ci](https://github.com/celemas/boiler/actions/workflows/ci.yml/badge.svg)](https://github.com/celemas/boiler/actions)
