@@ -1,11 +1,11 @@
 # Celemas Boiler
 
 <!-- prettier-ignore-start -->
-[![ci](https://github.com/celemas/boiler/actions/workflows/ci.yml/badge.svg)](https://github.com/celemas/boiler/actions)
-[![codecov](https://codecov.io/github/celemas/boiler/graph/badge.svg?token=G5SHAT48UZ)](https://codecov.io/github/celemas/boiler)
-[![psalm coverage](https://shepherd.dev/github/celemas/boiler/coverage.svg?)](https://shepherd.dev/github/celemas/boiler)
-[![psalm level](https://shepherd.dev/github/celemas/boiler/level.svg?)](https://shepherd.dev/github/celemas/boiler)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
+[![ci](https://codeberg.org/celemas/boiler/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celemas/boiler/actions)
+[![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fboiler%2Fcode%2Fbadge.json)](https://cov.celemas.dev/celemas/boiler/code)
+[![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fboiler%2Ftypes%2Fbadge-cover.json)](https://cov.celemas.dev/celemas/boiler/types)
+[![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fboiler%2Ftypes%2Fbadge-level.json)](https://cov.celemas.dev/celemas/boiler/types)
+[![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 <!-- prettier-ignore-end -->
 
 Boiler is a small template engine for PHP 8.5+, inspired by [Plates](https://platesphp.com/). Like Plates, it uses native PHP as its templating language rather than introducing a custom syntax.
