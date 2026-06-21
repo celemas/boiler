@@ -108,9 +108,9 @@ abstract class BaseTemplate
 	}
 
 	/** @internal */
-	public function setSlot(?Closure $slot): void
+	public function setSlot(?Closure $slot, ?Location $location = null): void
 	{
-		$this->slot = $slot === null ? null : new Slot($slot);
+		$this->slot = $slot === null ? null : new Slot($slot, $location ?? new Location($this->path));
 	}
 
 	/** @internal */

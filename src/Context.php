@@ -187,7 +187,7 @@ abstract class Context
 		);
 
 		$template->setMethods($this->template->methods());
-		$template->setSlot($slot);
+		$template->setSlot($slot, $this->location());
 
 		echo
 			$this->autoescape

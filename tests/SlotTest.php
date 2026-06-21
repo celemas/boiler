@@ -110,7 +110,14 @@ final class SlotTest extends TestCase
 			$engine->render('slotthrows');
 			$this->fail('RenderException was not thrown');
 		} catch (RenderException $e) {
+			$path = self::DEFAULT_DIR . '/slotthrows.php';
+
+			$this->assertSame($path, $e->getFile());
+			$this->assertSame(2, $e->getLine());
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(2, $e->location()?->line);
 			$this->assertStringContainsString('boom in slot', $e->getMessage());
+			$this->assertStringContainsString($path . ':2', $e->getMessage());
 		}
 
 		$this->assertSame($level, ob_get_level());
