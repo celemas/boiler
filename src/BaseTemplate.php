@@ -8,12 +8,14 @@ use Celemas\Boiler\Exception\LookupException;
 use Celemas\Boiler\Exception\RenderException;
 use Celemas\Boiler\Exception\RuntimeException;
 use Celemas\Boiler\Exception\UnexpectedValueException;
+use Closure;
 use Throwable;
 
 abstract class BaseTemplate
 {
 	private ?LayoutSpec $layout = null;
 	private Methods $methods;
+	private ?Slot $slot = null;
 	private readonly bool $ownsSections;
 
 	public private(set) Engine $engine {
@@ -103,6 +105,18 @@ abstract class BaseTemplate
 	public function methods(): Methods
 	{
 		return $this->methods;
+	}
+
+	/** @internal */
+	public function setSlot(?Closure $slot): void
+	{
+		$this->slot = $slot === null ? null : new Slot($slot);
+	}
+
+	/** @internal */
+	public function slot(): ?Slot
+	{
+		return $this->slot;
 	}
 
 	/** @param list<class-string> $trusted */

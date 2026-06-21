@@ -11,7 +11,7 @@ The main differences from Plates are:
 
 - Automatic escaping via PHP's `htmlspecialchars()`
 - A small API centered around the [Engine](engine.md)
-- Code reuse with [layouts](layouts.md), [inserts](inserts.md), and [sections](sections.md)
+- Code reuse with [layouts](layouts.md), [inserts](inserts.md), [sections](sections.md), and [slots](slots.md)
 - Plain PHP templates with no custom syntax
 - Wrapper-driven escaping and a pluggable filter system for value transformations such as HTML sanitization, case conversion, tag stripping, and trimming
 - Custom template methods, including safe HTML helpers, and optional trusted classes
@@ -28,4 +28,5 @@ If you are new to Boiler, read the docs in this order:
 5. [Layouts](layouts.md)
 6. [Inserts](inserts.md)
 7. [Sections](sections.md)
-8. [Template](template.md)
+8. [Slots](slots.md)
+9. [Template](template.md)

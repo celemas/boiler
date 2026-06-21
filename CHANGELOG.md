@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codeberg.org/celemas/boiler/compare/0.4.0...HEAD)
 
-No notable changes since the last release.
+### Added
+
+- Added scoped slots: `insert()` accepts an optional `slot` closure that the inserted template renders, and repeats with per-call data, via `$this->slot([...])`. Added `$this->hasSlot()` to detect an optional slot. See [slots](docs/slots.md).
 
 ## [0.4.0](https://codeberg.org/celemas/boiler/src/tag/0.4.0) (2026-05-12)
 

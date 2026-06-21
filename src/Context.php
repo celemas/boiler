@@ -9,6 +9,7 @@ use Celemas\Boiler\Exception\RuntimeException;
 use Celemas\Boiler\Proxy\ObjectProxy;
 use Celemas\Boiler\Proxy\Proxy;
 use Celemas\Boiler\Proxy\StringProxy;
+use Closure;
 use Stringable;
 
 /** @api */
@@ -169,9 +170,14 @@ abstract class Context
 	 *
 	 * If no context is passed it shares the context of the calling template.
 	 *
+	 * The optional slot is a block of markup the inserted template can place,
+	 * and repeat, by calling `$this->slot([...])`. The closure receives the
+	 * per-call data as its argument and either echoes or returns markup. Its
+	 * values are raw, so it must escape them like any other template.
+	 *
 	 * @param non-empty-string $path
 	 */
-	public function insert(string $path, array $context = []): void
+	public function insert(string $path, array $context = [], ?Closure $slot = null): void
 	{
 		$path = $this->template->engine->resolve($path);
 		$template = new Template(
@@ -181,12 +187,35 @@ abstract class Context
 		);
 
 		$template->setMethods($this->template->methods());
+		$template->setSlot($slot);
 
 		echo
 			$this->autoescape
 				? $template->renderEscaped($this->get($context), $this->trusted)
 				: $template->renderUnescaped($this->get($context), $this->trusted)
 		;
+	}
+
+	/**
+	 * Renders the slot passed to this template via `insert(..., slot: ...)`.
+	 *
+	 * Call it once for a simple slot, or once per row to repeat the block with
+	 * different data. Throws when the template was inserted without a slot;
+	 * guard with `hasSlot()` when a slot is optional.
+	 *
+	 * @param array<array-key, mixed> $data
+	 */
+	public function slot(array $data = []): void
+	{
+		echo
+			($this->template->slot() ?? throw new RuntimeException('No slot was provided for this template'))
+				->render($data)
+		;
+	}
+
+	public function hasSlot(): bool
+	{
+		return $this->template->slot() !== null;
 	}
 
 	public function begin(string $name): void

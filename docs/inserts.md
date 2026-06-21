@@ -68,3 +68,7 @@ Inserts use the current render mode:
 - unescaped renders keep automatic escaping disabled in the inserted template
 
 Read [displaying values](values.md) for details.
+
+## Slots
+
+To let an inserted template place and repeat a block of markup you supply at the call site, pass a `slot` closure. See [slots](slots.md).
