@@ -61,12 +61,13 @@ In escaped renders, safe methods must return `string` or `Stringable`. Boiler ex
 
 Use `safe: true` only when the helper itself guarantees safe HTML for the values it accepts.
 
-## Layouts and inserts
+## Layouts, inserts, and slots
 
 Standalone templates can use the same composition helpers as engine-backed renders:
 
 - `$this->layout('layout')`
 - `$this->insert('partial')`
+- `$this->slot()` and `$this->hasSlot()` inside inserted templates that receive a slot
 - sections via `$this->begin()` and `$this->section()`
 
 Those template references are resolved relative to the directory that contains the original template file.

@@ -46,6 +46,7 @@ Start here: [docs/index.md](docs/index.md).
 - [Layouts](docs/layouts.md)
 - [Inserts](docs/inserts.md)
 - [Sections](docs/sections.md)
+- [Slots](docs/slots.md)
 - [Template](docs/template.md)
 
 ## Quick start
@@ -153,6 +154,7 @@ Template helpers available via `$this` inside templates:
 
 - `$this->layout('layout')`
 - `$this->insert('partial', ['value' => '...'])`
+- `$this->slot(['value' => '...'])` / `$this->hasSlot()` inside inserted templates that receive a slot
 - `$this->begin('name')` / `$this->append('name')` / `$this->prepend('name')` / `$this->end()`
 - `$this->section('name', 'default')` / `$this->has('name')`
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
@@ -160,7 +162,7 @@ Template helpers available via `$this` inside templates:
 
 ## Error handling
 
-Boiler fails fast on invalid lookups and render state, such as missing templates, invalid template names, duplicate layouts, unclosed sections, or unknown methods and filters. See [rendering templates](docs/rendering.md), [layouts](docs/layouts.md), [sections](docs/sections.md), and [template](docs/template.md) for the exact rules.
+Boiler fails fast on invalid lookups and render state, such as missing templates, invalid template names, duplicate layouts, unclosed sections, missing slots, or unknown methods and filters. See [rendering templates](docs/rendering.md), [layouts](docs/layouts.md), [sections](docs/sections.md), [slots](docs/slots.md), and [template](docs/template.md) for the exact rules.
 
 ## Benchmark
 
