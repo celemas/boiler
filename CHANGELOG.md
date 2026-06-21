@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://codeberg.org/celemas/boiler/compare/0.4.0...HEAD)
+## [Unreleased](https://codeberg.org/celemas/boiler/compare/0.5.0...HEAD)
+
+No notable changes since the last release.
+
+## [0.5.0](https://codeberg.org/celemas/boiler/src/tag/0.5.0) (2026-06-21)
 
 ### Breaking Changes
 
@@ -10,6 +14,7 @@
 
 - Added scoped slots: `insert()` accepts an optional `slot` closure that the inserted template renders, and repeats with per-call data, via `$this->slot([...])`. Added `$this->hasSlot()` to detect an optional slot. See [slots](docs/slots.md).
 - Added `Slot::template()` for slots that render another template with merged slot context.
+- Slot errors, including calling `$this->slot()` without a provided slot, are reported at the `insert()` call site.
 
 ## [0.4.0](https://codeberg.org/celemas/boiler/src/tag/0.4.0) (2026-05-12)
 
