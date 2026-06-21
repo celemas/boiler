@@ -4,66 +4,49 @@ declare(strict_types=1);
 
 namespace Celemas\Boiler;
 
-use Celemas\Boiler\Exception\LogicException;
-use Celemas\Boiler\Exception\RenderException;
-use Celemas\Boiler\Exception\RuntimeException;
-use Closure;
-use Stringable;
-use Throwable;
-
-/** @internal */
+/** @api */
 final class Slot
 {
-	public function __construct(
-		private readonly Closure $slot,
-		private readonly Location $location,
+	/**
+	 * @param non-empty-string $path
+	 * @param array<array-key, mixed> $context
+	 */
+	private function __construct(
+		private readonly string $path,
+		private readonly array $context = [],
 	) {}
 
-	/** @param array<array-key, mixed> $data */
-	public function render(array $data): string
+	/**
+	 * Renders a template when the inserted template calls `$this->slot()`.
+	 *
+	 * The slot template receives the caller context, this context, and the data
+	 * passed to `$this->slot([...])`, with later values overriding earlier ones.
+	 *
+	 * @param non-empty-string $path
+	 * @param array<array-key, mixed> $context
+	 */
+	public static function template(string $path, array $context = []): self
 	{
-		$level = ob_get_level();
-
-		try {
-			ob_start();
-
-			try {
-				/** @psalm-suppress MixedAssignment slot may echo, return markup, or both */
-				$returned = ($this->slot)($data);
-			} catch (RenderException $e) {
-				throw $e;
-			} catch (RuntimeException|LogicException $e) {
-				if ($e->location() !== null) {
-					throw $e;
-				}
-
-				throw $this->wrapException($e);
-			} catch (Throwable $e) {
-				throw $this->wrapException($e);
-			}
-
-			$captured = (string) ob_get_clean();
-
-			return is_string($returned) || $returned instanceof Stringable
-				? $captured . (string) $returned
-				: $captured;
-		} finally {
-			while (ob_get_level() > $level) {
-				ob_end_clean();
-			}
-		}
+		return new self($path, $context);
 	}
 
-	private function wrapException(Throwable $exception): RuntimeException
+	/**
+	 * @internal
+	 *
+	 * @return non-empty-string
+	 */
+	public function path(): string
 	{
-		$code = $exception->getCode();
-		$location = Location::fromThrowable($this->location->path, $exception);
+		return $this->path;
+	}
 
-		return new RuntimeException(
-			$exception->getMessage(),
-			is_int($code) ? $code : 0,
-			$exception,
-			$location->line === null ? $this->location : $location,
-		);
+	/**
+	 * @internal
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	public function context(): array
+	{
+		return $this->context;
 	}
 }

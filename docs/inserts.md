@@ -71,4 +71,4 @@ Read [displaying values](values.md) for details.
 
 ## Slots
 
-To let an inserted template place and repeat a block of markup you supply at the call site, pass a `slot` closure. See [slots](slots.md).
+To let an inserted template place and repeat a block of markup you supply at the call site, pass a `slot` closure or `Slot::template()` slot. See [slots](slots.md).

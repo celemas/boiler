@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Celemas\Boiler\Tests;
 
+use Celemas\Boiler\Context;
 use Celemas\Boiler\Engine;
 use Celemas\Boiler\Exception\RenderException;
 use Celemas\Boiler\Exception\RuntimeException as BoilerRuntimeException;
 use Celemas\Boiler\Location;
-use Celemas\Boiler\Slot;
+use Celemas\Boiler\SlotRenderer;
+use Celemas\Boiler\Template;
 
 final class SlotTest extends TestCase
 {
@@ -126,13 +128,60 @@ final class SlotTest extends TestCase
 		$this->assertSame($level, ob_get_level());
 	}
 
+	public function testTemplateSlotRendersTemplatePerSlotCall(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		$this->assertSame(
+			'<ul><li><input name="row-a" value="1"></li><li><input name="row-b" value="&lt;x&gt;"></li></ul>',
+			$this->fullTrim($engine->render('slottemplate', [
+				'rows' => [
+					['name' => 'a', 'value' => '1'],
+					['name' => 'b', 'value' => '<x>'],
+				],
+			])),
+		);
+	}
+
+	public function testTemplateSlotUsesCallerContext(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		$this->assertSame(
+			'<div class="box">caller</div>',
+			$this->fullTrim($engine->render('slottemplatecontext', ['shared' => 'caller'])),
+		);
+	}
+
+	public function testMissingTemplateSlotReportsDeclarationLocation(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		try {
+			$engine->render('slottemplatemissing');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$path = self::DEFAULT_DIR . '/slottemplatemissing.php';
+
+			$this->assertSame($path, $e->getFile());
+			$this->assertSame(1, $e->getLine());
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(1, $e->location()?->line);
+			$this->assertStringContainsString('missing-slot-template', $e->getMessage());
+		}
+	}
+
 	public function testSlotPreservesNestedRenderException(): void
 	{
 		$exception = new RenderException(
 			'nested render failed',
 			location: new Location('/tmp/nested.php', 3),
 		);
-		$slot = new Slot(static fn(): never => throw $exception, new Location('/tmp/caller.php', 7));
+		$slot = new SlotRenderer(
+			static fn(): never => throw $exception,
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
 
 		try {
 			$slot->render([]);
@@ -146,7 +195,11 @@ final class SlotTest extends TestCase
 	{
 		$location = new Location('/tmp/template.php', 5);
 		$exception = new BoilerRuntimeException('located error', location: $location);
-		$slot = new Slot(static fn(): never => throw $exception, new Location('/tmp/caller.php', 7));
+		$slot = new SlotRenderer(
+			static fn(): never => throw $exception,
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
 
 		try {
 			$slot->render([]);
@@ -159,8 +212,9 @@ final class SlotTest extends TestCase
 
 	public function testSlotWrapsUnlocatedBoilerExceptionAtCaller(): void
 	{
-		$slot = new Slot(
+		$slot = new SlotRenderer(
 			static fn(): never => throw new BoilerRuntimeException('unlocated error'),
+			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -172,5 +226,15 @@ final class SlotTest extends TestCase
 			$this->assertSame(7, $e->location()?->line);
 			$this->assertInstanceOf(BoilerRuntimeException::class, $e->getPrevious());
 		}
+	}
+
+	private function slotContext(): Context
+	{
+		return new class(
+			new Template(self::DEFAULT_DIR . '/empty.php', engine: Engine::create(self::DEFAULT_DIR)),
+			[],
+			[],
+			true,
+		) extends Context {};
 	}
 }

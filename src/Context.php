@@ -171,13 +171,14 @@ abstract class Context
 	 * If no context is passed it shares the context of the calling template.
 	 *
 	 * The optional slot is a block of markup the inserted template can place,
-	 * and repeat, by calling `$this->slot([...])`. The closure receives the
-	 * per-call data as its argument and either echoes or returns markup. Its
-	 * values are raw, so it must escape them like any other template.
+	 * and repeat, by calling `$this->slot([...])`. A closure receives the per-call
+	 * data as its argument and either echoes or returns markup. A `Slot::template()`
+	 * slot renders another template with the per-call data merged into its context.
+	 * Slot values are raw, so escape them like any other template data.
 	 *
 	 * @param non-empty-string $path
 	 */
-	public function insert(string $path, array $context = [], ?Closure $slot = null): void
+	public function insert(string $path, array $context = [], Closure|Slot|null $slot = null): void
 	{
 		$path = $this->template->engine->resolve($path);
 		$template = new Template(
@@ -187,7 +188,7 @@ abstract class Context
 		);
 
 		$template->setMethods($this->template->methods());
-		$template->setSlot($slot, $this->location());
+		$template->setSlot($slot, $this, $this->location());
 
 		echo
 			$this->autoescape

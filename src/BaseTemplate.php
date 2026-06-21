@@ -15,7 +15,7 @@ abstract class BaseTemplate
 {
 	private ?LayoutSpec $layout = null;
 	private Methods $methods;
-	private ?Slot $slot = null;
+	private ?SlotRenderer $slot = null;
 	private readonly bool $ownsSections;
 
 	public private(set) Engine $engine {
@@ -108,13 +108,18 @@ abstract class BaseTemplate
 	}
 
 	/** @internal */
-	public function setSlot(?Closure $slot, ?Location $location = null): void
-	{
-		$this->slot = $slot === null ? null : new Slot($slot, $location ?? new Location($this->path));
+	public function setSlot(
+		Closure|Slot|null $slot,
+		Context $context,
+		?Location $location = null,
+	): void {
+		$this->slot = $slot === null
+			? null
+			: new SlotRenderer($slot, $context, $location ?? new Location($this->path));
 	}
 
 	/** @internal */
-	public function slot(): ?Slot
+	public function slot(): ?SlotRenderer
 	{
 		return $this->slot;
 	}

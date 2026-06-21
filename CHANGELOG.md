@@ -4,11 +4,12 @@
 
 ### Breaking Changes
 
-- Added `Context::insert()`'s optional `slot` parameter and the reserved template helper names `slot()` and `hasSlot()`. Custom `Context` subclasses that override `insert()` must accept the new parameter, and custom template methods with those names are now shadowed by the built-in slot helpers.
+- Added `Context::insert()`'s optional `slot` parameter and the reserved template helper names `slot()` and `hasSlot()`. Custom `Context` subclasses that override `insert()` must accept the new `Closure|Slot|null` parameter, and custom template methods with those names are now shadowed by the built-in slot helpers.
 
 ### Added
 
 - Added scoped slots: `insert()` accepts an optional `slot` closure that the inserted template renders, and repeats with per-call data, via `$this->slot([...])`. Added `$this->hasSlot()` to detect an optional slot. See [slots](docs/slots.md).
+- Added `Slot::template()` for slots that render another template with merged slot context.
 
 ## [0.4.0](https://codeberg.org/celemas/boiler/src/tag/0.4.0) (2026-05-12)
 

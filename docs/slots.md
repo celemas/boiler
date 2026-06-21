@@ -38,11 +38,30 @@ Create `rows.php`:
 
 The partial owns the repeated structure (the list, the row wrapper); the call site owns the control. `rows.php` calls `$this->slot()` once per item, passing that item's data, and the closure renders with it.
 
+## Template slots
+
+Use `Slot::template()` when a slot only renders another template:
+
+```php
+<?php
+use Celemas\Boiler\Slot;
+
+foreach ($fields as $field) {
+    $this->insert(
+        'field-wrapper',
+        context: ['field' => $field],
+        slot: Slot::template($field->template, context: ['field' => $field]),
+    );
+}
+```
+
+The slot template receives the caller context, the `Slot::template()` context, and the data passed to `$this->slot([...])`. Later values override earlier values.
+
 ## Slot data and escaping
 
-The array you pass to `$this->slot([...])` is handed to the closure as-is. Like every Boiler template, those values are **raw**, so escape them with `$this->escape()` when you output them. The closure keeps the caller's render mode: in an escaped render `<?= $value ?>` still auto-escapes; in an [unescaped](values.md) render it does not.
+The array you pass to `$this->slot([...])` is handed to the closure as-is or merged into the template slot context. Like every Boiler template, those values are **raw**, so escape them with `$this->escape()` when you output them. Slots keep the caller's render mode: in an escaped render `<?= $value ?>` still auto-escapes; in an [unescaped](values.md) render it does not.
 
-A slot closure can also `return` markup instead of echoing it, and can `insert()` further templates or use the engine's other helpers — `$this` is the calling template throughout.
+A slot closure can also `return` markup instead of echoing it, and can `insert()` further templates or use the engine's other helpers — `$this` is the calling template throughout. A template slot does not receive the slot again; use a closure if you need to pass a nested slot.
 
 ## Optional slots
 

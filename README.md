@@ -154,7 +154,7 @@ Template helpers available via `$this` inside templates:
 
 - `$this->layout('layout')`
 - `$this->insert('partial', ['value' => '...'])`
-- `$this->slot(['value' => '...'])` / `$this->hasSlot()` inside inserted templates that receive a slot
+- `$this->slot(['value' => '...'])` / `$this->hasSlot()` inside inserted templates that receive a closure or `Slot::template()` slot
 - `$this->begin('name')` / `$this->append('name')` / `$this->prepend('name')` / `$this->end()`
 - `$this->section('name', 'default')` / `$this->has('name')`
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
