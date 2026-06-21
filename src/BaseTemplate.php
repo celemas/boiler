@@ -111,11 +111,9 @@ abstract class BaseTemplate
 	public function setSlot(
 		Closure|Slot|null $slot,
 		Context $context,
-		?Location $location = null,
+		Location $location,
 	): void {
-		$this->slot = $slot === null
-			? null
-			: new SlotRenderer($slot, $context, $location ?? new Location($this->path));
+		$this->slot = $slot === null ? null : new SlotRenderer($slot, $context, $location);
 	}
 
 	/** @internal */

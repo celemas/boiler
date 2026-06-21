@@ -209,8 +209,10 @@ abstract class Context
 	public function slot(array $data = []): void
 	{
 		echo
-			($this->template->slot() ?? throw new RuntimeException('No slot was provided for this template'))
-				->render($data)
+			($this->template->slot() ?? throw new RuntimeException(
+				'No slot was provided for this template',
+				location: $this->location(),
+			))->render($data)
 		;
 	}
 

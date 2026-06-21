@@ -101,9 +101,16 @@ final class SlotTest extends TestCase
 
 	public function testCallingSlotWithoutProvidingOneThrows(): void
 	{
-		$this->throws(RenderException::class, 'No slot was provided');
+		try {
+			Engine::create(self::DEFAULT_DIR)->render('slotnoslot');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$path = self::DEFAULT_DIR . '/slotbox.php';
 
-		Engine::create(self::DEFAULT_DIR)->render('slotnoslot');
+			$this->assertStringContainsString('No slot was provided', $e->getMessage());
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(1, $e->location()?->line);
+		}
 	}
 
 	public function testExceptionInSlotIsWrappedAndBuffersRestored(): void
