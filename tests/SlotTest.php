@@ -6,6 +6,9 @@ namespace Celemas\Boiler\Tests;
 
 use Celemas\Boiler\Engine;
 use Celemas\Boiler\Exception\RenderException;
+use Celemas\Boiler\Exception\RuntimeException as BoilerRuntimeException;
+use Celemas\Boiler\Location;
+use Celemas\Boiler\Slot;
 
 final class SlotTest extends TestCase
 {
@@ -121,5 +124,53 @@ final class SlotTest extends TestCase
 		}
 
 		$this->assertSame($level, ob_get_level());
+	}
+
+	public function testSlotPreservesNestedRenderException(): void
+	{
+		$exception = new RenderException(
+			'nested render failed',
+			location: new Location('/tmp/nested.php', 3),
+		);
+		$slot = new Slot(static fn(): never => throw $exception, new Location('/tmp/caller.php', 7));
+
+		try {
+			$slot->render([]);
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($exception, $e);
+		}
+	}
+
+	public function testSlotPreservesLocatedBoilerException(): void
+	{
+		$location = new Location('/tmp/template.php', 5);
+		$exception = new BoilerRuntimeException('located error', location: $location);
+		$slot = new Slot(static fn(): never => throw $exception, new Location('/tmp/caller.php', 7));
+
+		try {
+			$slot->render([]);
+			$this->fail('RuntimeException was not thrown');
+		} catch (BoilerRuntimeException $e) {
+			$this->assertSame($exception, $e);
+			$this->assertSame($location, $e->location());
+		}
+	}
+
+	public function testSlotWrapsUnlocatedBoilerExceptionAtCaller(): void
+	{
+		$slot = new Slot(
+			static fn(): never => throw new BoilerRuntimeException('unlocated error'),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		try {
+			$slot->render([]);
+			$this->fail('RuntimeException was not thrown');
+		} catch (BoilerRuntimeException $e) {
+			$this->assertSame('/tmp/caller.php', $e->location()?->path);
+			$this->assertSame(7, $e->location()?->line);
+			$this->assertInstanceOf(BoilerRuntimeException::class, $e->getPrevious());
+		}
 	}
 }
