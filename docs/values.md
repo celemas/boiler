@@ -108,7 +108,7 @@ Boiler ships with built-in filters:
 - `stripTags` removes HTML tags via `strip_tags()`. This filter is not safe on arbitrary input, but it preserves already-safe output from earlier safe filters.
 - `trim` trims leading and trailing characters via `trim()`. This filter is not safe on arbitrary input, but it preserves already-safe output from earlier safe filters.
 
-When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. When it should keep already-safe HTML safe, implement `Celemas\Boiler\Contract\PreservesSafety` instead.
+When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
 
 Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details.
 
@@ -119,7 +119,7 @@ Use filters when you want to transform wrapped values. Use named escapers when y
 By default, Boiler wraps objects in escaped renders. If a specific class should stay unwrapped, add it to the trusted list when creating the `Engine` or when rendering a standalone `Template`.
 
 ```php
-$engine = \Celemas\Boiler\Engine::create(
+$engine = \Celema\Boiler\Engine::create(
     '/path/to/templates',
     defaults: [],
     trusted: [TrustedHtml::class],

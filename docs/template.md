@@ -7,7 +7,7 @@ Use `Template` when you want to render a single template file directly instead o
 Pass the full file path to the constructor:
 
 ```php
-$template = new \Celemas\Boiler\Template('/path/to/templates/page.php');
+$template = new \Celema\Boiler\Template('/path/to/templates/page.php');
 ```
 
 Boiler creates an internal `Engine` automatically and uses the directory that contains the file as the template root.
@@ -27,7 +27,7 @@ $html = $template->renderUnescaped(['id' => 13]);
 Register helpers on a standalone template with `method()`. They are available as `$this->methodName()` inside the template, its inserts, and its layouts.
 
 ```php
-$template = new \Celemas\Boiler\Template('/path/to/templates/page.php');
+$template = new \Celema\Boiler\Template('/path/to/templates/page.php');
 
 $template->method('upper', static fn(string $value): string => strtoupper($value));
 
@@ -47,7 +47,7 @@ Pass `safe: true` when a helper returns safe HTML:
 ```php
 use function App\Template\icon;
 
-$template = new \Celemas\Boiler\Template('/path/to/templates/page.php');
+$template = new \Celema\Boiler\Template('/path/to/templates/page.php');
 $template->method('icon', icon(...), safe: true);
 ```
 
@@ -88,7 +88,7 @@ $html = $template->render(
 A `Template` instance can be rendered multiple times safely:
 
 ```php
-$template = new \Celemas\Boiler\Template('/path/to/templates/page.php');
+$template = new \Celema\Boiler\Template('/path/to/templates/page.php');
 
 $first = $template->render(['id' => 1]);
 $second = $template->render(['id' => 2]);

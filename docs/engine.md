@@ -16,17 +16,17 @@ path
 Create an engine with one or more template directories:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create('/path/to/templates');
+$engine = \Celema\Boiler\Engine::create('/path/to/templates');
 ```
 
-If the directory does not exist, Boiler throws `\Celemas\Boiler\Exception\LookupException`.
+If the directory does not exist, Boiler throws `\Celema\Boiler\Exception\LookupException`.
 
 ## Use multiple directories
 
 Pass multiple directories when you want fallback lookup or override behavior:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create([
+$engine = \Celema\Boiler\Engine::create([
     '/path/to/templates',
     '/path/to/additional',
 ]);
@@ -39,7 +39,7 @@ Boiler searches directories in order. If a template is not found in the first on
 Pass an associative array when you want stable names for specific directories:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create([
+$engine = \Celema\Boiler\Engine::create([
     'first' => '/path/to/templates',
     'second' => '/path/to/additional',
 ]);
@@ -55,15 +55,15 @@ Read [rendering templates](rendering.md) for the lookup rules.
 
 ## Customize template lookup
 
-Boiler resolves template names through `Celemas\Boiler\Contract\Resolver`. `Engine::create()` and `Engine::unescaped()` always use `Celemas\Boiler\Resolver`.
+Boiler resolves template names through `Celema\Boiler\Contract\Resolver`. `Engine::create()` and `Engine::unescaped()` always use `Celema\Boiler\Resolver`.
 
 Instantiate `Engine` directly when your application needs different lookup rules:
 
 ```php
-use Celemas\Boiler\Contract\Resolver;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Exception\LookupException;
+use Celema\Boiler\Contract\Resolver;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Exception\LookupException;
 
 $engine = new Engine(
     new class implements Resolver {
@@ -88,9 +88,9 @@ Resolver selection happens at engine construction time. Lookup caching is resolv
 Use `Engine::create()` or `Engine::unescaped()` for the common case. Use the constructor when you need to provide your own resolver or `Contract\Environment`, for example to swap the wrapper or plug in custom filter or escaper registries.
 
 ```php
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Resolver;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Resolver;
 
 $environment = new Environment();
 
@@ -108,9 +108,9 @@ The constructor expects a resolver instance. The factory methods remain the simp
 Pass defaults as the second argument when values should be available in every render:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create(
+$engine = \Celema\Boiler\Engine::create(
     '/path/to/templates',
-    ['siteName' => 'Celemas'],
+    ['siteName' => 'Celema'],
 );
 ```
 
@@ -121,7 +121,7 @@ Per-render context overrides defaults with the same key. These values become par
 Pass a list of class names as the third argument when specific objects should be left unwrapped in escaped renders:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create(
+$engine = \Celema\Boiler\Engine::create(
     '/path/to/templates',
     defaults: [],
     trusted: [TrustedHtml::class],
@@ -137,12 +137,12 @@ Read [displaying values](values.md) for the escaping model.
 Set a custom `Wrapper` on `Environment` when you want to replace Boiler's runtime wrapping, escaping, and filter lookup entirely:
 
 ```php
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Resolver;
-use Celemas\Boiler\Wrapper;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Resolver;
+use Celema\Boiler\Wrapper;
 
 $environment = new Environment();
 $environment->setWrapper(new Wrapper(new Escapers([
@@ -170,11 +170,11 @@ When you only want to customize escapers, set them on the environment and let Bo
 Provide an escaper under the `html` name when you want to replace Boiler's built-in HTML escaper:
 
 ```php
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Resolver;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Resolver;
 
 $escapers = new Escapers([
     'caps' => new class implements Escaper {
@@ -200,11 +200,11 @@ $engine = new Engine(
 You can also register another named escaper on the registry before you pass it to the environment:
 
 ```php
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Resolver;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Resolver;
 
 $escapers = new Escapers();
 
@@ -230,9 +230,9 @@ $engine = new Engine(
 You can also register escapers directly on the engine when the environment is managing escapers:
 
 ```php
-use Celemas\Boiler\Contract\Escaper;
+use Celema\Boiler\Contract\Escaper;
 
-$engine = \Celemas\Boiler\Engine::create('/path/to/templates')
+$engine = \Celema\Boiler\Engine::create('/path/to/templates')
     ->escape('caps', new class implements Escaper {
         public function escape(string $value): string
         {
@@ -252,9 +252,9 @@ When you inject custom filter or escaper registries and still want to call `Engi
 Filters are value transformations you can apply to template values. Register filters on the engine with the fluent `filter()` method:
 
 ```php
-use Celemas\Boiler\Contract\Filter;
+use Celema\Boiler\Contract\Filter;
 
-$engine = \Celemas\Boiler\Engine::create('/path/to/templates')
+$engine = \Celema\Boiler\Engine::create('/path/to/templates')
     ->filter('upper', new class implements Filter {
         public function apply(string $value, mixed ...$args): string
         {
@@ -274,12 +274,12 @@ Lookups go through `Contract\Filters`, which only needs a `get(string $name): Co
 
 Escaper lookups go through `Contract\Escapers`, which expose `default` and `get(string $name): Contract\Escaper`. Escaper registration is exposed separately through `Contract\RegistersEscapers`.
 
-A filter implements `Celemas\Boiler\Contract\Filter` with two methods:
+A filter implements `Celema\Boiler\Contract\Filter` with two methods:
 
 - `apply(string $value, mixed ...$args): string` transforms the value.
 - `safe(): bool` returns `true` when the filter output is safe HTML from arbitrary input and should skip auto-escaping.
 
-When a filter should keep already-safe HTML safe without claiming to sanitize arbitrary input, implement `Celemas\Boiler\Contract\PreservesSafety` as well.
+When a filter should keep already-safe HTML safe without claiming to sanitize arbitrary input, implement `Celema\Boiler\Contract\PreservesSafety` as well.
 
 Use filters for transformations. When you need a different escaping context, register a named escaper instead.
 
@@ -319,24 +319,24 @@ Read [displaying values](values.md) for more on filters and escaping.
 Boiler escapes strings and `Stringable` values by default:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create('/path/to/templates');
+$engine = \Celema\Boiler\Engine::create('/path/to/templates');
 $html = $engine->render('page');
 ```
 
 Create an unescaped engine when automatic escaping should be off by default:
 
 ```php
-$engine = \Celemas\Boiler\Engine::unescaped('/path/to/templates');
+$engine = \Celema\Boiler\Engine::unescaped('/path/to/templates');
 $html = $engine->render('page');
 ```
 
 Override the engine default per render:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create('/path/to/templates');
+$engine = \Celema\Boiler\Engine::create('/path/to/templates');
 $engine->renderUnescaped('page');
 
-$engine = \Celemas\Boiler\Engine::unescaped('/path/to/templates');
+$engine = \Celema\Boiler\Engine::unescaped('/path/to/templates');
 $engine->renderEscaped('page');
 ```
 
@@ -404,7 +404,7 @@ $filePath = $engine->resolve('template');
 ```php
 $template = $engine->template('template');
 
-assert($template instanceof \Celemas\Boiler\Template);
+assert($template instanceof \Celema\Boiler\Template);
 ```
 
 A `Template` instance can be rendered multiple times safely.

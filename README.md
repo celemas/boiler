@@ -1,10 +1,10 @@
-# Celemas Boiler
+# Celema Boiler
 
 <!-- prettier-ignore-start -->
-[![ci](https://codeberg.org/celemas/boiler/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celemas/boiler/actions)
-[![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fboiler%2Fcode%2Fbadge.json)](https://cov.celemas.dev/celemas/boiler/code)
-[![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fboiler%2Ftypes%2Fbadge-cover.json)](https://cov.celemas.dev/celemas/boiler/types)
-[![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fboiler%2Ftypes%2Fbadge-level.json)](https://cov.celemas.dev/celemas/boiler/types)
+[![ci](https://codeberg.org/celema/boiler/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celema/boiler/actions)
+[![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fboiler%2Fcode%2Fbadge.json)](https://cov.celema.dev/celema/boiler/code)
+[![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fboiler%2Ftypes%2Fbadge-cover.json)](https://cov.celema.dev/celema/boiler/types)
+[![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fboiler%2Ftypes%2Fbadge-level.json)](https://cov.celema.dev/celema/boiler/types)
 [![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 <!-- prettier-ignore-end -->
 
@@ -24,7 +24,7 @@ Other highlights:
 ## Installation
 
 ```console
-composer require celemas/boiler
+composer require celema/boiler
 ```
 
 Install Symfony's HTML sanitizer when you want Boiler's built-in `sanitize` filter:
@@ -69,7 +69,7 @@ Create a template file at `/path/to/templates/page.php` with this content:
 Then initialize the `Engine` and render your template:
 
 ```php
-use Celemas\Boiler\Engine;
+use Celema\Boiler\Engine;
 
 $engine = Engine::create('/path/to/templates');
 $html = $engine->render('page', ['id' => 13]);
@@ -111,7 +111,7 @@ Configure shared defaults and trusted classes:
 ```php
 $engine = Engine::create(
     '/path/to/templates',
-    defaults: ['siteName' => 'Celemas'],
+    defaults: ['siteName' => 'Celema'],
     trusted: [TrustedHtml::class],
 );
 ```
@@ -130,7 +130,7 @@ Methods are available as `$this->icon()` inside templates, inserts, and layouts.
 Register custom filters with the fluent `filter()` method:
 
 ```php
-use Celemas\Boiler\Contract\Filter;
+use Celema\Boiler\Contract\Filter;
 
 $engine = Engine::create('/path/to/templates')
     ->filter('upper', new class implements Filter {

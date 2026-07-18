@@ -44,7 +44,7 @@ Use `Slot::template()` when a slot only renders another template:
 
 ```php
 <?php
-use Celemas\Boiler\Slot;
+use Celema\Boiler\Slot;
 
 foreach ($fields as $field) {
     $this->insert(

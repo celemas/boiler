@@ -21,7 +21,7 @@ path
 And assume this engine setup:
 
 ```php
-$engine = \Celemas\Boiler\Engine::create(
+$engine = \Celema\Boiler\Engine::create(
     [
         'theme' => '/path/to/theme',
         'templates' => '/path/to/templates',
@@ -133,10 +133,10 @@ You can expect `UnexpectedValueException` when the template path itself is empty
 If you need custom lookup behavior (for example tenant-based themes or non-standard naming rules), instantiate the engine with a custom resolver:
 
 ```php
-use Celemas\Boiler\Contract\Resolver;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Exception\LookupException;
+use Celema\Boiler\Contract\Resolver;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Exception\LookupException;
 
 $engine = new Engine(
     new class implements Resolver {

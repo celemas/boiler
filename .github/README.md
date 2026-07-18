@@ -1,4 +1,4 @@
-# Celemas Boiler
+# Celema Boiler
 
 <!-- prettier-ignore-start -->
 [![ci](https://github.com/celemas/boiler/actions/workflows/ci.yml/badge.svg)](https://github.com/celemas/boiler/actions)
@@ -10,6 +10,6 @@
 
 ## ⚠️ This repository is a mirror!
 
-**Development moved to <https://codeberg.org/celemas/boiler>.**
+**Development moved to <https://codeberg.org/celema/boiler>.**
 
 Boiler is a small auto escaping template engine for PHP 8.5+, inspired by [Plates](https://platesphp.com/). Like Plates, it uses native PHP as its templating language rather than introducing a custom syntax.
