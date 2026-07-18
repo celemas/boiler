@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Proxy;
+namespace Celema\Boiler\Proxy;
 
 use ArrayAccess;
-use Celemas\Boiler\Contract\Wrapper;
-use Celemas\Boiler\Exception\OutOfBoundsException;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Contract\Wrapper;
+use Celema\Boiler\Exception\OutOfBoundsException;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\UnexpectedValueException;
 use Countable;
 use Iterator;
 use Override;

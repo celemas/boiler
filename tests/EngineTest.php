@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Contract\Filter;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Exception\LookupException;
-use Celemas\Boiler\Exception\RenderException;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Proxy\StringProxy;
-use Celemas\Boiler\Resolver;
-use Celemas\Boiler\Template;
-use Celemas\Boiler\TemplateContext;
-use Celemas\Boiler\Wrapper;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Contract\Filter;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Exception\LookupException;
+use Celema\Boiler\Exception\RenderException;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Resolver;
+use Celema\Boiler\Template;
+use Celema\Boiler\TemplateContext;
+use Celema\Boiler\Wrapper;
 use PHPUnit\Framework\Attributes\TestDox;
 
 final class EngineTest extends TestCase
@@ -658,7 +658,7 @@ final class EngineTest extends TestCase
 	public function testConstructorAcceptsCustomResolver(): void
 	{
 		$resolver = new class(TestCase::DEFAULT_DIR . '/simple.php') implements
-			\Celemas\Boiler\Contract\Resolver {
+			\Celema\Boiler\Contract\Resolver {
 			public int $calls = 0;
 
 			public function __construct(

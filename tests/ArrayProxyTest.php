@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\OutOfBoundsException;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Proxy\ArrayProxy;
-use Celemas\Boiler\Proxy\IteratorProxy;
-use Celemas\Boiler\Proxy\ObjectProxy;
-use Celemas\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Exception\OutOfBoundsException;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Proxy\ArrayProxy;
+use Celema\Boiler\Proxy\IteratorProxy;
+use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\StringProxy;
 
 final class ArrayProxyTest extends TestCase
 {

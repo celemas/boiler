@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler;
+namespace Celema\Boiler;
 
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Filter\Lower;
-use Celemas\Boiler\Filter\Sanitize;
-use Celemas\Boiler\Filter\StripTags;
-use Celemas\Boiler\Filter\Trim;
-use Celemas\Boiler\Filter\Upper;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Filter\Lower;
+use Celema\Boiler\Filter\Sanitize;
+use Celema\Boiler\Filter\StripTags;
+use Celema\Boiler\Filter\Trim;
+use Celema\Boiler\Filter\Upper;
 
 /** @api */
 final class Filters implements Contract\RegistersFilters
@@ -80,7 +80,7 @@ final class Filters implements Contract\RegistersFilters
 
 			if (!$filter instanceof Contract\Filter) {
 				throw new UnexpectedValueException(
-					"Filter `{$name}` must implement `Celemas\\Boiler\\Contract\\Filter`",
+					"Filter `{$name}` must implement `Celema\\Boiler\\Contract\\Filter`",
 				);
 			}
 

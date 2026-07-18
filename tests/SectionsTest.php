@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\LogicException;
-use Celemas\Boiler\Location;
-use Celemas\Boiler\Sections;
+use Celema\Boiler\Exception\LogicException;
+use Celema\Boiler\Location;
+use Celema\Boiler\Sections;
 
 final class SectionsTest extends TestCase
 {

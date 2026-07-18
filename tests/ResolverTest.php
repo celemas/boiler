@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\LookupException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Resolver;
+use Celema\Boiler\Exception\LookupException;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Resolver;
 
 final class ResolverTest extends TestCase
 {

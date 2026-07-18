@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Proxy;
+namespace Celema\Boiler\Proxy;
 
-use Celemas\Boiler\Contract\Wrapper;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Contract\Wrapper;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\UnexpectedValueException;
 use Override;
 use Stringable;
 use Traversable;

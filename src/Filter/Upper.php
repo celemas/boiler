@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Filter;
+namespace Celema\Boiler\Filter;
 
-use Celemas\Boiler\Contract;
+use Celema\Boiler\Contract;
 use Override;
 
 /** @api */

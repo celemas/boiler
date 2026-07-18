@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\RenderException;
-use Celemas\Boiler\Location;
+use Celema\Boiler\Exception\RenderException;
+use Celema\Boiler\Location;
 
 final class LocationTest extends TestCase
 {

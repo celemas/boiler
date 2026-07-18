@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Filters;
-use Celemas\Boiler\Proxy\ArrayProxy;
-use Celemas\Boiler\Proxy\IteratorProxy;
-use Celemas\Boiler\Proxy\ObjectProxy;
-use Celemas\Boiler\Proxy\StringProxy;
-use Celemas\Boiler\Wrapper;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Filters;
+use Celema\Boiler\Proxy\ArrayProxy;
+use Celema\Boiler\Proxy\IteratorProxy;
+use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Wrapper;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Traversable;
 
@@ -120,7 +120,7 @@ class TestCase extends BaseTestCase
 	): StringProxy {
 		return new StringProxy(
 			$value,
-			new \Celemas\Boiler\Wrapper(new Escapers($escapers, $default), $filters),
+			new \Celema\Boiler\Wrapper(new Escapers($escapers, $default), $filters),
 		);
 	}
 }

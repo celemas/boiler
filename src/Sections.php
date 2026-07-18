@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler;
+namespace Celema\Boiler;
 
-use Celemas\Boiler\Exception\LogicException;
+use Celema\Boiler\Exception\LogicException;
 
 /** @internal */
 final class Sections

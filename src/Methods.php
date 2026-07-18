@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler;
+namespace Celema\Boiler;
 
-use Celemas\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Exception\UnexpectedValueException;
 
 /** @internal */
 final class Methods

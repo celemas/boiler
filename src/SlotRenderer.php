@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler;
+namespace Celema\Boiler;
 
-use Celemas\Boiler\Exception\LogicException;
-use Celemas\Boiler\Exception\RenderException;
-use Celemas\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\LogicException;
+use Celema\Boiler\Exception\RenderException;
+use Celema\Boiler\Exception\RuntimeException;
 use Closure;
 use Stringable;
 use Throwable;

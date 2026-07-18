@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Escaper;
+namespace Celema\Boiler\Escaper;
 
-use Celemas\Boiler\Contract\Escaper;
+use Celema\Boiler\Contract\Escaper;
 use Override;
 
 /** @api */

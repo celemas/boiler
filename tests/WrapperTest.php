@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract;
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Proxy\ArrayProxy;
-use Celemas\Boiler\Proxy\IteratorProxy;
-use Celemas\Boiler\Proxy\ObjectProxy;
-use Celemas\Boiler\Proxy\StringProxy;
-use Celemas\Boiler\Wrapper;
+use Celema\Boiler\Contract;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Proxy\ArrayProxy;
+use Celema\Boiler\Proxy\IteratorProxy;
+use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Wrapper;
 use Traversable;
 
 final class WrapperTest extends TestCase

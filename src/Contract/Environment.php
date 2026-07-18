@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Contract;
+namespace Celema\Boiler\Contract;
 
 /** @api */
 interface Environment

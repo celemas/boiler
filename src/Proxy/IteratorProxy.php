@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Proxy;
+namespace Celema\Boiler\Proxy;
 
-use Celemas\Boiler\Contract\Wrapper;
+use Celema\Boiler\Contract\Wrapper;
 use Iterator;
 use IteratorIterator;
 use Override;

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Contract;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Exception\UnexpectedValueException;
 
 final class EscapersTest extends TestCase
 {

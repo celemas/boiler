@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Proxy\StringProxy;
 use PHPUnit\Framework\Attributes\TestDox;
 use ValueError;
 

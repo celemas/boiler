@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\LookupException;
-use Celemas\Boiler\Path;
+use Celema\Boiler\Exception\LookupException;
+use Celema\Boiler\Path;
 use PHPUnit\Framework\Attributes\TestDox;
 
 final class PathTest extends TestCase

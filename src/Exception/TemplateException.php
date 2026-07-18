@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Exception;
+namespace Celema\Boiler\Exception;
 
 interface TemplateException {}

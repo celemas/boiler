@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Filters;
+use Celema\Boiler\Contract;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Filters;
 
 final class FiltersTest extends TestCase
 {

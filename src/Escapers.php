@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler;
+namespace Celema\Boiler;
 
-use Celemas\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Exception\UnexpectedValueException;
 
 /** @api */
 final class Escapers implements Contract\RegistersEscapers
@@ -77,7 +77,7 @@ final class Escapers implements Contract\RegistersEscapers
 
 			if (!$escaper instanceof Contract\Escaper) {
 				throw new UnexpectedValueException(
-					"Escaper `{$name}` must implement `Celemas\\Boiler\\Contract\\Escaper`",
+					"Escaper `{$name}` must implement `Celema\\Boiler\\Contract\\Escaper`",
 				);
 			}
 

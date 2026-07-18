@@ -326,10 +326,10 @@ function benchmarkContext(): array
 			'revenue' => 98432.50,
 		],
 		'store' => (object) [
-			'name' => 'Celemas & Partners <Store>',
+			'name' => 'Celema & Partners <Store>',
 			'currency' => 'USD',
 			'support' => (object) [
-				'email' => 'ernst@celemas.dev',
+				'email' => 'ernst@celema.dev',
 				'timezone' => 'Europe/Berlin',
 			],
 		],
@@ -675,8 +675,8 @@ function benchBoilerAutoEscaping(string $lifecycle): BenchResult
 {
 	return benchEngine(
 		'Boiler',
-		static fn() => Celemas\Boiler\Engine::create(__DIR__ . '/boiler'),
-		static fn(Celemas\Boiler\Engine $engine, array $context): string => $engine->render(
+		static fn() => Celema\Boiler\Engine::create(__DIR__ . '/boiler'),
+		static fn(Celema\Boiler\Engine $engine, array $context): string => $engine->render(
 			'page',
 			$context,
 		),
@@ -701,8 +701,8 @@ function benchBoilerManualEscaping(string $lifecycle): BenchResult
 {
 	return benchEngine(
 		'Boiler',
-		static fn() => Celemas\Boiler\Engine::unescaped(__DIR__ . '/boiler-manual'),
-		static fn(Celemas\Boiler\Engine $engine, array $context): string => $engine->render(
+		static fn() => Celema\Boiler\Engine::unescaped(__DIR__ . '/boiler-manual'),
+		static fn(Celema\Boiler\Engine $engine, array $context): string => $engine->render(
 			'page',
 			$context,
 		),

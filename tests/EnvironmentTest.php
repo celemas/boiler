@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract;
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Contract\Filter;
-use Celemas\Boiler\Environment;
-use Celemas\Boiler\Escapers;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Exception\UnexpectedValueException;
-use Celemas\Boiler\Filters;
+use Celema\Boiler\Contract;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Contract\Filter;
+use Celema\Boiler\Environment;
+use Celema\Boiler\Escapers;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Filters;
 
 final class EnvironmentTest extends TestCase
 {

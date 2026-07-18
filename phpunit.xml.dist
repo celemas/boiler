@@ -6,7 +6,7 @@
 	colors="true"
 	cacheDirectory=".phpunit.cache">
 	<testsuites>
-		<testsuite name="Celemas Boiler Test Suite">
+		<testsuite name="Celema Boiler Test Suite">
 			<directory suffix="Test.php">tests</directory>
 		</testsuite>
 	</testsuites>

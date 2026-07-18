@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Contract\Escaper;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Proxy\StringProxy;
-use Celemas\Boiler\Template;
-use Celemas\Boiler\TemplateContext;
+use Celema\Boiler\Contract\Escaper;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Template;
+use Celema\Boiler\TemplateContext;
 
 final class TemplateContextTest extends TestCase
 {

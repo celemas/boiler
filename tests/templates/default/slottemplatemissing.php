@@ -1,1 +1,1 @@
-<?php $this->insert('slotbox', slot: \Celemas\Boiler\Slot::template('missing-slot-template')); ?>
+<?php $this->insert('slotbox', slot: \Celema\Boiler\Slot::template('missing-slot-template')); ?>

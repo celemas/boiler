@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Proxy;
+namespace Celema\Boiler\Proxy;
 
-use Celemas\Boiler\Contract\PreservesSafety;
-use Celemas\Boiler\Contract\Wrapper;
+use Celema\Boiler\Contract\PreservesSafety;
+use Celema\Boiler\Contract\Wrapper;
 use Override;
 
 /**

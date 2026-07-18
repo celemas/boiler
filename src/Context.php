@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler;
+namespace Celema\Boiler;
 
-use Celemas\Boiler\Contract\Wrapper;
-use Celemas\Boiler\Exception\RuntimeException;
-use Celemas\Boiler\Proxy\ObjectProxy;
-use Celemas\Boiler\Proxy\Proxy;
-use Celemas\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Contract\Wrapper;
+use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\Proxy;
+use Celema\Boiler\Proxy\StringProxy;
 use Closure;
 use Stringable;
 

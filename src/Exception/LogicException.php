@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Exception;
+namespace Celema\Boiler\Exception;
 
-use Celemas\Boiler\Location;
+use Celema\Boiler\Location;
 use Throwable;
 
 final class LogicException extends \LogicException implements TemplateException

@@ -1,1 +1,1 @@
-<?php $this->insert('slotbox', ['shared' => 'wrapper'], slot: \Celemas\Boiler\Slot::template('slotcontext')); ?>
+<?php $this->insert('slotbox', ['shared' => 'wrapper'], slot: \Celema\Boiler\Slot::template('slotcontext')); ?>

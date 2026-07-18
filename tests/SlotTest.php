@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Context;
-use Celemas\Boiler\Engine;
-use Celemas\Boiler\Exception\RenderException;
-use Celemas\Boiler\Exception\RuntimeException as BoilerRuntimeException;
-use Celemas\Boiler\Location;
-use Celemas\Boiler\SlotRenderer;
-use Celemas\Boiler\Template;
+use Celema\Boiler\Context;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Exception\RenderException;
+use Celema\Boiler\Exception\RuntimeException as BoilerRuntimeException;
+use Celema\Boiler\Location;
+use Celema\Boiler\SlotRenderer;
+use Celema\Boiler\Template;
 
 final class SlotTest extends TestCase
 {

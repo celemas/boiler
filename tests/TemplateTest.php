@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Celemas\Boiler\Tests;
+namespace Celema\Boiler\Tests;
 
-use Celemas\Boiler\Exception\LookupException;
-use Celemas\Boiler\Exception\RenderException;
-use Celemas\Boiler\Template;
+use Celema\Boiler\Exception\LookupException;
+use Celema\Boiler\Exception\RenderException;
+use Celema\Boiler\Template;
 
 final class TemplateTest extends TestCase
 {
