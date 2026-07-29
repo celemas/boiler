@@ -179,11 +179,13 @@ composer types
 composer docs:lint
 ```
 
-For the full verification pipeline, run:
+For the PHP verification pipeline, run:
 
 ```console
 composer ci
 ```
+
+`composer ci:full` additionally lints Markdown and requires Node (`npx`).
 
 ## License
 

@@ -56,7 +56,10 @@
 		"ci": [
 			"composer lint",
 			"composer coverage",
-			"composer types",
+			"composer types"
+		],
+		"ci:full": [
+			"composer ci",
 			"composer docs:lint"
 		],
 		"benchmark": "@php -d xdebug.mode=off -d pcov.enabled=0 bench/run.php"
