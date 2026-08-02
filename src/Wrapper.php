@@ -22,6 +22,9 @@ final class Wrapper implements Contract\Wrapper
 	private readonly Contract\Escaper $defaultEscaper;
 	private readonly bool $isBuiltinEscaper;
 
+	/** @var list<class-string> */
+	private array $trusted = [];
+
 	public function __construct(
 		?Contract\Escapers $escapers = null,
 		?Contract\Filters $filters = null,
@@ -30,6 +33,19 @@ final class Wrapper implements Contract\Wrapper
 		$this->defaultEscaper = $this->escapers->get($this->escapers->default);
 		$this->isBuiltinEscaper = $this->defaultEscaper instanceof Html;
 		$this->filters = $filters;
+	}
+
+	#[Override]
+	public function withTrusted(array $trusted): static
+	{
+		if ($trusted === $this->trusted) {
+			return $this;
+		}
+
+		$clone = clone $this;
+		$clone->trusted = $trusted;
+
+		return $clone;
 	}
 
 	#[Override]
@@ -54,6 +70,14 @@ final class Wrapper implements Contract\Wrapper
 		}
 
 		if ($value instanceof Proxy) {
+			return $value;
+		}
+
+		// Trust applies at any depth: an object of a trusted class is left
+		// alone whether it sits in the context, in an array, or behind an
+		// iterator. Checked before Traversable so trusted collections stay
+		// unwrapped too.
+		if ($this->isTrusted($value)) {
 			return $value;
 		}
 
@@ -105,5 +129,20 @@ final class Wrapper implements Contract\Wrapper
 	private function filters(): Contract\Filters
 	{
 		return $this->filters ??= new Filters();
+	}
+
+	private function isTrusted(mixed $value): bool
+	{
+		if ($this->trusted === [] || !is_object($value)) {
+			return false;
+		}
+
+		foreach ($this->trusted as $class) {
+			if ($value instanceof $class) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

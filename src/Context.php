@@ -7,7 +7,6 @@ namespace Celema\Boiler;
 use Celema\Boiler\Contract\Wrapper;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
-use Celema\Boiler\Proxy\Proxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Closure;
 use Stringable;
@@ -18,7 +17,6 @@ abstract class Context
 	/** @var array<array-key, mixed>|null */
 	private ?array $wrappedContext = null;
 	protected readonly Wrapper $wrapper;
-	private readonly bool $hasTrusted;
 
 	/**
 	 * @param list<class-string> $trusted
@@ -29,8 +27,7 @@ abstract class Context
 		public readonly array $trusted,
 		public readonly bool $autoescape,
 	) {
-		$this->wrapper = $template->engine->wrapper();
-		$this->hasTrusted = $trusted !== [];
+		$this->wrapper = $template->engine->wrapper()->withTrusted($trusted);
 	}
 
 	public function __call(string $name, array $args): mixed
@@ -68,24 +65,6 @@ abstract class Context
 
 		/** @var mixed $value */
 		foreach ($values as $key => $value) {
-			if ($value instanceof Proxy) {
-				$wrapped[$key] = $value;
-
-				continue;
-			}
-
-			if ($this->hasTrusted && is_object($value)) {
-				foreach ($this->trusted as $trustedClass) {
-					if (!$value instanceof $trustedClass) {
-						continue;
-					}
-
-					$wrapped[$key] = $value;
-
-					continue 2;
-				}
-			}
-
 			/** @psalm-suppress MixedAssignment wrapper returns mixed by design */
 			$wrapped[$key] = $this->wrapper->wrap($value);
 		}

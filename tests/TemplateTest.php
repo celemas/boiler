@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use ArrayIterator;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Template;
@@ -62,6 +63,39 @@ final class TemplateTest extends TestCase
 				],
 				[TrustedBase::class],
 			)),
+		);
+	}
+
+	public function testTrustedValueStaysUnwrappedInsideArraysAndIterators(): void
+	{
+		$path = $this->templates . 'trustednested.php';
+		$template = new Template($path);
+
+		$this->assertSame(
+			'<h1>headline</h1>|<p>a</p><h1>headline</h1><p>b</p>',
+			$this->fullTrim($template->render(
+				[
+					'list' => [new TrustedValue()],
+					'deep' => ['outer' => ['inner' => new TrustedValue()]],
+					'iter' => new ArrayIterator([new TrustedValue()]),
+				],
+				[TrustedValue::class],
+			)),
+		);
+	}
+
+	public function testUntrustedValueStaysWrappedInsideArrays(): void
+	{
+		$path = $this->templates . 'trustednested.php';
+		$template = new Template($path);
+
+		$this->assertSame(
+			'&lt;h1&gt;headline&lt;/h1&gt;|&lt;p&gt;a&lt;/p&gt;&lt;h1&gt;headline&lt;/h1&gt;&lt;p&gt;b&lt;/p&gt;',
+			$this->fullTrim($template->render([
+				'list' => [new TrustedValue()],
+				'deep' => ['outer' => ['inner' => new TrustedValue()]],
+				'iter' => new ArrayIterator([new TrustedValue()]),
+			])),
 		);
 	}
 

@@ -128,7 +128,7 @@ $engine = \Celema\Boiler\Engine::create(
 );
 ```
 
-Use this only for values you fully trust. Trusted objects bypass Boiler's normal object wrapping and can output unescaped string content from methods such as `__toString()`.
+Use this only for values you fully trust. Trusted objects bypass Boiler's normal object wrapping and can output unescaped string content from methods such as `__toString()`. The list applies wherever such an object appears in the context, including inside arrays and iterators.
 
 Read [displaying values](values.md) for the escaping model.
 

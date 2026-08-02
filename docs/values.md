@@ -118,6 +118,8 @@ Use filters when you want to transform wrapped values. Use named escapers when y
 
 By default, Boiler wraps objects in escaped renders. If a specific class should stay unwrapped, add it to the trusted list when creating the `Engine` or when rendering a standalone `Template`.
 
+Trust applies at any depth: an instance of a trusted class stays unwrapped whether it is a context value itself, an element of an array, or yielded by an iterator.
+
 ```php
 $engine = \Celema\Boiler\Engine::create(
     '/path/to/templates',

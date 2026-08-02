@@ -2,7 +2,13 @@
 
 ## [Unreleased](https://codeberg.org/celema/boiler/compare/0.6.0...HEAD)
 
-No notable changes since the last release.
+### Fixed
+
+- Trusted classes are now honored at any depth. The list was only consulted for top-level context values, so an object of a trusted class stayed unwrapped as `$user` but was wrapped in an `ObjectProxy` as `$users[0]` — where magic `__get` and `__call` no longer resolve. Trust now applies to array elements and iterator values as well.
+
+### Changed
+
+- `Contract\Wrapper` gained `withTrusted(list<class-string> $trusted): static`, returning a wrapper that leaves instances of those classes alone. `Context` builds its wrapper through it, which is how trust reaches nested values. Custom `Contract\Wrapper` implementations must add the method.
 
 ## [0.6.0](https://codeberg.org/celema/boiler/src/tag/0.6.0) (2026-07-18)
 

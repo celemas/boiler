@@ -152,6 +152,11 @@ final class EnvironmentTest extends TestCase
 	private static function passthroughWrapper(): Contract\Wrapper
 	{
 		return new class implements Contract\Wrapper {
+			public function withTrusted(array $trusted): static
+			{
+				return $this;
+			}
+
 			public function wrap(mixed $value): mixed
 			{
 				return $value;
