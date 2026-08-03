@@ -99,6 +99,22 @@ final class TemplateTest extends TestCase
 		);
 	}
 
+	public function testExplicitWrapProxiesEvenATrustedValue(): void
+	{
+		$path = $this->templates . 'trustedexplicit.php';
+		$template = new Template($path);
+
+		// Trust governs automatic wrapping; asking for a proxy explicitly
+		// overrides it, the way it already overrides unescaped rendering.
+		$this->assertSame(
+			'<h1>headline</h1>|&lt;h1&gt;headline&lt;/h1&gt;',
+			$this->fullTrim($template->render(
+				['wl' => new TrustedValue()],
+				[TrustedValue::class],
+			)),
+		);
+	}
+
 	public function testUntrustedValueIsWrapped(): void
 	{
 		$path = $this->templates . 'trusted.php';

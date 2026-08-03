@@ -9,6 +9,7 @@
 ### Changed
 
 - `Contract\Wrapper` gained `withTrusted(list<class-string> $trusted): static`, returning a wrapper that leaves instances of those classes alone. `Context` builds its wrapper through it, which is how trust reaches nested values. Custom `Contract\Wrapper` implementations must add the method.
+- Trust applies to automatic wrapping only. `$this->wrap()` keeps returning a proxy for an instance of a trusted class, the way it already does in unescaped renders.
 
 ## [0.6.0](https://codeberg.org/celema/boiler/src/tag/0.6.0) (2026-07-18)
 

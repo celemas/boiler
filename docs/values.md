@@ -62,7 +62,7 @@ This is most useful when you want string filter methods on a literal or raw stri
 <?= $this->wrap('<b>Boiler</b>')->stripTags('<b>') ?>
 ```
 
-`$this->wrap()` always uses the wrapper directly, so it still returns proxies even when the engine is rendering unescaped output.
+`$this->wrap()` always uses the wrapper directly, so it still returns proxies even when the engine is rendering unescaped output, and for instances of [trusted classes](#trusted-classes). Trust governs automatic wrapping; asking for a proxy explicitly overrides it.
 
 ## Return safe HTML from a method
 

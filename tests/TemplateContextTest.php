@@ -7,6 +7,7 @@ namespace Celema\Boiler\Tests;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Engine;
 use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Celema\Boiler\Template;
 use Celema\Boiler\TemplateContext;
@@ -155,6 +156,21 @@ final class TemplateContextTest extends TestCase
 
 		$tmplContext = new TemplateContext($this->template, [], [], true);
 		$tmplContext->escape($this->objectProxy(new class {}));
+	}
+
+	public function testWrapReturnsProxyForTrustedClasses(): void
+	{
+		$tmplContext = new TemplateContext(
+			$this->template,
+			[],
+			[TrustedValue::class],
+			true,
+		);
+		$trusted = new TrustedValue();
+
+		$this->assertInstanceOf(ObjectProxy::class, $tmplContext->wrap($trusted));
+		// The same object arrives unwrapped through the context itself.
+		$this->assertSame($trusted, $tmplContext->get(['wl' => $trusted])['wl']);
 	}
 
 	public function testWrapReturnsWrappedValueInUnescapedContext(): void
