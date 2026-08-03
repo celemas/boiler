@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://codeberg.org/celema/boiler/compare/0.6.0...HEAD)
+## [Unreleased](https://codeberg.org/celema/boiler/compare/0.7.0...HEAD)
+
+No notable changes since the last release.
+
+## [0.7.0](https://codeberg.org/celema/boiler/src/tag/0.7.0) (2026-08-03)
 
 ### Fixed
 
