@@ -17,11 +17,7 @@ abstract class Context
 	/** @var array<array-key, mixed>|null */
 	private ?array $wrappedContext = null;
 
-	/** Wraps context values, method results and added values; honors trust. */
 	protected readonly Wrapper $wrapper;
-
-	/** Backs `wrap()`, which overrides ambient policy and always proxies. */
-	private readonly Wrapper $explicitWrapper;
 
 	/**
 	 * @param list<class-string> $trusted
@@ -32,8 +28,7 @@ abstract class Context
 		public readonly array $trusted,
 		public readonly bool $autoescape,
 	) {
-		$this->explicitWrapper = $template->engine->wrapper();
-		$this->wrapper = $this->explicitWrapper->withTrusted($trusted);
+		$this->wrapper = $template->engine->wrapper()->withTrusted($trusted);
 	}
 
 	public function __call(string $name, array $args): mixed
@@ -110,14 +105,13 @@ abstract class Context
 		return $this->wrapper->escape((string) $value, $escaper);
 	}
 
-	/**
-	 * Asking for proxy behavior explicitly overrides the ambient policy —
-	 * both autoescape and the trusted list — so a template can always get a
-	 * proxy for a value, whatever the engine is configured to do.
-	 */
 	public function wrap(mixed $value): mixed
 	{
-		return $this->explicitWrapper->wrap($value);
+		// Explicit wrapping bypasses the trusted list.
+		// Deliberately not `$this->wrapper`: that one honors trust, which would
+		// turn this call into a no-op for an instance of a trusted class and
+		// leave the template no way to get a proxy at all.
+		return $this->template->engine->wrapper()->wrap($value);
 	}
 
 	/** @return array<array-key, mixed> */
