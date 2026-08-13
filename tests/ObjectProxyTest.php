@@ -43,6 +43,7 @@ final class ObjectProxyTest extends TestCase
 		$proxy = $this->objectProxy(Status::Active);
 
 		$this->assertTrue($proxy->in([Status::Inactive, Status::Active]));
+		$this->assertTrue($proxy->in($this->arrayProxy([Status::Active])));
 		$this->assertFalse($proxy->in([Status::Inactive]));
 	}
 

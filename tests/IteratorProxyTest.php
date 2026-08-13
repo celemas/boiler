@@ -76,6 +76,7 @@ final class IteratorProxyTest extends TestCase
 		$iterval = $this->iteratorProxy($iterator);
 
 		$this->assertTrue($iterval->in([$iterator]));
+		$this->assertTrue($iterval->in($this->arrayProxy([$iterator])));
 		$this->assertFalse($iterval->in([]));
 	}
 

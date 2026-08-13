@@ -42,6 +42,7 @@ final class ArrayProxyTest extends TestCase
 		$arrval = $this->arrayProxy(['a', 'b']);
 
 		$this->assertTrue($arrval->in([['a'], ['a', 'b']]));
+		$this->assertTrue($arrval->in($this->arrayProxy([['a', 'b']])));
 		$this->assertFalse($arrval->in([['b', 'a']]));
 	}
 
