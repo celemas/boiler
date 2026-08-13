@@ -160,7 +160,7 @@ Template helpers available via `$this` inside templates:
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
 - `$this->escape($value)` and `$this->wrap($value)` when you need proxy behavior such as string filters on a raw value
 
-Wrapped values are proxy objects, so `===` against a plain value is always false. Compare through the proxy's `is()` method instead, which checks the raw value strictly: `$item->status->is('active')`, `$item->status->is(Status::Active)`. See [comparing wrapped values](docs/values.md#comparing-wrapped-values).
+Wrapped values are proxy objects, so `===` against a plain value is always false, and native string functions such as `str_contains()` silently operate on the escaped text. Compare and test through the proxy's predicate methods instead, which work on the raw value: `$item->status->is(Status::Active)`, `$status->in(['draft', 'pending'])`, `$title->contains('&')`, `$url->startsWith('https://')`, `$file->endsWith('.pdf')`, `$slug->matches('/^[a-z0-9-]+$/')`, and `$tags->contains('featured')` on wrapped arrays. See [comparing wrapped values](docs/values.md#comparing-wrapped-values).
 
 ## Error handling
 
