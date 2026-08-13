@@ -48,6 +48,12 @@ final class ArrayProxy implements ArrayAccess, Iterator, Countable, Proxy
 	}
 
 	#[Override]
+	public function is(mixed $other): bool
+	{
+		return $this->array === ($other instanceof Proxy ? $other->unwrap() : $other);
+	}
+
+	#[Override]
 	public function rewind(): void
 	{
 		$this->position = 0;

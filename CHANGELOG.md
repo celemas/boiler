@@ -2,7 +2,13 @@
 
 ## [Unreleased](https://codeberg.org/celema/boiler/compare/0.7.0...HEAD)
 
-No notable changes since the last release.
+### Added
+
+- Added `Proxy::is()` for strict comparison of the raw value behind a proxy: `$item->status->is('active')`, `$item->status->is(Status::Active)`. `===` compares the proxy object itself and is always false against a plain value, and `==` compares the escaped string, which breaks once the value contains HTML special characters. See [comparing wrapped values](docs/values.md#comparing-wrapped-values).
+
+### Changed
+
+- The `Proxy` interface gained the `is()` method; custom implementations must add it. On wrapped strings, `is` joins `escape` and `unwrap` as a reserved name that shadows a filter registered under it.
 
 ## [0.7.0](https://codeberg.org/celema/boiler/src/tag/0.7.0) (2026-08-03)
 

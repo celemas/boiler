@@ -48,6 +48,25 @@ final class IteratorProxyTest extends TestCase
 		$this->assertSame($iterator, $iterval->unwrap());
 	}
 
+	public function testIteratorProxyIsComparesTheInnerIterator(): void
+	{
+		$iterator = (static function () {
+			yield 1;
+		})();
+
+		$iterval = $this->iteratorProxy($iterator);
+
+		$this->assertTrue($iterval->is($iterator));
+		$this->assertTrue($iterval->is($this->iteratorProxy($iterator)));
+		$this->assertFalse(
+			$iterval->is(
+				(static function () {
+					yield 1;
+				})(),
+			),
+		);
+	}
+
 	public function testIteratorProxyToArray(): void
 	{
 		$iterator = (static function () {

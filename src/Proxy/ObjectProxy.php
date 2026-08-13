@@ -80,6 +80,12 @@ final class ObjectProxy implements Proxy
 		return $this->value;
 	}
 
+	#[Override]
+	public function is(mixed $other): bool
+	{
+		return $this->value === ($other instanceof Proxy ? $other->unwrap() : $other);
+	}
+
 	private function hasPublicProperty(string $name): bool
 	{
 		return array_key_exists($name, get_object_vars($this->value));

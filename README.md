@@ -160,6 +160,8 @@ Template helpers available via `$this` inside templates:
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
 - `$this->escape($value)` and `$this->wrap($value)` when you need proxy behavior such as string filters on a raw value
 
+Wrapped values are proxy objects, so `===` against a plain value is always false. Compare through the proxy's `is()` method instead, which checks the raw value strictly: `$item->status->is('active')`, `$item->status->is(Status::Active)`. See [comparing wrapped values](docs/values.md#comparing-wrapped-values).
+
 ## Error handling
 
 Boiler fails fast on invalid lookups and render state, such as missing templates, invalid template names, duplicate layouts, unclosed sections, missing slots, or unknown methods and filters. See [rendering templates](docs/rendering.md), [layouts](docs/layouts.md), [sections](docs/sections.md), [slots](docs/slots.md), and [template](docs/template.md) for the exact rules.

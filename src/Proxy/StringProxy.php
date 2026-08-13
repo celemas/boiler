@@ -65,4 +65,10 @@ final class StringProxy implements Proxy
 	{
 		return $this->value;
 	}
+
+	#[Override]
+	public function is(mixed $other): bool
+	{
+		return $this->value === ($other instanceof Proxy ? $other->unwrap() : $other);
+	}
 }

@@ -20,6 +20,24 @@ final class ObjectProxyTest extends TestCase
 		$this->assertSame($object, $value->unwrap());
 	}
 
+	public function testIsComparesObjectIdentity(): void
+	{
+		$object = new class {};
+		$proxy = $this->objectProxy($object);
+
+		$this->assertTrue($proxy->is($object));
+		$this->assertFalse($proxy->is(new \stdClass()));
+		$this->assertTrue($proxy->is($this->objectProxy($object)));
+	}
+
+	public function testIsComparesEnumCases(): void
+	{
+		$proxy = $this->objectProxy(Status::Active);
+
+		$this->assertTrue($proxy->is(Status::Active));
+		$this->assertFalse($proxy->is(Status::Inactive));
+	}
+
 	public function testTraversableObjectsMustUseIteratorProxy(): void
 	{
 		$this->throws(UnexpectedValueException::class, 'iterator proxies');

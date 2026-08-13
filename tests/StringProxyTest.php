@@ -15,6 +15,28 @@ final class StringProxyTest extends TestCase
 		$this->assertSame('<b>boiler</b>', $this->stringProxy('<b>boiler</b>')->unwrap());
 	}
 
+	public function testIsComparesTheRawValue(): void
+	{
+		$proxy = $this->stringProxy('Tom & Jerry');
+
+		$this->assertTrue($proxy->is('Tom & Jerry'));
+		$this->assertFalse($proxy->is('Tom &amp; Jerry'));
+	}
+
+	public function testIsComparesStrictly(): void
+	{
+		$this->assertFalse($this->stringProxy('1')->is(1));
+		$this->assertFalse($this->stringProxy('')->is(null));
+	}
+
+	public function testIsUnwrapsProxyArgument(): void
+	{
+		$proxy = $this->stringProxy('boiler');
+
+		$this->assertTrue($proxy->is($this->stringProxy('boiler')));
+		$this->assertFalse($proxy->is($this->stringProxy('plate')));
+	}
+
 	public function testStringValue(): void
 	{
 		$html = '<b onclick="func()">boiler</b>';

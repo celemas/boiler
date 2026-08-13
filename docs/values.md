@@ -2,7 +2,7 @@
 
 In escaped renders, Boiler wraps strings and most objects before exposing them to templates. This gives you automatic escaping while still allowing objects, arrays, and iterators to be used naturally in template code.
 
-Read this page if you want to understand when Boiler escapes values and when you need `$this->unwrap()`, `$this->escape()`, or `$this->wrap()`.
+Read this page if you want to understand when Boiler escapes values and when you need `->is()`, `$this->unwrap()`, `$this->escape()`, or `$this->wrap()`.
 
 ## What Boiler escapes automatically
 
@@ -29,6 +29,42 @@ This is mainly useful for explicit checks or when you need the original array of
 <?php if ($this->unwrap($title) !== '') : ?>
     <h1><?= $title ?></h1>
 <?php endif; ?>
+```
+
+## Comparing wrapped values
+
+In escaped renders, strings, arrays, and most objects reach the template as proxy objects. Identity comparison against a plain value is therefore always false, no matter what the value contains:
+
+```php
+<?php if ($item->status === 'active') : ?>        <?php /* always false */ ?>
+<?php if ($item->status === Status::Active) : ?>  <?php /* always false */ ?>
+```
+
+Loose comparison is not a fix either. `==` converts the proxy via `__toString()`, which returns the escaped string, so the check works until the value contains HTML special characters:
+
+```php
+$title == 'Tom & Jerry' // false: compares against 'Tom &amp; Jerry'
+```
+
+Use the proxy's `is()` method instead. It compares the raw value with `===` and unwraps the other side first when it is a proxy too:
+
+```php
+<?php if ($item->status->is('active')) : ?>
+<?php if ($item->status->is(Status::Active)) : ?>
+<?php if ($title->is($subtitle)) : ?>
+```
+
+`is()` is available at any depth, because property access, method calls, array access, and iteration all return wrapped values again.
+
+Integers, floats, booleans, and `null` are never wrapped, so they keep native comparison: `$item->count === 3` works as written. Calling `->is()` on one of them fails with a PHP error rather than silently returning false.
+
+`match` compares with `===` internally, so no method can help there; match on the unwrapped value:
+
+```php
+<?= match ($item->status->unwrap()) {
+    'active' => 'Active',
+    'blocked' => 'Blocked',
+} ?>
 ```
 
 ## Escape a value explicitly
@@ -110,7 +146,7 @@ Boiler ships with built-in filters:
 
 When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
 
-Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details.
+Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
 
 Use filters when you want to transform wrapped values. Use named escapers when you intentionally need a different escaping context. Use normal escaped output or `$this->escape()` when plain text output is enough.
 

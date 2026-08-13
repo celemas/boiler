@@ -28,6 +28,15 @@ final class ArrayProxyTest extends TestCase
 		$this->assertSame(['string', 2], $arrval->unwrap());
 	}
 
+	public function testIsComparesTheRawArray(): void
+	{
+		$arrval = $this->arrayProxy(['a' => 1, 'b' => '<i>']);
+
+		$this->assertTrue($arrval->is(['a' => 1, 'b' => '<i>']));
+		$this->assertFalse($arrval->is(['a' => 1, 'b' => '&lt;i&gt;']));
+		$this->assertTrue($arrval->is($this->arrayProxy(['a' => 1, 'b' => '<i>'])));
+	}
+
 	public function testHelperExists(): void
 	{
 		$arrval = $this->arrayProxy([1, 2]);
