@@ -81,12 +81,24 @@ final class StringProxy implements Proxy
 			throw new UnexpectedValueException('Empty regex pattern');
 		}
 
-		// @mago-expect lint:no-error-control-operator The failure surfaces as an exception, not template output.
-		$result = @preg_match($pattern, $this->value);
+		// preg_match() warns on compile errors instead of throwing; capture the
+		// message, which is more specific than preg_last_error_msg() there.
+		$warning = null;
+		set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
+			$warning = $message;
+
+			return true;
+		});
+
+		try {
+			$result = preg_match($pattern, $this->value);
+		} finally {
+			restore_error_handler();
+		}
 
 		if ($result === false) {
 			throw new UnexpectedValueException(
-				"Regex error for pattern '{$pattern}': " . preg_last_error_msg(),
+				"Regex error for pattern '{$pattern}': " . ($warning ?? preg_last_error_msg()),
 			);
 		}
 
