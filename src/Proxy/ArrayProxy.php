@@ -53,6 +53,24 @@ final class ArrayProxy implements ArrayAccess, Iterator, Countable, Proxy
 		return $this->array === ($other instanceof Proxy ? $other->unwrap() : $other);
 	}
 
+	/** @param self|array<array-key, mixed> $haystack */
+	#[Override]
+	public function in(self|array $haystack): bool
+	{
+		if ($haystack instanceof self) {
+			$haystack = $haystack->unwrap();
+		}
+
+		/** @var mixed $item */
+		foreach ($haystack as $item) {
+			if ($this->is($item)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	#[Override]
 	public function rewind(): void
 	{

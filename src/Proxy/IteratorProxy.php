@@ -52,6 +52,24 @@ final class IteratorProxy extends IteratorIterator implements Proxy
 		return $this->getInnerIterator() === ($other instanceof Proxy ? $other->unwrap() : $other);
 	}
 
+	/** @param ArrayProxy|array<array-key, mixed> $haystack */
+	#[Override]
+	public function in(ArrayProxy|array $haystack): bool
+	{
+		if ($haystack instanceof ArrayProxy) {
+			$haystack = $haystack->unwrap();
+		}
+
+		/** @var mixed $item */
+		foreach ($haystack as $item) {
+			if ($this->is($item)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public function toArray(): ArrayProxy
 	{
 		$inner = $this->getInnerIterator();

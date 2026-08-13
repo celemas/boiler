@@ -67,6 +67,18 @@ final class IteratorProxyTest extends TestCase
 		);
 	}
 
+	public function testIteratorProxyInComparesTheInnerIterator(): void
+	{
+		$iterator = (static function () {
+			yield 1;
+		})();
+
+		$iterval = $this->iteratorProxy($iterator);
+
+		$this->assertTrue($iterval->in([$iterator]));
+		$this->assertFalse($iterval->in([]));
+	}
+
 	public function testIteratorProxyToArray(): void
 	{
 		$iterator = (static function () {

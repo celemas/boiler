@@ -29,6 +29,29 @@ final class StringProxyTest extends TestCase
 		$this->assertFalse($this->stringProxy('')->is(null));
 	}
 
+	public function testInComparesTheRawValueAgainstEachElement(): void
+	{
+		$proxy = $this->stringProxy('Tom & Jerry');
+
+		$this->assertTrue($proxy->in(['Spike', 'Tom & Jerry']));
+		$this->assertFalse($proxy->in(['Spike', 'Tom &amp; Jerry']));
+		$this->assertFalse($proxy->in([]));
+	}
+
+	public function testInComparesStrictly(): void
+	{
+		$this->assertFalse($this->stringProxy('1')->in([1, true]));
+	}
+
+	public function testInUnwrapsProxies(): void
+	{
+		$proxy = $this->stringProxy('boiler');
+
+		$this->assertTrue($proxy->in([$this->stringProxy('boiler')]));
+		$this->assertTrue($proxy->in($this->arrayProxy(['plate', 'boiler'])));
+		$this->assertFalse($proxy->in($this->arrayProxy(['plate'])));
+	}
+
 	public function testIsUnwrapsProxyArgument(): void
 	{
 		$proxy = $this->stringProxy('boiler');

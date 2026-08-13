@@ -5,10 +5,11 @@
 ### Added
 
 - Added `Proxy::is()` for strict comparison of the raw value behind a proxy: `$item->status->is('active')`, `$item->status->is(Status::Active)`. `===` compares the proxy object itself and is always false against a plain value, and `==` compares the escaped string, which breaks once the value contains HTML special characters. See [comparing wrapped values](docs/values.md#comparing-wrapped-values).
+- Added `Proxy::in()`, the list version of `is()`: strict comparison of the raw value against each element of a plain or wrapped array, unwrapping proxy elements: `$item->status->in([Status::Draft, Status::Pending])`.
 
 ### Changed
 
-- The `Proxy` interface gained the `is()` method; custom implementations must add it. On wrapped strings, `is` joins `escape` and `unwrap` as a reserved name that shadows a filter registered under it.
+- The `Proxy` interface gained the `is()` and `in()` methods; custom implementations must add them. On wrapped strings they join `escape` and `unwrap` as reserved names that shadow filters registered under them, and on wrapped objects they shadow same-named methods of the proxied object.
 
 ## [0.7.0](https://codeberg.org/celema/boiler/src/tag/0.7.0) (2026-08-03)
 

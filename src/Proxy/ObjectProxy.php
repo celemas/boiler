@@ -86,6 +86,24 @@ final class ObjectProxy implements Proxy
 		return $this->value === ($other instanceof Proxy ? $other->unwrap() : $other);
 	}
 
+	/** @param ArrayProxy|array<array-key, mixed> $haystack */
+	#[Override]
+	public function in(ArrayProxy|array $haystack): bool
+	{
+		if ($haystack instanceof ArrayProxy) {
+			$haystack = $haystack->unwrap();
+		}
+
+		/** @var mixed $item */
+		foreach ($haystack as $item) {
+			if ($this->is($item)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private function hasPublicProperty(string $name): bool
 	{
 		return array_key_exists($name, get_object_vars($this->value));

@@ -20,4 +20,12 @@ interface Proxy
 	 * object and is therefore always false against a plain value.
 	 */
 	public function is(mixed $other): bool;
+
+	/**
+	 * Whether the wrapped value is identical to an element of `$haystack`,
+	 * comparing each element with the semantics of `is()`.
+	 *
+	 * @param ArrayProxy|array<array-key, mixed> $haystack
+	 */
+	public function in(ArrayProxy|array $haystack): bool;
 }

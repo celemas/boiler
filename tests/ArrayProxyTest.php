@@ -37,6 +37,14 @@ final class ArrayProxyTest extends TestCase
 		$this->assertTrue($arrval->is($this->arrayProxy(['a' => 1, 'b' => '<i>'])));
 	}
 
+	public function testInComparesTheRawArrayAgainstEachElement(): void
+	{
+		$arrval = $this->arrayProxy(['a', 'b']);
+
+		$this->assertTrue($arrval->in([['a'], ['a', 'b']]));
+		$this->assertFalse($arrval->in([['b', 'a']]));
+	}
+
 	public function testHelperExists(): void
 	{
 		$arrval = $this->arrayProxy([1, 2]);

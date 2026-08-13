@@ -38,6 +38,14 @@ final class ObjectProxyTest extends TestCase
 		$this->assertFalse($proxy->is(Status::Inactive));
 	}
 
+	public function testInComparesEnumCases(): void
+	{
+		$proxy = $this->objectProxy(Status::Active);
+
+		$this->assertTrue($proxy->in([Status::Inactive, Status::Active]));
+		$this->assertFalse($proxy->in([Status::Inactive]));
+	}
+
 	public function testTraversableObjectsMustUseIteratorProxy(): void
 	{
 		$this->throws(UnexpectedValueException::class, 'iterator proxies');
