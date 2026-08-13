@@ -157,6 +157,11 @@ final class ArrayProxy implements ArrayAccess, Iterator, Countable, Proxy
 		return array_key_exists($key, $this->array);
 	}
 
+	public function contains(mixed $value): bool
+	{
+		return in_array($value instanceof Proxy ? $value->unwrap() : $value, $this->array, true);
+	}
+
 	public function merge(array|self $array): self
 	{
 		return new self(array_merge(

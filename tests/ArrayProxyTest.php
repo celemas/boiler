@@ -45,6 +45,16 @@ final class ArrayProxyTest extends TestCase
 		$this->assertFalse($arrval->in([['b', 'a']]));
 	}
 
+	public function testHelperContains(): void
+	{
+		$arrval = $this->arrayProxy(['featured', '<i>']);
+
+		$this->assertTrue($arrval->contains('featured'));
+		$this->assertTrue($arrval->contains($this->stringProxy('<i>')));
+		$this->assertFalse($arrval->contains('&lt;i&gt;'));
+		$this->assertFalse($arrval->contains(true));
+	}
+
 	public function testHelperExists(): void
 	{
 		$arrval = $this->arrayProxy([1, 2]);

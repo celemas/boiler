@@ -8,6 +8,7 @@
 - Added `Proxy::in()`, the list version of `is()`: strict comparison of the raw value against each element of a plain or wrapped array, unwrapping proxy elements: `$item->status->in([Status::Draft, Status::Pending])`.
 - Added `StringProxy::matches()`, running `preg_match()` on the raw value: `$slug->matches('/^[a-z0-9-]+$/')`. An invalid pattern throws instead of returning false with a warning.
 - Added `StringProxy::contains()`, `startsWith()`, and `endsWith()`, testing the raw value and accepting a wrapped needle. The native `str_*` functions coerce a proxy via `__toString()` in templates without `strict_types` and silently search the escaped text.
+- Added `ArrayProxy::contains()` for strict element membership on the raw array, unwrapping a proxy argument: `$tags->contains('featured')`. Wrapped iterators deliberately have no `contains()`, because checking would consume a single-pass generator.
 
 ### Changed
 

@@ -79,6 +79,14 @@ Native string functions share the problem of `==`: in a template without `strict
 <?php if ($file->endsWith('.pdf')) : ?>
 ```
 
+Wrapped arrays offer the reverse check. `contains()` tests strict element membership on the raw array, unwrapping a proxy argument:
+
+```php
+<?php if ($tags->contains('featured')) : ?>
+```
+
+Wrapped iterators deliberately have no `contains()`, because checking would consume a single-pass generator.
+
 Integers, floats, booleans, and `null` are never wrapped, so they keep native comparison: `$item->count === 3` works as written. Calling `->is()` on one of them fails with a PHP error rather than silently returning false.
 
 `match` compares with `===` internally, so no method can help there; match on the unwrapped value:
