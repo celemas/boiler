@@ -71,6 +71,14 @@ Wrapped strings also expose `matches()`, which runs `preg_match()` on the raw va
 
 An invalid pattern throws instead of quietly returning false.
 
+Native string functions share the problem of `==`: in a template without `strict_types`, `str_contains($title, '...')` coerces the proxy via `__toString()` and searches the escaped text. Wrapped strings expose raw-value predicates instead, and all of them accept a wrapped needle:
+
+```php
+<?php if ($title->contains('&')) : ?>
+<?php if ($url->startsWith('https://')) : ?>
+<?php if ($file->endsWith('.pdf')) : ?>
+```
+
 Integers, floats, booleans, and `null` are never wrapped, so they keep native comparison: `$item->count === 3` works as written. Calling `->is()` on one of them fails with a PHP error rather than silently returning false.
 
 `match` compares with `===` internally, so no method can help there; match on the unwrapped value:
@@ -161,7 +169,7 @@ Boiler ships with built-in filters:
 
 When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
 
-Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `matches`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
+Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `matches`, `contains`, `startsWith`, `endsWith`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
 
 Use filters when you want to transform wrapped values. Use named escapers when you intentionally need a different escaping context. Use normal escaped output or `$this->escape()` when plain text output is enough.
 

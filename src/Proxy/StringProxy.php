@@ -93,6 +93,21 @@ final class StringProxy implements Proxy
 		return $result === 1;
 	}
 
+	public function contains(string|self $needle): bool
+	{
+		return str_contains($this->value, $needle instanceof self ? $needle->value : $needle);
+	}
+
+	public function startsWith(string|self $needle): bool
+	{
+		return str_starts_with($this->value, $needle instanceof self ? $needle->value : $needle);
+	}
+
+	public function endsWith(string|self $needle): bool
+	{
+		return str_ends_with($this->value, $needle instanceof self ? $needle->value : $needle);
+	}
+
 	/** @param ArrayProxy|array<array-key, mixed> $haystack */
 	#[Override]
 	public function in(ArrayProxy|array $haystack): bool

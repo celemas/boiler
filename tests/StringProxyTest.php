@@ -79,6 +79,27 @@ final class StringProxyTest extends TestCase
 		$this->stringProxy('boiler')->matches('');
 	}
 
+	public function testSubstringPredicatesUseTheRawValue(): void
+	{
+		$proxy = $this->stringProxy('Tom & Jerry');
+
+		$this->assertTrue($proxy->contains('& J'));
+		$this->assertFalse($proxy->contains('&amp;'));
+		$this->assertTrue($proxy->startsWith('Tom &'));
+		$this->assertFalse($proxy->startsWith('Jerry'));
+		$this->assertTrue($proxy->endsWith('& Jerry'));
+		$this->assertFalse($proxy->endsWith('Tom'));
+	}
+
+	public function testSubstringPredicatesUnwrapProxyNeedles(): void
+	{
+		$proxy = $this->stringProxy('boilerplate');
+
+		$this->assertTrue($proxy->contains($this->stringProxy('erp')));
+		$this->assertTrue($proxy->startsWith($this->stringProxy('boil')));
+		$this->assertTrue($proxy->endsWith($this->stringProxy('plate')));
+	}
+
 	public function testIsUnwrapsProxyArgument(): void
 	{
 		$proxy = $this->stringProxy('boiler');
