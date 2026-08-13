@@ -6,6 +6,7 @@ namespace Celema\Boiler\Proxy;
 
 use Celema\Boiler\Contract\PreservesSafety;
 use Celema\Boiler\Contract\Wrapper;
+use Celema\Boiler\Exception\UnexpectedValueException;
 use Override;
 
 /**
@@ -70,6 +71,26 @@ final class StringProxy implements Proxy
 	public function is(mixed $other): bool
 	{
 		return $this->value === ($other instanceof Proxy ? $other->unwrap() : $other);
+	}
+
+	public function matches(string|self $pattern): bool
+	{
+		$pattern = $pattern instanceof self ? $pattern->value : $pattern;
+
+		if ($pattern === '') {
+			throw new UnexpectedValueException('Empty regex pattern');
+		}
+
+		// @mago-expect lint:no-error-control-operator The failure surfaces as an exception, not template output.
+		$result = @preg_match($pattern, $this->value);
+
+		if ($result === false) {
+			throw new UnexpectedValueException(
+				"Regex error for pattern '{$pattern}': " . preg_last_error_msg(),
+			);
+		}
+
+		return $result === 1;
 	}
 
 	/** @param ArrayProxy|array<array-key, mixed> $haystack */

@@ -63,6 +63,14 @@ Use the proxy's `is()` method instead. It compares the raw value with `===` and 
 <?php if ($item->status->in([Status::Draft, Status::Pending])) : ?>
 ```
 
+Wrapped strings also expose `matches()`, which runs `preg_match()` on the raw value:
+
+```php
+<?php if ($slug->matches('/^[a-z0-9-]+$/')) : ?>
+```
+
+An invalid pattern throws instead of quietly returning false.
+
 Integers, floats, booleans, and `null` are never wrapped, so they keep native comparison: `$item->count === 3` works as written. Calling `->is()` on one of them fails with a PHP error rather than silently returning false.
 
 `match` compares with `===` internally, so no method can help there; match on the unwrapped value:
@@ -153,7 +161,7 @@ Boiler ships with built-in filters:
 
 When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
 
-Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
+Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `matches`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
 
 Use filters when you want to transform wrapped values. Use named escapers when you intentionally need a different escaping context. Use normal escaped output or `$this->escape()` when plain text output is enough.
 

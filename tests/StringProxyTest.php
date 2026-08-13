@@ -52,6 +52,33 @@ final class StringProxyTest extends TestCase
 		$this->assertFalse($proxy->in($this->arrayProxy(['plate'])));
 	}
 
+	public function testMatchesTestsTheRawValue(): void
+	{
+		$proxy = $this->stringProxy('Tom & Jerry');
+
+		$this->assertTrue($proxy->matches('/& J/'));
+		$this->assertFalse($proxy->matches('/&amp;/'));
+	}
+
+	public function testMatchesUnwrapsProxyPattern(): void
+	{
+		$this->assertTrue($this->stringProxy('boiler')->matches($this->stringProxy('/^boil/')));
+	}
+
+	public function testMatchesThrowsOnInvalidPattern(): void
+	{
+		$this->throws(UnexpectedValueException::class, 'Regex error');
+
+		$this->stringProxy('boiler')->matches('/invalid');
+	}
+
+	public function testMatchesThrowsOnEmptyPattern(): void
+	{
+		$this->throws(UnexpectedValueException::class, 'Empty regex pattern');
+
+		$this->stringProxy('boiler')->matches('');
+	}
+
 	public function testIsUnwrapsProxyArgument(): void
 	{
 		$proxy = $this->stringProxy('boiler');
