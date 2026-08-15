@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased](https://codeberg.org/celema/boiler/compare/0.8.0...HEAD)
+## [Unreleased](https://codefloe.com/celema/boiler/compare/0.8.0...HEAD)
 
 No notable changes since the last release.
 
-## [0.8.0](https://codeberg.org/celema/boiler/src/tag/0.8.0) (2026-08-14)
+## [0.8.0](https://codefloe.com/celema/boiler/src/tag/0.8.0) (2026-08-14)
 
 ### Added
 
@@ -19,7 +19,7 @@ No notable changes since the last release.
 - The `Proxy` interface gained the `is()` and `in()` methods; custom implementations must add them. On wrapped strings they join `escape` and `unwrap` as reserved names that shadow filters registered under them, and on wrapped objects they shadow same-named methods of the proxied object.
 - `matches`, `contains`, `startsWith`, and `endsWith` are reserved names on wrapped strings as well; a filter registered under one of them is shadowed by the new methods.
 
-## [0.7.0](https://codeberg.org/celema/boiler/src/tag/0.7.0) (2026-08-03)
+## [0.7.0](https://codefloe.com/celema/boiler/src/tag/0.7.0) (2026-08-03)
 
 ### Fixed
 
@@ -30,7 +30,7 @@ No notable changes since the last release.
 - `Contract\Wrapper` gained `withTrusted(list<class-string> $trusted): static`, returning a wrapper that leaves instances of those classes alone. `Context` builds its wrapper through it, which is how trust reaches nested values. Custom `Contract\Wrapper` implementations must add the method.
 - Trust applies to automatic wrapping only. `$this->wrap()` keeps returning a proxy for an instance of a trusted class, the way it already does in unescaped renders.
 
-## [0.6.0](https://codeberg.org/celema/boiler/src/tag/0.6.0) (2026-07-18)
+## [0.6.0](https://codefloe.com/celema/boiler/src/tag/0.6.0) (2026-07-18)
 
 ### Changed
 
@@ -40,7 +40,7 @@ No notable changes since the last release.
 
 - Removed the previous Composer package name and PHP namespace; consumers must update their dependency and imports.
 
-## [0.5.0](https://codeberg.org/celema/boiler/src/tag/0.5.0) (2026-06-21)
+## [0.5.0](https://codefloe.com/celema/boiler/src/tag/0.5.0) (2026-06-21)
 
 ### Breaking Changes
 
@@ -52,13 +52,13 @@ No notable changes since the last release.
 - Added `Slot::template()` for slots that render another template with merged slot context.
 - Slot errors, including calling `$this->slot()` without a provided slot, are reported at the `insert()` call site.
 
-## [0.4.0](https://codeberg.org/celema/boiler/src/tag/0.4.0) (2026-05-12)
+## [0.4.0](https://codefloe.com/celema/boiler/src/tag/0.4.0) (2026-05-12)
 
 ### Breaking Changes
 
 - Rename package metadata, root namespace, repository URLs, homepage, and author info.
 
-## [0.3.3](https://codeberg.org/celema/boiler/src/tag/0.3.3) (2026-04-24)
+## [0.3.3](https://codefloe.com/celema/boiler/src/tag/0.3.3) (2026-04-24)
 
 ### Breaking
 
@@ -73,17 +73,17 @@ No notable changes since the last release.
 
 - Allowed inserted templates to render inside active section capture blocks without being reported as unclosed sections, while still detecting inserts that close a parent section unexpectedly.
 
-## [0.3.2](https://codeberg.org/celema/boiler/src/tag/0.3.2) (2026-04-23)
+## [0.3.2](https://codefloe.com/celema/boiler/src/tag/0.3.2) (2026-04-23)
 
 ### Added
 
 - Added `safe: true` support to `Engine::method()` and `Template::method()` so helpers can return safe HTML in escaped renders without manual unwrapping while still allowing safety-preserving string filter chains.
 
-## [0.3.1](https://codeberg.org/celema/boiler/src/tag/0.3.1) (2026-04-15)
+## [0.3.1](https://codefloe.com/celema/boiler/src/tag/0.3.1) (2026-04-15)
 
 Included repository housekeeping updates and enabled CI runs for pull requests.
 
-## [0.3.0](https://codeberg.org/celema/boiler/src/tag/0.3.0) (2026-04-11)
+## [0.3.0](https://codefloe.com/celema/boiler/src/tag/0.3.0) (2026-04-11)
 
 ### Breaking
 
@@ -120,7 +120,7 @@ Included repository housekeeping updates and enabled CI runs for pull requests.
 - Removed `Contract\Engine`, `Contract\Template`, and `Contract\MethodRegister`.
 - Removed support for subclassing `Engine`, `Template`, and `TemplateContext`; these classes are now final.
 
-## [0.2.0](https://codeberg.org/celema/boiler/src/tag/0.2.0) (2026-03-25)
+## [0.2.0](https://codefloe.com/celema/boiler/src/tag/0.2.0) (2026-03-25)
 
 ### Breaking
 
@@ -145,7 +145,7 @@ Included repository housekeeping updates and enabled CI runs for pull requests.
 - Allowed resources in template context values without triggering unsupported type errors.
 - Reset per-render template state so a `Template` instance can be reused safely across multiple renders.
 
-## [0.1.2](https://codeberg.org/celema/boiler/src/tag/0.1.2) (2026-01-30)
+## [0.1.2](https://codefloe.com/celema/boiler/src/tag/0.1.2) (2026-01-30)
 
 ### Added
 
@@ -161,13 +161,13 @@ Included repository housekeeping updates and enabled CI runs for pull requests.
 
 - Removed MkDocs-based documentation tooling.
 
-## [0.1.1](https://codeberg.org/celema/boiler/src/tag/0.1.1) (2026-01-26)
+## [0.1.1](https://codefloe.com/celema/boiler/src/tag/0.1.1) (2026-01-26)
 
 ### Fixed
 
 - Fixed `Engine` handling of `is_null` condition checks.
 
-## [0.1.0](https://codeberg.org/celema/boiler/src/tag/0.1.0) (2026-01-25)
+## [0.1.0](https://codefloe.com/celema/boiler/src/tag/0.1.0) (2026-01-25)
 
 Initial version.
 

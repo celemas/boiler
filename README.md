@@ -1,7 +1,7 @@
 # Celema Boiler
 
 <!-- prettier-ignore-start -->
-[![ci](https://codeberg.org/celema/boiler/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celema/boiler/actions)
+[![ci](https://codefloe.com/celema/boiler/badges/workflows/ci.yml/badge.svg?style=flat&logo=forgejo&logoColor=white&label=ci)](https://codefloe.com/celema/boiler/actions)
 [![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fboiler%2Fcode%2Fbadge.json)](https://cov.celema.dev/celema/boiler/code)
 [![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fboiler%2Ftypes%2Fbadge-cover.json)](https://cov.celema.dev/celema/boiler/types)
 [![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celema.dev%2Fcelema%2Fboiler%2Ftypes%2Fbadge-level.json)](https://cov.celema.dev/celema/boiler/types)
