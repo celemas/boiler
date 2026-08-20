@@ -61,10 +61,10 @@ final class Wrapper implements Contract\Wrapper
 
 		if (
 			$value === null
-			|| is_int($value)
-			|| is_float($value)
-			|| is_bool($value)
-			|| is_resource($value)
+				|| is_int($value)
+				|| is_float($value)
+				|| is_bool($value)
+				|| is_resource($value)
 		) {
 			return $value;
 		}

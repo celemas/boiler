@@ -657,8 +657,7 @@ final class EngineTest extends TestCase
 
 	public function testConstructorAcceptsCustomResolver(): void
 	{
-		$resolver = new class(TestCase::DEFAULT_DIR . '/simple.php') implements
-			\Celema\Boiler\Contract\Resolver {
+		$resolver = new class(TestCase::DEFAULT_DIR . '/simple.php') implements \Celema\Boiler\Contract\Resolver {
 			public int $calls = 0;
 
 			public function __construct(

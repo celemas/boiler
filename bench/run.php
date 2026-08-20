@@ -809,9 +809,7 @@ function main(): int
 
 	echo "\n" . str_repeat('=', LINE_LEN);
 	echo "\nBenchmark: " . number_format($runs) . ' renders × ' . $iterations . ' iterations';
-	echo
-		"\n           $ composer benchmark -- --runs=" . $runs . ' --iterations=' . $iterations . "\n"
-	;
+	echo "\n           $ composer benchmark -- --runs=" . $runs . ' --iterations=' . $iterations . "\n";
 	echo str_repeat('=', LINE_LEN) . "\n\n\n";
 
 	foreach (lifecycles() as $index => $lifecycle) {
