@@ -177,8 +177,7 @@ abstract class Context
 		echo
 			$this->autoescape
 				? $template->renderEscaped($this->get($context), $this->trusted)
-				: $template->renderUnescaped($this->get($context), $this->trusted)
-		;
+				: $template->renderUnescaped($this->get($context), $this->trusted);
 	}
 
 	/**
@@ -196,8 +195,7 @@ abstract class Context
 			($this->template->slot() ?? throw new RuntimeException(
 				'No slot was provided for this template',
 				location: $this->location(),
-			))->render($data)
-		;
+			))->render($data);
 	}
 
 	public function hasSlot(): bool
