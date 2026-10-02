@@ -35,3 +35,4 @@ no-boolean-flag-parameter = { enabled = false }
 no-shorthand-ternary = { enabled = false }
 readable-literal = { min-digits = 7 }
 too-many-methods = { enabled = false }
+prefer-early-continue = { enabled = false }
