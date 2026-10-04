@@ -94,6 +94,16 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testContextKeysMayUseAnyVariableName(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'checkout|path',
+			trim($engine->render('reservedkeys', ['context' => 'checkout', 'templatePath' => 'path'])),
+		);
+	}
+
 	public function testSimpleScalarValueRendering(): void
 	{
 		$engine = Engine::create(TestCase::DEFAULT_DIR, ['obj' => $this->obj()]);

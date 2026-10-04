@@ -58,6 +58,8 @@ $html = $engine->render('page', [
 ]);
 ```
 
+Each key becomes a variable in the template. Any valid variable name works except `this`, which always refers to the template context.
+
 If `page.php` contains:
 
 ```php
