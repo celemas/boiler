@@ -11,6 +11,7 @@ In escaped renders, Boiler escapes:
 - strings
 - `Stringable` values
 - strings returned from wrapped objects, arrays, and iterators during template access
+- keys of wrapped arrays and iterators in `foreach` loops
 
 Boiler uses PHP's `htmlspecialchars()` with these defaults:
 
@@ -210,6 +211,20 @@ That means this stays escaped in a normal render:
 ```
 
 The same applies when values come from object properties, object methods, or iterator items.
+
+### Loop keys
+
+Loops over wrapped arrays and iterators wrap keys like values, so a key is escaped when you output it. Integer array keys stay integers.
+
+```php
+<?php foreach ($options as $value => $label) : ?>
+    <option value="<?= $value ?>"><?= $label ?></option>
+<?php endforeach; ?>
+```
+
+A wrapped key follows the rules from [comparing wrapped values](#comparing-wrapped-values): compare it with `$key->is('name')`, and use `$this->unwrap($key)` where you need the raw string, such as an offset into an unwrapped array. Wrapped arrays accept wrapped keys directly, so `$items[$key]` works. `iterator_to_array()` cannot collect wrapped string keys; use `$this->unwrap($items)` or `iterator_to_array($items, false)` instead.
+
+Nested loops over the same wrapped array or `IteratorAggregate` each get their own cursor, as with the plain value. A wrapped generator or other `Iterator` keeps its single cursor, as it does without Boiler.
 
 ## Unescaped renders
 

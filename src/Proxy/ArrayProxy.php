@@ -20,8 +20,8 @@ use Override;
  * @psalm-type ArrayCallable = callable(mixed, mixed):int
  * @psalm-type FilterCallable = callable(mixed):mixed
  *
- * @template-implements ArrayAccess<array-key, mixed>
- * @template-implements IteratorAggregate<array-key, mixed>
+ * @template-implements ArrayAccess<array-key|StringProxy, mixed>
+ * @template-implements IteratorAggregate<mixed, mixed>
  * @implements Proxy<array<array-key, mixed>>
  */
 final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy
@@ -66,30 +66,33 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 
 	/**
 	 * Every loop gets its own generator, so nested loops over the same proxy
-	 * do not share a cursor.
+	 * do not share a cursor. Keys are wrapped like values: a string key is
+	 * template output as much as the value is.
 	 *
-	 * @return Generator<array-key, mixed>
+	 * @return Generator<mixed, mixed>
 	 */
 	#[Override]
 	public function getIterator(): Generator
 	{
 		/** @var mixed $value */
 		foreach ($this->array as $key => $value) {
-			yield $key => $this->wrapper->wrap($value);
+			yield $this->wrapper->wrap($key) => $this->wrapper->wrap($value);
 		}
 	}
 
-	/** @param array-key $offset */
+	/** @param array-key|StringProxy $offset */
 	#[Override]
 	public function offsetExists(mixed $offset): bool
 	{
-		return array_key_exists($offset, $this->array);
+		return array_key_exists(self::key($offset), $this->array);
 	}
 
-	/** @param array-key $offset */
+	/** @param array-key|StringProxy $offset */
 	#[Override]
 	public function offsetGet(mixed $offset): mixed
 	{
+		$offset = self::key($offset);
+
 		if (array_key_exists($offset, $this->array)) {
 			return $this->wrapper->wrap($this->array[$offset]);
 		}
@@ -99,20 +102,22 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 		throw new OutOfBoundsException("Undefined array key {$key}");
 	}
 
+	/** @param array-key|StringProxy|null $offset */
 	#[Override]
 	public function offsetSet(mixed $offset, mixed $value): void
 	{
 		if ($offset === null) {
 			$this->array[] = $this->wrapper->unwrap($value);
 		} else {
-			$this->array[$offset] = $this->wrapper->unwrap($value);
+			$this->array[self::key($offset)] = $this->wrapper->unwrap($value);
 		}
 	}
 
+	/** @param array-key|StringProxy $offset */
 	#[Override]
 	public function offsetUnset(mixed $offset): void
 	{
-		unset($this->array[$offset]);
+		unset($this->array[self::key($offset)]);
 	}
 
 	#[Override]
@@ -121,10 +126,10 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 		return count($this->array);
 	}
 
-	/** @param array-key $key */
+	/** @param array-key|StringProxy $key */
 	public function exists(mixed $key): bool
 	{
-		return array_key_exists($key, $this->array);
+		return array_key_exists(self::key($key), $this->array);
 	}
 
 	public function contains(mixed $value): bool
@@ -199,5 +204,16 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 		};
 
 		return new self($array, $this->wrapper);
+	}
+
+	/**
+	 * Iteration hands out string keys wrapped, so accept them back as offsets.
+	 *
+	 * @param array-key|StringProxy $offset
+	 * @return array-key
+	 */
+	private static function key(mixed $offset): mixed
+	{
+		return $offset instanceof StringProxy ? $offset->unwrap() : $offset;
 	}
 }

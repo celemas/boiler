@@ -27,7 +27,8 @@ final class IteratorProxy implements IteratorAggregate, Proxy
 	/**
 	 * Traverses the wrapped value anew on every loop, like a native foreach:
 	 * an IteratorAggregate hands out a fresh iterator each time, while an
-	 * Iterator or a generator keeps its single cursor.
+	 * Iterator or a generator keeps its single cursor. Keys are wrapped like
+	 * values, since a template can output either.
 	 *
 	 * @return Generator<mixed, mixed>
 	 */
@@ -39,7 +40,7 @@ final class IteratorProxy implements IteratorAggregate, Proxy
 		 * @var mixed $item
 		 */
 		foreach ($this->value as $key => $item) {
-			yield $key => $this->wrapper->wrap($item);
+			yield $this->wrapper->wrap($key) => $this->wrapper->wrap($item);
 		}
 	}
 

@@ -56,6 +56,18 @@ final class IteratorProxyTest extends TestCase
 		$this->assertSame([10, 20], $keys);
 	}
 
+	public function testIterationWrapsStringKeys(): void
+	{
+		[$key] = $this->keys($this->iteratorProxy(
+			(static function () {
+				yield '<b>' => 1;
+			})(),
+		));
+
+		$this->assertInstanceOf(StringProxy::class, $key);
+		$this->assertSame('&lt;b&gt;', (string) $key);
+	}
+
 	public function testIteratorProxyUnwrap(): void
 	{
 		$iterator = (static function () {

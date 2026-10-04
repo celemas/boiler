@@ -243,10 +243,36 @@ final class ArrayProxyTest extends TestCase
 
 	public function testIterationReflectsSetValues(): void
 	{
-		$arrval = $this->arrayProxy(['a' => 1]);
-		$arrval['b'] = 2;
+		$arrval = $this->arrayProxy([1]);
+		$arrval[5] = 2;
 
-		$this->assertSame(['a' => 1, 'b' => 2], iterator_to_array($arrval));
+		$this->assertSame([0 => 1, 5 => 2], iterator_to_array($arrval));
+	}
+
+	public function testIterationWrapsStringKeys(): void
+	{
+		$keys = $this->keys($this->arrayProxy(['<b>' => 1, 7 => 2]));
+
+		$this->assertInstanceOf(StringProxy::class, $keys[0]);
+		$this->assertSame('&lt;b&gt;', (string) $keys[0]);
+		$this->assertSame('<b>', $keys[0]->unwrap());
+		$this->assertSame(7, $keys[1]);
+	}
+
+	public function testWrappedKeysWorkAsOffsets(): void
+	{
+		$arrval = $this->arrayProxy(['<b>' => 'value']);
+		[$key] = $this->keys($arrval);
+
+		$this->assertTrue(isset($arrval[$key]));
+		$this->assertTrue($arrval->exists($key));
+		$this->assertSame('value', $arrval[$key]->unwrap());
+
+		$arrval[$key] = 'changed';
+		$this->assertSame(['<b>' => 'changed'], $arrval->unwrap());
+
+		unset($arrval[$key]);
+		$this->assertSame([], $arrval->unwrap());
 	}
 
 	public function testIterationReflectsUnsetValues(): void

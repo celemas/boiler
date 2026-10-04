@@ -371,6 +371,16 @@ final class EngineTest extends TestCase
 		}
 	}
 
+	public function testLoopKeysAreEscapedAndWorkAsOffsets(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'<option value="a&quot; onfocus=&quot;x">&lt;i&gt;A&lt;/i&gt;</option>',
+			trim($engine->render('keys', ['options' => ['a" onfocus="x' => '<i>A</i>']])),
+		);
+	}
+
 	public function testTemplateMethodReceivesWrappedAggregateUnwrapped(): void
 	{
 		$engine = Engine::create($this->templates())->method(

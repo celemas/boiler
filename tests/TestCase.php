@@ -79,6 +79,18 @@ class TestCase extends BaseTestCase
 		}
 	}
 
+	/** @return list<mixed> */
+	protected function keys(Traversable $proxy): array
+	{
+		$keys = [];
+
+		foreach ($proxy as $key => $_) {
+			$keys[] = $key;
+		}
+
+		return $keys;
+	}
+
 	protected function wrapper(?Filters $filters = null): Wrapper
 	{
 		return new Wrapper(filters: $filters);
