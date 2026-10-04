@@ -189,7 +189,7 @@ composer ci
 
 `composer ci:full` additionally lints Markdown and requires Node (`npx`).
 
-Mutation testing with [Infection](https://infection.github.io/) is not part of `composer ci`, but the CI workflow runs it after the coverage step and requires a mutation score of 100%. Run it locally with:
+Mutation testing with [Infection](https://infection.github.io/) is not part of `composer ci`, but the CI workflow runs it after the coverage step and requires a mutation score of 100%. Pushes only mutate the changed lines; a weekly scheduled run covers the whole codebase. Run it locally with:
 
 ```console
 composer mutation
