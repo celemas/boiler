@@ -81,3 +81,4 @@ Regular `begin()` content becomes the main assigned section content.
 - Section capture blocks must be closed with `$this->end()`.
 - Nested capture blocks are not allowed and raise a render error.
 - Calling `$this->end()` without an open section raises a render error.
+- Calling `$this->section()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, or check with `$this->has()` when the section is optional.

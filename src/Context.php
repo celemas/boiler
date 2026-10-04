@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Celema\Boiler;
 
 use Celema\Boiler\Contract\Wrapper;
+use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
@@ -223,10 +224,23 @@ abstract class Context
 		$this->template->sections->end();
 	}
 
+	/**
+	 * Returns the captured content of a section.
+	 *
+	 * Without a default the section is required and a missing section throws;
+	 * pass a default, even `''`, or guard with `has()` when it is optional.
+	 */
 	public function section(string $name, string $default = ''): string
 	{
 		if (func_num_args() > 1) {
 			return $this->template->sections->getOr($name, $default);
+		}
+
+		if (!$this->template->sections->has($name)) {
+			throw new LookupException(
+				"Section `{$name}` is not defined; pass a default or check it with has()",
+				location: $this->location(),
+			);
 		}
 
 		return $this->template->sections->get($name);

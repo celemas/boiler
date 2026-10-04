@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codefloe.com/celema/boiler/compare/0.8.0...HEAD)
 
-No notable changes since the last release.
+### Changed
+
+- `$this->section('name')` without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->has()` for optional sections.
 
 ## [0.8.0](https://codefloe.com/celema/boiler/src/tag/0.8.0) (2026-08-14)
 

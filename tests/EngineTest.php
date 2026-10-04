@@ -552,6 +552,24 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testMissingSectionWithoutDefaultError(): void
+	{
+		$path = self::DEFAULT_DIR . '/missingsection.php';
+
+		try {
+			Engine::create($this->templates())->render('missingsection');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(2, $e->location()?->line);
+			$this->assertInstanceOf(LookupException::class, $e->getPrevious());
+			$this->assertStringEndsWith(
+				'Section `sidebar` is not defined; pass a default or check it with has()',
+				$e->getMessage(),
+			);
+		}
+	}
+
 	public function testInsertRendering(): void
 	{
 		$engine = Engine::create($this->templates());
