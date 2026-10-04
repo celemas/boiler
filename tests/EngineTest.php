@@ -19,6 +19,7 @@ use Celema\Boiler\Resolver;
 use Celema\Boiler\Template;
 use Celema\Boiler\TemplateContext;
 use Celema\Boiler\Wrapper;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 
 final class EngineTest extends TestCase
@@ -1050,6 +1051,24 @@ final class EngineTest extends TestCase
 
 		$this->assertSame('template', trim($template->render()));
 		$this->assertSame('engine', trim($engine->render('who')));
+	}
+
+	/** @return iterable<string, array{string}> */
+	public static function reservedMethodNames(): iterable
+	{
+		yield 'helper' => ['section'];
+		yield 'helper in other case' => ['Section'];
+		yield 'camel case helper' => ['hasSlot'];
+		yield 'layout helper' => ['body'];
+	}
+
+	#[DataProvider('reservedMethodNames')]
+	public function testMethodRejectsNamesOfTemplateHelpers(string $name): void
+	{
+		$this->expectException(UnexpectedValueException::class);
+		$this->expectExceptionMessage("Method name `{$name}` is reserved by a template helper");
+
+		Engine::create($this->templates())->method($name, static fn(): string => '');
 	}
 
 	public function testCustomTemplateMethod(): void

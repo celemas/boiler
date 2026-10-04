@@ -24,6 +24,10 @@ final class Methods
 	/** @param non-empty-string $name */
 	public function add(string $name, callable $callable, bool $safe = false): void
 	{
+		if (self::isReserved($name)) {
+			throw new UnexpectedValueException("Method name `{$name}` is reserved by a template helper");
+		}
+
 		$this->methods[$name] = new Method($callable, $safe);
 	}
 
@@ -38,5 +42,18 @@ final class Methods
 		}
 
 		throw new UnexpectedValueException("Method '{$name}' does not exist");
+	}
+
+	/**
+	 * Templates reach registered methods through Context::__call(), which PHP
+	 * only calls for names the context does not define itself, ignoring case.
+	 */
+	private static function isReserved(string $name): bool
+	{
+		return in_array(
+			strtolower($name),
+			array_map(strtolower(...), get_class_methods(LayoutContext::class)),
+			true,
+		);
 	}
 }
