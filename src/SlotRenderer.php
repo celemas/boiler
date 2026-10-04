@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Celema\Boiler;
 
 use Celema\Boiler\Exception\LogicException;
-use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
 use Closure;
 use Stringable;
@@ -31,9 +30,8 @@ final class SlotRenderer
 			try {
 				/** @psalm-suppress MixedAssignment slot may echo, return markup, or both */
 				$returned = $this->renderSlot($data);
-			} catch (RenderException $e) {
-				throw $e;
 			} catch (RuntimeException|LogicException $e) {
+				// Located errors, including nested render errors, pass through unchanged.
 				if ($e->location() !== null) {
 					throw $e;
 				}

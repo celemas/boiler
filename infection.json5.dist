@@ -9,10 +9,8 @@
 		html: '.infection/infection.html',
 		summary: '.infection/summary.log',
 	},
-	// One escaped mutant remains (a redundant catch block in SlotRenderer::render
-	// that cannot be told apart from killed ones); any further escape fails.
-	minMsi: 99.8,
-	minCoveredMsi: 99.8,
+	minMsi: 100,
+	minCoveredMsi: 100,
 	// Ignores below cover equivalent mutants: they change no observable behavior.
 	// Keep them scoped to a method so that new code elsewhere is still mutated.
 	// Where a method also has killed mutants of the same kind, match the source
@@ -106,24 +104,18 @@
 
 		// Redundant guards: another check already covers the same case.
 		MethodCallRemoval: {
-			ignore: [
-				// The finally block resets the state after every render.
-				'Celema\\Boiler\\BaseTemplate::renderIsolated::128',
-				// The preceding check already rejects empty names.
-				'Celema\\Boiler\\Escapers::normalize',
-			],
+			// The preceding check already rejects empty names.
+			ignore: ['Celema\\Boiler\\Escapers::normalize'],
 		},
-		// The path regex already rejects whitespace, and an invalid
-		// namespaced path falls through to the same exception.
+		// The path regex already rejects whitespace.
 		UnwrapTrim: {
 			ignore: ['Celema\\Boiler\\Resolver::segments'],
 		},
 		UnwrapArrayMap: {
 			ignore: ['Celema\\Boiler\\Resolver::segments'],
 		},
+		// name() throws the same exception without an open section.
 		Throw_: {
-			ignore: ['Celema\\Boiler\\Resolver::segments::70'],
-			// name() throws the same exception without an open section.
 			ignoreSourceCodeByRegex: ["throw new LogicException\\('No section started'\\);"],
 		},
 		// Nested sections are rejected, so the capture stack never holds more

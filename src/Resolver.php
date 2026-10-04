@@ -66,10 +66,6 @@ final class Resolver implements Contract\Resolver
 			if ($namespace !== '' && $file !== '') {
 				return [$namespace, $file];
 			}
-
-			throw new LookupException(
-				"Invalid template format: '{$path}'. " . "Use 'namespace:template/path or template/path'.",
-			);
 		}
 
 		throw new LookupException(

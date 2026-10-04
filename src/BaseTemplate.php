@@ -125,8 +125,6 @@ abstract class BaseTemplate
 	/** @param list<class-string> $trusted */
 	private function renderIsolated(array $context, array $trusted, bool $autoescape): string
 	{
-		$this->resetRenderState();
-
 		try {
 			return $this->renderTemplate($context, $trusted, $autoescape);
 		} finally {
