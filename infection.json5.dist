@@ -9,10 +9,154 @@
 		html: '.infection/infection.html',
 		summary: '.infection/summary.log',
 	},
-	// Baseline from the first run; raise these as escaped mutants are fixed or ignored.
-	minMsi: 86,
-	minCoveredMsi: 86,
+	// One escaped mutant remains (a redundant catch block in SlotRenderer::render
+	// that cannot be told apart from killed ones); any further escape fails.
+	minMsi: 99.8,
+	minCoveredMsi: 99.8,
+	// Ignores below cover equivalent mutants: they change no observable behavior.
+	// Keep them scoped to a method so that new code elsewhere is still mutated.
+	// Where a method also has killed mutants of the same kind, match the source
+	// line by regex instead (`ignoreSourceCodeByRegex` applies to the removed
+	// diff lines across the whole codebase), or pin `Class::method::line` when
+	// the line text is not unique. A pinned line that moves makes the mutant
+	// escape again, which fails the run rather than hiding anything.
 	mutators: {
 		'@default': true,
+
+		// Memoization and fast paths: dropping the cache or early return
+		// recomputes the same value.
+		AssignCoalesce: {
+			ignore: [
+				'Celema\\Boiler\\Context::wrappedContext',
+				'Celema\\Boiler\\Engine::wrapper',
+				'Celema\\Boiler\\Filter\\Sanitize::sanitizer',
+				'Celema\\Boiler\\Proxy\\StringProxy::__toString',
+			],
+		},
+		ReturnRemoval: {
+			ignore: [
+				'Celema\\Boiler\\Resolver::resolve',
+				'Celema\\Boiler\\Wrapper::withTrusted',
+				'Celema\\Boiler\\Wrapper::isTrusted::137',
+			],
+			ignoreSourceCodeByRegex: ['return \\$this->wrappedContext\\(\\);'],
+		},
+		LogicalOr: {
+			ignore: [
+				'Celema\\Boiler\\Wrapper::isTrusted',
+				// dirname() only returns '' for an empty path.
+				'Celema\\Boiler\\BaseTemplate::__construct',
+			],
+		},
+
+		// Casts of values that are already strings: ob_get_clean() inside an
+		// active buffer, interpolated keys, and Stringable concatenation.
+		CastString: {
+			ignore: [
+				'Celema\\Boiler\\BaseTemplate::getContent',
+				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
+				'Celema\\Boiler\\Sections::end',
+				'Celema\\Boiler\\SlotRenderer::render',
+			],
+		},
+
+		// Templates run in the scope of their context object, so the template
+		// API works with any visibility.
+		PublicVisibility: {
+			ignore: [
+				'Celema\\Boiler\\Context::unwrap',
+				'Celema\\Boiler\\Context::layout',
+				'Celema\\Boiler\\Context::slot',
+				'Celema\\Boiler\\Context::hasSlot',
+				'Celema\\Boiler\\Context::begin',
+				'Celema\\Boiler\\Context::append',
+				'Celema\\Boiler\\Context::prepend',
+				'Celema\\Boiler\\Context::end',
+				'Celema\\Boiler\\Context::section',
+				'Celema\\Boiler\\Context::has',
+				'Celema\\Boiler\\LayoutContext::body',
+			],
+		},
+		ProtectedVisibility: {
+			ignore: ['Celema\\Boiler\\Context::wrapAll'],
+		},
+
+		// The default exception code is not part of the contract.
+		DecrementInteger: {
+			ignore: [
+				'Celema\\Boiler\\Exception\\LogicException::__construct',
+				'Celema\\Boiler\\Exception\\RuntimeException::__construct',
+			],
+		},
+		IncrementInteger: {
+			ignore: [
+				'Celema\\Boiler\\Exception\\LogicException::__construct',
+				'Celema\\Boiler\\Exception\\RuntimeException::__construct',
+			],
+		},
+
+		// Windows-only branch; the root comes from realpath() and has no
+		// trailing separator.
+		Identical: {
+			ignore: ['Celema\\Boiler\\Path::isWithinRoot'],
+		},
+		UnwrapRtrim: {
+			ignore: ['Celema\\Boiler\\Path::isWithinRoot'],
+		},
+
+		// Redundant guards: another check already covers the same case.
+		MethodCallRemoval: {
+			ignore: [
+				// The finally block resets the state after every render.
+				'Celema\\Boiler\\BaseTemplate::renderIsolated::128',
+				// The preceding check already rejects empty names.
+				'Celema\\Boiler\\Escapers::normalize',
+			],
+		},
+		// The path regex already rejects whitespace, and an invalid
+		// namespaced path falls through to the same exception.
+		UnwrapTrim: {
+			ignore: ['Celema\\Boiler\\Resolver::segments'],
+		},
+		UnwrapArrayMap: {
+			ignore: ['Celema\\Boiler\\Resolver::segments'],
+		},
+		Throw_: {
+			ignore: ['Celema\\Boiler\\Resolver::segments::70'],
+			// name() throws the same exception without an open section.
+			ignoreSourceCodeByRegex: ["throw new LogicException\\('No section started'\\);"],
+		},
+		// Nested sections are rejected, so the capture stack never holds more
+		// than one name, and checkpoints differ in name or location as well.
+		FunctionCallRemoval: {
+			ignore: ['Celema\\Boiler\\Sections::end'],
+		},
+		ArrayItem: {
+			ignoreSourceCodeByRegex: [
+				"'mode' => \\$this->sectionMode,",
+				"'level' => \\$this->captureLevel,",
+			],
+		},
+		ArrayItemRemoval: {
+			ignore: ['Celema\\Boiler\\Sections::checkpoint'],
+		},
+		// preg_match() reports errors through the handler and does not throw.
+		UnwrapFinally: {
+			ignore: ['Celema\\Boiler\\Proxy\\StringProxy::matches'],
+		},
+		// Internal defaults; Engine and Template always pass the value.
+		FalseValue: {
+			ignore: [
+				'Celema\\Boiler\\Method::__construct',
+				'Celema\\Boiler\\Methods::add',
+			],
+		},
+		// Only int|null line numbers reach normalizeLine().
+		LogicalAnd: {
+			ignore: ['Celema\\Boiler\\Location::normalizeLine'],
+		},
+		GreaterThan: {
+			ignore: ['Celema\\Boiler\\Location::normalizeLine'],
+		},
 	},
 }
