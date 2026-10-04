@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use ArrayObject;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Contract\Filter;
 use Celema\Boiler\Engine;
@@ -356,6 +357,28 @@ final class EngineTest extends TestCase
 				['arr' => $iter()],
 			)),
 		);
+	}
+
+	public function testNestedLoopsOverSharedValueDoNotEndOuterLoop(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		foreach ([['a', 'b'], new ArrayObject(['a', 'b'])] as $items) {
+			$this->assertSame(
+				'aa,ab,ba,bb,|[a:ab][b:ab]',
+				trim($engine->render('nestediteration', ['items' => $items])),
+			);
+		}
+	}
+
+	public function testTemplateMethodReceivesWrappedAggregateUnwrapped(): void
+	{
+		$engine = Engine::create($this->templates())->method(
+			'size',
+			static fn(ArrayObject $items): int => count($items),
+		);
+
+		$this->assertSame('2', trim($engine->render('typedunwrap', ['items' => new ArrayObject([1, 2])])));
 	}
 
 	public function testComplexNestedRendering(): void

@@ -5,6 +5,12 @@
 ### Changed
 
 - `$this->section('name')` without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->has()` for optional sections.
+- `ArrayProxy` implements `IteratorAggregate` instead of `Iterator`, so its public `current()`, `key()`, `next()`, `rewind()`, and `valid()` methods are gone. `IteratorProxy` implements `IteratorAggregate` instead of extending `IteratorIterator`, and its `unwrap()` returns the wrapped `Traversable` itself instead of `?Iterator`. `foreach`, `count()`, array access, and the predicate methods work as before.
+
+### Fixed
+
+- Nested loops over the same wrapped array no longer end the outer loop after its first pass. This includes a partial that loops over a list it shares with the calling template's loop. Wrapped `IteratorAggregate` values such as `ArrayObject` get a fresh iterator for every loop, as in plain PHP; iterators and generators keep their single cursor.
+- Unwrapping a wrapped `IteratorAggregate` returns the original object instead of its internal iterator. This applies to `$this->unwrap()`, `is()`, and arguments passed to template methods, so a method typed `ArrayObject $items` accepts a wrapped `ArrayObject`.
 
 ## [0.8.0](https://codefloe.com/celema/boiler/src/tag/0.8.0) (2026-08-14)
 

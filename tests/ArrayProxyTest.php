@@ -227,13 +227,18 @@ final class ArrayProxyTest extends TestCase
 		$this->assertSame([3, 4, 5], $new);
 	}
 
-	public function testIterationStartsAtFirstElementWithoutRewind(): void
+	public function testNestedIterationUsesIndependentCursors(): void
 	{
-		$arrval = $this->arrayProxy(['a' => 1, 'b' => 2]);
+		$arrval = $this->arrayProxy([1, 2]);
+		$pairs = [];
 
-		$this->assertTrue($arrval->valid());
-		$this->assertSame('a', $arrval->key());
-		$this->assertSame(1, $arrval->current());
+		foreach ($arrval as $outer) {
+			foreach ($arrval as $inner) {
+				$pairs[] = [$outer, $inner];
+			}
+		}
+
+		$this->assertSame([[1, 1], [1, 2], [2, 1], [2, 2]], $pairs);
 	}
 
 	public function testIterationReflectsSetValues(): void

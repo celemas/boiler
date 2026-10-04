@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use ArrayObject;
 use Celema\Boiler\Proxy\ArrayProxy;
 use Celema\Boiler\Proxy\IteratorProxy;
 use Celema\Boiler\Proxy\StringProxy;
@@ -35,6 +36,24 @@ final class IteratorProxyTest extends TestCase
 		$this->assertInstanceOf(StringProxy::class, $new[1]);
 		$this->assertInstanceOf(ArrayProxy::class, $new[2]);
 		$this->assertInstanceOf(IteratorProxy::class, $new[3]);
+	}
+
+	public function testIterationPreservesKeys(): void
+	{
+		$iterval = $this->iteratorProxy(
+			(static function () {
+				yield 10 => 'a';
+
+				yield 20 => 'b';
+			})(),
+		);
+		$keys = [];
+
+		foreach ($iterval as $key => $_) {
+			$keys[] = $key;
+		}
+
+		$this->assertSame([10, 20], $keys);
 	}
 
 	public function testIteratorProxyUnwrap(): void
@@ -78,6 +97,30 @@ final class IteratorProxyTest extends TestCase
 		$this->assertTrue($iterval->in([$iterator]));
 		$this->assertTrue($iterval->in($this->arrayProxy([$iterator])));
 		$this->assertFalse($iterval->in([]));
+	}
+
+	public function testNestedIterationOverAggregateUsesIndependentIterators(): void
+	{
+		$iterval = $this->iteratorProxy(new ArrayObject([1, 2]));
+		$pairs = [];
+
+		foreach ($iterval as $outer) {
+			foreach ($iterval as $inner) {
+				$pairs[] = [$outer, $inner];
+			}
+		}
+
+		$this->assertSame([[1, 1], [1, 2], [2, 1], [2, 2]], $pairs);
+	}
+
+	public function testUnwrapAndIsUseTheWrappedAggregate(): void
+	{
+		$aggregate = new ArrayObject([1, 2]);
+		$iterval = $this->iteratorProxy($aggregate);
+
+		$this->assertSame($aggregate, $iterval->unwrap());
+		$this->assertTrue($iterval->is($aggregate));
+		$this->assertSame([1, 2], $iterval->toArray()->unwrap());
 	}
 
 	public function testIteratorProxyToArray(): void

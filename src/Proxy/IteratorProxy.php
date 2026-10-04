@@ -5,51 +5,55 @@ declare(strict_types=1);
 namespace Celema\Boiler\Proxy;
 
 use Celema\Boiler\Contract\Wrapper;
-use Iterator;
-use IteratorIterator;
+use Generator;
+use IteratorAggregate;
 use Override;
 use Traversable;
 
 /**
  * @api
  *
- * @template-covariant TKey
- * @template-covariant TValue
- *
- * @template TIterator as \Traversable<TKey, TValue>
- *
- * @template-extends IteratorIterator<TKey, TValue, TIterator>
- * @implements Proxy<Iterator<TKey, TValue>|null>
+ * @template-implements IteratorAggregate<mixed, mixed>
+ * @implements Proxy<Traversable<mixed, mixed>>
  */
-final class IteratorProxy extends IteratorIterator implements Proxy
+final class IteratorProxy implements IteratorAggregate, Proxy
 {
-	/** @param TIterator $iterator */
+	/** @param Traversable<mixed, mixed> $value */
 	public function __construct(
-		Traversable $iterator,
+		private readonly Traversable $value,
 		private readonly Wrapper $wrapper,
-	) {
-		parent::__construct($iterator);
+	) {}
+
+	/**
+	 * Traverses the wrapped value anew on every loop, like a native foreach:
+	 * an IteratorAggregate hands out a fresh iterator each time, while an
+	 * Iterator or a generator keeps its single cursor.
+	 *
+	 * @return Generator<mixed, mixed>
+	 */
+	#[Override]
+	public function getIterator(): Generator
+	{
+		/**
+		 * @var mixed $key
+		 * @var mixed $item
+		 */
+		foreach ($this->value as $key => $item) {
+			yield $key => $this->wrapper->wrap($item);
+		}
 	}
 
+	/** @return Traversable<mixed, mixed> */
 	#[Override]
-	public function current(): mixed
+	public function unwrap(): Traversable
 	{
-		$value = parent::current();
-
-		/** @psalm-suppress MixedReturnStatement see above */
-		return $this->wrapper->wrap($value);
-	}
-
-	#[Override]
-	public function unwrap(): ?Iterator
-	{
-		return $this->getInnerIterator();
+		return $this->value;
 	}
 
 	#[Override]
 	public function is(mixed $other): bool
 	{
-		return $this->getInnerIterator() === ($other instanceof Proxy ? $other->unwrap() : $other);
+		return $this->value === ($other instanceof Proxy ? $other->unwrap() : $other);
 	}
 
 	/** @param ArrayProxy|array<array-key, mixed> $haystack */
@@ -72,8 +76,6 @@ final class IteratorProxy extends IteratorIterator implements Proxy
 
 	public function toArray(): ArrayProxy
 	{
-		$inner = $this->getInnerIterator();
-
-		return new ArrayProxy($inner ? iterator_to_array($inner) : [], $this->wrapper);
+		return new ArrayProxy(iterator_to_array($this->value), $this->wrapper);
 	}
 }

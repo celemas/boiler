@@ -10,7 +10,8 @@ use Celema\Boiler\Exception\OutOfBoundsException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
 use Countable;
-use Iterator;
+use Generator;
+use IteratorAggregate;
 use Override;
 
 /**
@@ -20,26 +21,18 @@ use Override;
  * @psalm-type FilterCallable = callable(mixed):mixed
  *
  * @template-implements ArrayAccess<array-key, mixed>
- * @template-implements Iterator<mixed>
+ * @template-implements IteratorAggregate<array-key, mixed>
  * @implements Proxy<array<array-key, mixed>>
  */
-final class ArrayProxy implements ArrayAccess, Iterator, Countable, Proxy
+final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy
 {
-	/** @var list<array-key> */
-	private array $keys;
-	private int $position;
-
 	/**
 	 * @param array<array-key, mixed> $array
 	 */
 	public function __construct(
 		private array $array,
 		private readonly Wrapper $wrapper,
-	) {
-		$this->array = $array;
-		$this->keys = array_keys($array);
-		$this->position = 0;
-	}
+	) {}
 
 	#[Override]
 	public function unwrap(): array
@@ -71,39 +64,19 @@ final class ArrayProxy implements ArrayAccess, Iterator, Countable, Proxy
 		return false;
 	}
 
-	#[Override]
-	public function rewind(): void
-	{
-		$this->position = 0;
-	}
-
-	#[Override]
-	public function current(): mixed
-	{
-		$key = $this->keys[$this->position];
-
-		return $this->wrapper->wrap($this->array[$key]);
-	}
-
 	/**
-	 * @return array-key
+	 * Every loop gets its own generator, so nested loops over the same proxy
+	 * do not share a cursor.
+	 *
+	 * @return Generator<array-key, mixed>
 	 */
 	#[Override]
-	public function key(): mixed
+	public function getIterator(): Generator
 	{
-		return $this->keys[$this->position];
-	}
-
-	#[Override]
-	public function next(): void
-	{
-		$this->position++;
-	}
-
-	#[Override]
-	public function valid(): bool
-	{
-		return isset($this->keys[$this->position]);
+		/** @var mixed $value */
+		foreach ($this->array as $key => $value) {
+			yield $key => $this->wrapper->wrap($value);
+		}
 	}
 
 	/** @param array-key $offset */
@@ -134,15 +107,12 @@ final class ArrayProxy implements ArrayAccess, Iterator, Countable, Proxy
 		} else {
 			$this->array[$offset] = $this->wrapper->unwrap($value);
 		}
-
-		$this->keys = array_keys($this->array);
 	}
 
 	#[Override]
 	public function offsetUnset(mixed $offset): void
 	{
 		unset($this->array[$offset]);
-		$this->keys = array_keys($this->array);
 	}
 
 	#[Override]
