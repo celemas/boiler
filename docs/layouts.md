@@ -81,7 +81,7 @@ Create `outer.php`:
 </body>
 ```
 
-Boiler renders layouts from the innermost template outward.
+Boiler renders layouts from the innermost template outward. Each layout receives the context of the template it wraps, including the values passed to that template's `$this->layout()` call. A value the page passes to `inner` therefore also reaches `outer`, unless `inner` overrides it in its own `$this->layout('outer', [...])` call.
 
 ## Error handling
 

@@ -153,10 +153,6 @@ abstract class BaseTemplate
 	{
 		$content = $this->getContent($context, $trusted, $autoescape);
 
-		if ($this instanceof Layout) {
-			return $content->content;
-		}
-
 		return $this->renderLayouts(
 			$this,
 			$content->templateContext,
@@ -167,7 +163,7 @@ abstract class BaseTemplate
 	}
 
 	/** @param list<class-string> $trusted */
-	private function getContent(array $context, array $trusted, bool $autoescape): Content
+	final protected function getContent(array $context, array $trusted, bool $autoescape): Content
 	{
 		$templateContext = $this->context($context, $trusted, $autoescape);
 
@@ -236,9 +232,11 @@ abstract class BaseTemplate
 			);
 			$template->setMethods($methods);
 
-			$layoutContext = $context->get($layout->context);
-
-			$content = $template->renderTemplate($layoutContext, $trusted, $autoescape);
+			$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);
+			$content = $rendered->content;
+			// The next layout builds on this one's context, like an insert
+			// builds on the context of the template that calls it.
+			$context = $rendered->templateContext;
 		}
 
 		return $content;

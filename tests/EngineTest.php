@@ -479,6 +479,16 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testStackedLayoutInheritsContextOfInnerLayout(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'<title>Inner</title>boiler<div>Inner<p>boiler</p></div>',
+			$this->fullTrim($engine->render('stackedcontext', ['text' => 'boiler'])),
+		);
+	}
+
 	public function testMultilpleLayoutsError(): void
 	{
 		$this->throws(RuntimeException::class, 'layout already set');
