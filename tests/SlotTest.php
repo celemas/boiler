@@ -6,11 +6,13 @@ namespace Celema\Boiler\Tests;
 
 use Celema\Boiler\Context;
 use Celema\Boiler\Engine;
+use Celema\Boiler\Exception\LogicException as BoilerLogicException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException as BoilerRuntimeException;
 use Celema\Boiler\Location;
 use Celema\Boiler\SlotRenderer;
 use Celema\Boiler\Template;
+use Stringable;
 
 final class SlotTest extends TestCase
 {
@@ -47,6 +49,49 @@ final class SlotTest extends TestCase
 			'<div class="box"><i>returned</i></div>',
 			$this->fullTrim($engine->render('slotreturn')),
 		);
+	}
+
+	public function testSlotCanReturnStringableMarkup(): void
+	{
+		$slot = new SlotRenderer(
+			static fn(): Stringable => new class implements Stringable {
+				public function __toString(): string
+				{
+					return '<i>returned</i>';
+				}
+			},
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		$this->assertSame('<i>returned</i>', $slot->render([]));
+	}
+
+	public function testSlotAppendsReturnedMarkupToEchoedOutput(): void
+	{
+		$slot = new SlotRenderer(
+			static function (): string {
+				echo '<b>echoed</b>';
+
+				return '<i>returned</i>';
+			},
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		$this->assertSame('<b>echoed</b><i>returned</i>', $slot->render([]));
+	}
+
+	public function testSlotIgnoresNonMarkupReturnValue(): void
+	{
+		// `print` returns 1, which must not end up in the output.
+		$slot = new SlotRenderer(
+			static fn(): int => print '<b>printed</b>',
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		$this->assertSame('<b>printed</b>', $slot->render([]));
 	}
 
 	public function testSlotCanInsertNestedTemplate(): void
@@ -217,6 +262,24 @@ final class SlotTest extends TestCase
 		}
 	}
 
+	public function testSlotPreservesLocatedBoilerLogicException(): void
+	{
+		$location = new Location('/tmp/template.php', 5);
+		$exception = new BoilerLogicException('located error', location: $location);
+		$slot = new SlotRenderer(
+			static fn(): never => throw $exception,
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		try {
+			$slot->render([]);
+			$this->fail('LogicException was not thrown');
+		} catch (BoilerLogicException $e) {
+			$this->assertSame($exception, $e);
+		}
+	}
+
 	public function testSlotWrapsUnlocatedBoilerExceptionAtCaller(): void
 	{
 		$slot = new SlotRenderer(
@@ -232,6 +295,43 @@ final class SlotTest extends TestCase
 			$this->assertSame('/tmp/caller.php', $e->location()?->path);
 			$this->assertSame(7, $e->location()?->line);
 			$this->assertInstanceOf(BoilerRuntimeException::class, $e->getPrevious());
+		}
+	}
+
+	public function testWrappedSlotExceptionKeepsIntegerCode(): void
+	{
+		$slot = new SlotRenderer(
+			static fn(): never => throw new \RuntimeException('coded error', 42),
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		try {
+			$slot->render([]);
+			$this->fail('RuntimeException was not thrown');
+		} catch (BoilerRuntimeException $e) {
+			$this->assertSame(42, $e->getCode());
+		}
+	}
+
+	public function testWrappedSlotExceptionDropsNonIntegerCode(): void
+	{
+		// PDOException uses SQLSTATE strings as codes, which Exception::__construct() rejects.
+		$exception = new class('string code') extends \Exception {
+			protected $code = 'HY000';
+		};
+		$slot = new SlotRenderer(
+			static fn(): never => throw $exception,
+			$this->slotContext(),
+			new Location('/tmp/caller.php', 7),
+		);
+
+		try {
+			$slot->render([]);
+			$this->fail('RuntimeException was not thrown');
+		} catch (BoilerRuntimeException $e) {
+			$this->assertSame(0, $e->getCode());
+			$this->assertSame($exception, $e->getPrevious());
 		}
 	}
 

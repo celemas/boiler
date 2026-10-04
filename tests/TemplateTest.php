@@ -66,6 +66,23 @@ final class TemplateTest extends TestCase
 		);
 	}
 
+	public function testUntrustedValueIsEscapedWhenOtherClassesAreTrusted(): void
+	{
+		$path = $this->templates . 'trusted.php';
+		$template = new Template($path);
+
+		$this->assertSame(
+			'&lt;h1&gt;headline&lt;/h1&gt;&lt;p&gt;test&lt;/p&gt;',
+			$this->fullTrim($template->render(
+				[
+					'wl' => new TrustedValue(),
+					'content' => 'test',
+				],
+				[\stdClass::class],
+			)),
+		);
+	}
+
 	public function testTrustedValueStaysUnwrappedInsideArraysAndIterators(): void
 	{
 		$path = $this->templates . 'trustednested.php';

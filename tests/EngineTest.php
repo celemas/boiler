@@ -643,6 +643,7 @@ final class EngineTest extends TestCase
 
 		$this->assertSame(true, $engine->exists('simple'));
 		$this->assertSame(false, $engine->exists('wrongindex'));
+		$this->assertSame(false, $engine->exists('invalid path'));
 	}
 
 	public function testResolveReturnsResolvedTemplatePath(): void
@@ -798,6 +799,17 @@ final class EngineTest extends TestCase
 		$engine = Engine::create($this->templates());
 
 		$engine->render('failing');
+	}
+
+	public function testRenderErrorInInsertedTemplateIsNotWrappedAgain(): void
+	{
+		try {
+			Engine::create($this->templates())->render('insertfailing');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame(self::DEFAULT_DIR . '/failing.php', $e->location()?->path);
+			$this->assertInstanceOf(\ParseError::class, $e->getPrevious());
+		}
 	}
 
 	public function testRenderExceptionReportsLocation(): void
@@ -971,7 +983,7 @@ final class EngineTest extends TestCase
 			->method('upper', static fn(string $value): string => strtoupper($value));
 
 		$this->assertSame(
-			'<body><p>BOILER</p></body>',
+			'<body><p>BOILER</p><p>BOILER</p></body>',
 			$this->fullTrim($engine->render('uselayoutmethod', ['text' => 'Boiler'])),
 		);
 	}

@@ -118,6 +118,7 @@ final class ArrayProxyTest extends TestCase
 		$this->assertSame([1, 2, 3], $arrval->sorted()->unwrap());
 		$this->assertSame([1, 2, 3], $arrval->sorted('  ')->unwrap());
 		$this->assertSame([3, 2, 1], $arrval->sorted('r')->unwrap());
+		$this->assertSame([3, 2, 1], $arrval->sorted('R')->unwrap());
 		$this->assertSame(['b' => 1, 'c' => 2, 'a' => 3], $arrval->sorted('a')->unwrap());
 		$this->assertSame(['a' => 3, 'c' => 2, 'b' => 1], $arrval->sorted('ar')->unwrap());
 		// Check if original value is preserved
@@ -224,6 +225,31 @@ final class ArrayProxyTest extends TestCase
 		}
 
 		$this->assertSame([3, 4, 5], $new);
+	}
+
+	public function testIterationStartsAtFirstElementWithoutRewind(): void
+	{
+		$arrval = $this->arrayProxy(['a' => 1, 'b' => 2]);
+
+		$this->assertTrue($arrval->valid());
+		$this->assertSame('a', $arrval->key());
+		$this->assertSame(1, $arrval->current());
+	}
+
+	public function testIterationReflectsSetValues(): void
+	{
+		$arrval = $this->arrayProxy(['a' => 1]);
+		$arrval['b'] = 2;
+
+		$this->assertSame(['a' => 1, 'b' => 2], iterator_to_array($arrval));
+	}
+
+	public function testIterationReflectsUnsetValues(): void
+	{
+		$arrval = $this->arrayProxy([1, 2, 3]);
+		unset($arrval[1]);
+
+		$this->assertSame([0 => 1, 2 => 3], iterator_to_array($arrval));
 	}
 
 	public function testNullValue(): void

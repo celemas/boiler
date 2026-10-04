@@ -117,6 +117,19 @@ final class ObjectProxyTest extends TestCase
 		$this->assertSame('BOILER', (string) $value->upper($this->stringProxy('boiler')));
 	}
 
+	public function testMethodCallPassesAllArguments(): void
+	{
+		$object = new class {
+			public function join(string $first, string $second): string
+			{
+				return $first . '-' . $second;
+			}
+		};
+		$value = $this->objectProxy($object);
+
+		$this->assertSame('boiler-rocks', (string) $value->join($this->stringProxy('boiler'), 'rocks'));
+	}
+
 	public function testInvokeUnwrapsProxyArguments(): void
 	{
 		$closure = static fn(string $value): string => strtoupper($value);

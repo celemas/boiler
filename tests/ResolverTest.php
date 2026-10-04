@@ -60,6 +60,30 @@ final class ResolverTest extends TestCase
 		$resolver->resolve("\0");
 	}
 
+	public function testRejectsInvalidLeadingTemplatePathCharacter(): void
+	{
+		$this->throws(UnexpectedValueException::class, 'invalid or empty');
+
+		$resolver = new Resolver($this->templates());
+		$resolver->resolve('!simple');
+	}
+
+	public function testRejectsInvalidTrailingTemplatePathCharacter(): void
+	{
+		$this->throws(UnexpectedValueException::class, 'invalid or empty');
+
+		$resolver = new Resolver($this->templates());
+		$resolver->resolve('simple!');
+	}
+
+	public function testAcceptsUnicodeTemplatePathCharacters(): void
+	{
+		$this->throws(LookupException::class, 'not found');
+
+		$resolver = new Resolver($this->templates());
+		$resolver->resolve('übersicht');
+	}
+
 	public function testRejectsInvalidTemplateFormat(): void
 	{
 		$this->throws(LookupException::class, 'Invalid template format');

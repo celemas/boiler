@@ -102,4 +102,12 @@ final class PathTest extends TestCase
 		$tplp = new Path('', 'simple');
 		$tplp->path();
 	}
+
+	public function testErrorWhenAccessingPathOutsideOfTemplateDirectory(): void
+	{
+		$this->throws(LookupException::class, 'Error while accessing path');
+
+		$tplp = new Path($this::DEFAULT_DIR, '../unreachable');
+		$tplp->path();
+	}
 }

@@ -95,6 +95,7 @@ final class FiltersTest extends TestCase
 		$filters = new Filters();
 
 		$this->assertSame('BOILER', $filters->get('upper')->apply('boiler'));
+		$this->assertSame('ÄÖÜ', $filters->get('upper')->apply('äöü'));
 	}
 
 	public function testLowerConvertsToLowercase(): void
@@ -102,6 +103,7 @@ final class FiltersTest extends TestCase
 		$filters = new Filters();
 
 		$this->assertSame('boiler', $filters->get('lower')->apply('BOILER'));
+		$this->assertSame('äöü', $filters->get('lower')->apply('ÄÖÜ'));
 	}
 
 	public function testUpperAndLowerAreNotSafe(): void
@@ -277,6 +279,25 @@ final class FiltersTest extends TestCase
 
 		new Filters([
 			13 => new class implements Contract\Filter {
+				public function apply(string $value, mixed ...$args): string
+				{
+					return $value;
+				}
+
+				public function safe(): bool
+				{
+					return false;
+				}
+			},
+		]);
+	}
+
+	public function testRejectsInvalidFilterNameInConstructor(): void
+	{
+		$this->throws(UnexpectedValueException::class, 'Filter name `no-dashes` is not a valid PHP method name');
+
+		new Filters([
+			'no-dashes' => new class implements Contract\Filter {
 				public function apply(string $value, mixed ...$args): string
 				{
 					return $value;
