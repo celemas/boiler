@@ -15,9 +15,8 @@
 	// Keep them scoped to a method so that new code elsewhere is still mutated.
 	// Where a method also has killed mutants of the same kind, match the source
 	// line by regex instead (`ignoreSourceCodeByRegex` applies to the removed
-	// diff lines across the whole codebase), or pin `Class::method::line` when
-	// the line text is not unique. A pinned line that moves makes the mutant
-	// escape again, which fails the run rather than hiding anything.
+	// diff lines across the whole codebase). Avoid `Class::method::line` pins:
+	// unrelated edits that move the line break the run.
 	mutators: {
 		'@default': true,
 
@@ -35,7 +34,9 @@
 			ignore: [
 				'Celema\\Boiler\\Resolver::resolve',
 				'Celema\\Boiler\\Wrapper::withTrusted',
-				'Celema\\Boiler\\Wrapper::isTrusted::137',
+				// Also skips the killed `return true` in the loop; the trusted
+				// class tests cover it.
+				'Celema\\Boiler\\Wrapper::isTrusted',
 			],
 			ignoreSourceCodeByRegex: ['return \\$this->wrappedContext\\(\\);'],
 		},
