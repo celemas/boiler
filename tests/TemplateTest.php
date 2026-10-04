@@ -236,7 +236,8 @@ final class TemplateTest extends TestCase
 
 	public function testNonExistentTemplateWithoutExtension(): void
 	{
-		$this->throws(LookupException::class, 'Template not found');
+		$this->throws(LookupException::class);
+		$this->expectExceptionMessage('Template not found: ' . $this->templates . 'nonexistent');
 
 		$template = new Template($this->templates . 'nonexistent');
 

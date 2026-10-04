@@ -67,9 +67,24 @@ final class StringProxyTest extends TestCase
 
 	public function testMatchesThrowsOnInvalidPattern(): void
 	{
-		$this->throws(UnexpectedValueException::class, 'Regex error');
+		$this->throws(UnexpectedValueException::class);
+		$this->expectExceptionMessage(
+			"Regex error for pattern '/invalid': preg_match(): No ending delimiter '/' found",
+		);
 
 		$this->stringProxy('boiler')->matches('/invalid');
+	}
+
+	public function testMatchesDoesNotEmitWarningOnInvalidPattern(): void
+	{
+		error_clear_last();
+
+		try {
+			$this->stringProxy('boiler')->matches('/invalid');
+			$this->fail('UnexpectedValueException was not thrown');
+		} catch (UnexpectedValueException) {
+			$this->assertNull(error_get_last());
+		}
 	}
 
 	public function testMatchesThrowsOnEmptyPattern(): void

@@ -8,10 +8,15 @@ use Celema\Boiler\Contract;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Contract\Filter;
 use Celema\Boiler\Environment;
+use Celema\Boiler\Escaper\Html;
 use Celema\Boiler\Escapers;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Filter\Upper;
 use Celema\Boiler\Filters;
+use Celema\Boiler\Wrapper;
+use Closure;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class EnvironmentTest extends TestCase
 {
@@ -140,13 +145,27 @@ final class EnvironmentTest extends TestCase
 		$environment->setEscapers(new Escapers());
 	}
 
-	public function testConfigurationIsSealedAfterWrapperIsMaterialized(): void
+	/** @param Closure(Environment): void $configure */
+	#[DataProvider('configurators')]
+	public function testConfigurationIsSealedAfterWrapperIsMaterialized(Closure $configure): void
 	{
 		$this->throws(RuntimeException::class, 'Engine configuration is sealed');
 
 		$environment = new Environment();
 		$environment->wrapper();
-		$environment->setEscapers(new Escapers());
+		$configure($environment);
+	}
+
+	/** @return array<string, list<Closure(Environment): void>> */
+	public static function configurators(): array
+	{
+		return [
+			'setWrapper' => [static fn(Environment $env) => $env->setWrapper(new Wrapper())],
+			'setFilters' => [static fn(Environment $env) => $env->setFilters(new Filters())],
+			'setEscapers' => [static fn(Environment $env) => $env->setEscapers(new Escapers())],
+			'registerFilter' => [static fn(Environment $env) => $env->registerFilter('shout', new Upper())],
+			'registerEscaper' => [static fn(Environment $env) => $env->registerEscaper('plain', new Html())],
+		];
 	}
 
 	private static function passthroughWrapper(): Contract\Wrapper

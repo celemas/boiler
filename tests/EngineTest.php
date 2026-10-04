@@ -25,7 +25,8 @@ final class EngineTest extends TestCase
 	#[TestDox('Directory does not exist I')]
 	public function testDirectoryDoesNotExistI(): void
 	{
-		$this->throws(LookupException::class, 'doesnotexist');
+		$this->throws(LookupException::class);
+		$this->expectExceptionMessage('Template directory does not exist ./doesnotexist');
 
 		Engine::create('./doesnotexist');
 	}
@@ -516,7 +517,7 @@ final class EngineTest extends TestCase
 
 	public function testNestedSectionsError(): void
 	{
-		$this->throws(RenderException::class);
+		$this->throws(RenderException::class, 'Nested sections are not allowed');
 
 		$engine = Engine::create($this->templates());
 
@@ -707,7 +708,10 @@ final class EngineTest extends TestCase
 	#[TestDox('Config error wrong template format I')]
 	public function testConfigErrorWrongTemplateFormatI(): void
 	{
-		$this->throws(LookupException::class, 'Invalid template format');
+		$this->throws(LookupException::class);
+		$this->expectExceptionMessage(
+			"Invalid template format: 'default:sub:index'. Use 'namespace:template/path or template/path'.",
+		);
 
 		$engine = Engine::create($this->templates());
 
@@ -717,7 +721,10 @@ final class EngineTest extends TestCase
 	#[TestDox('Config error wrong template format II')]
 	public function testConfigErrorWrongTemplateFormatII(): void
 	{
-		$this->throws(LookupException::class, 'Invalid template format');
+		$this->throws(LookupException::class);
+		$this->expectExceptionMessage(
+			"Invalid template format: ':default.php'. Use 'namespace:template/path or template/path'.",
+		);
 
 		$engine = Engine::create($this->templates());
 
@@ -854,8 +861,7 @@ final class EngineTest extends TestCase
 		} catch (RenderException $e) {
 			$this->assertSame($path, $e->getFile());
 			$this->assertSame(1, $e->getLine());
-			$this->assertStringContainsString('Unclosed section capture block `scripts`', $e->getMessage());
-			$this->assertStringContainsString($path . ':1', $e->getMessage());
+			$this->assertStringEndsWith("Unclosed section capture block `scripts` at {$path}:1", $e->getMessage());
 		}
 	}
 
@@ -871,7 +877,8 @@ final class EngineTest extends TestCase
 			$this->assertSame(5, $e->getLine());
 			$this->assertSame($path, $e->location()?->path);
 			$this->assertSame(5, $e->location()?->line);
-			$this->assertStringContainsString($path . ':5', $e->getMessage());
+			$this->assertStringStartsWith('Template not found', $e->getMessage());
+			$this->assertStringEndsWith(" (referenced at {$path}:5)", $e->getMessage());
 		}
 	}
 

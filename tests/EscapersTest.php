@@ -85,6 +85,13 @@ final class EscapersTest extends TestCase
 		new Escapers(default: 'xml');
 	}
 
+	public function testRejectsEmptyDefaultEscaperName(): void
+	{
+		$this->throws(UnexpectedValueException::class, 'Escaper name must be a non-empty string');
+
+		new Escapers(default: '');
+	}
+
 	public function testRejectsEmptyEscaperNameOnRegister(): void
 	{
 		$this->throws(UnexpectedValueException::class, 'Escaper name must be a non-empty string');

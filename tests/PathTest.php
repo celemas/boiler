@@ -46,6 +46,14 @@ final class PathTest extends TestCase
 		$this->assertSame('Template directory must not be an empty string', $tplp->error());
 	}
 
+	public function testFailingInitializationWhitespaceDirectoryString(): void
+	{
+		$tplp = new Path('  ', 'simple');
+
+		$this->assertSame(false, $tplp->isValid());
+		$this->assertSame('Template directory must not be an empty string', $tplp->error());
+	}
+
 	public function testFailingInitializationNonExistentDirectory(): void
 	{
 		$tplp = new Path('doesnotexist', 'simple');
