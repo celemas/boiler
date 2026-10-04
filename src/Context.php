@@ -230,9 +230,9 @@ abstract class Context
 	 * Without a default the section is required and a missing section throws;
 	 * pass a default, even `''`, or guard with `has()` when it is optional.
 	 */
-	public function section(string $name, string $default = ''): string
+	public function section(string $name, ?string $default = null): string
 	{
-		if (func_num_args() > 1) {
+		if ($default !== null) {
 			return $this->template->sections->getOr($name, $default);
 		}
 

@@ -4,7 +4,7 @@
 
 ### Changed
 
-- `$this->section('name')` without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->has()` for optional sections.
+- `$this->section('name')` without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->has()` for optional sections. The default parameter is now `?string $default = null`; passing `null` is the same as omitting it.
 - `ArrayProxy` implements `IteratorAggregate` instead of `Iterator`, so its public `current()`, `key()`, `next()`, `rewind()`, and `valid()` methods are gone. `IteratorProxy` implements `IteratorAggregate` instead of extending `IteratorIterator`, and its `unwrap()` returns the wrapped `Traversable` itself instead of `?Iterator`. `foreach`, `count()`, array access, and the predicate methods work as before.
 - `RenderException` now carries the integer code of the exception it wraps instead of `0`, so error handlers that derive a status from the code keep working for exceptions thrown inside templates. Non-integer codes, such as PDO's SQLSTATE, still become `0`.
 - `isset($items['key'])` and `$items['key'] ?? $default` on a wrapped array treat a `null` value as missing, like a plain array. `exists()` still tests for the key alone.
