@@ -718,6 +718,16 @@ final class EngineTest extends TestCase
 		$this->assertSame(false, $engine->exists('invalid path'));
 	}
 
+	public function testDirectoryIsNotATemplate(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertFalse($engine->exists('sub'));
+		$this->throws(LookupException::class, 'Template not found');
+
+		$engine->render('sub');
+	}
+
 	public function testResolveReturnsResolvedTemplatePath(): void
 	{
 		$engine = Engine::create($this->templates());

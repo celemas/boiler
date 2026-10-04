@@ -86,7 +86,8 @@ final class Path
 	{
 		$realpath = realpath($path);
 
-		if ($realpath === false || strlen($realpath) === 0) {
+		// realpath() also resolves directories, which include() cannot load.
+		if ($realpath === false || !is_file($realpath)) {
 			$this->error = "Template not found: {$path}";
 
 			return;
