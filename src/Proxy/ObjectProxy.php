@@ -45,6 +45,15 @@ final class ObjectProxy implements Proxy
 		throw new RuntimeException('No such property');
 	}
 
+	/**
+	 * Backs `isset()`, `empty()`, and `??` on properties. Delegates to the
+	 * object, so its own `__isset()` applies and null counts as missing.
+	 */
+	public function __isset(string $name): bool
+	{
+		return isset($this->value->{$name});
+	}
+
 	public function __set(string $name, mixed $value): void
 	{
 		if ($this->hasPublicProperty($name)) {

@@ -6,8 +6,11 @@
 
 - `$this->section('name')` without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->has()` for optional sections.
 - `ArrayProxy` implements `IteratorAggregate` instead of `Iterator`, so its public `current()`, `key()`, `next()`, `rewind()`, and `valid()` methods are gone. `IteratorProxy` implements `IteratorAggregate` instead of extending `IteratorIterator`, and its `unwrap()` returns the wrapped `Traversable` itself instead of `?Iterator`. `foreach`, `count()`, array access, and the predicate methods work as before.
+- `isset($items['key'])` and `$items['key'] ?? $default` on a wrapped array treat a `null` value as missing, like a plain array. `exists()` still tests for the key alone.
 
 ### Fixed
+
+- `isset()`, `empty()`, and `??` on properties of wrapped objects now follow the object. `isset()` used to be false even for a set property, and `??` on an undeclared property threw instead of returning the fallback. The object's own `__isset()` is used when it has one.
 
 - Keys in loops over wrapped arrays and iterators are now escaped. They used to reach templates raw, so in an escaped render `<option value="<?= $key ?>">` let markup or a quote in a key through, for example from user-provided option values or category names. String keys of wrapped arrays and all keys of wrapped iterators are now wrapped like values; integer array keys stay integers. This is a breaking change for templates that compare keys with `===`, use them as offsets into unwrapped arrays, or pass them to `string` parameters under `strict_types`: use `$key->is()` or `$this->unwrap($key)`. `iterator_to_array()` on a wrapped array with string keys now fails; use `$this->unwrap()` instead. Wrapped arrays accept wrapped keys for array access and `exists()`.
 - Nested loops over the same wrapped array no longer end the outer loop after its first pass. This includes a partial that loops over a list it shares with the calling template's loop. Wrapped `IteratorAggregate` values such as `ArrayObject` get a fresh iterator for every loop, as in plain PHP; iterators and generators keep their single cursor.

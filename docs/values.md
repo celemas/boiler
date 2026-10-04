@@ -99,6 +99,26 @@ Integers, floats, booleans, and `null` are never wrapped, so they keep native co
 } ?>
 ```
 
+## Checking for values
+
+`isset()` and `??` work on wrapped objects and arrays as they do on plain ones: a missing property, a missing key, and `null` count as not set.
+
+```php
+<?php if (isset($user->avatar)) : ?>
+<?= $user->nickname ?? $user->name ?>
+<?= $row['label'] ?? 'Untitled' ?>
+```
+
+Use `exists()` on a wrapped array when a key with a `null` value should count as present.
+
+Wrapped strings and arrays are objects, though, so they are always truthy, even when empty, and `empty()` is false for them. Test the raw value instead:
+
+```php
+<?php if (!$subtitle->is('')) : ?>
+<?php if (count($items) > 0) : ?>
+<?php if ($this->unwrap($summary)) : ?>
+```
+
 ## Escape a value explicitly
 
 Use `$this->escape()` when you need to escape a value manually, or when you want to select a named escaper:

@@ -190,6 +190,32 @@ final class ObjectProxyTest extends TestCase
 		$this->assertSame('<b>boiler</b>', (string) $value->html()->sanitize());
 	}
 
+	public function testIssetFollowsTheObject(): void
+	{
+		$value = $this->objectProxy(new class {
+			public string $name = 'boiler';
+			public ?string $nickname = null;
+		});
+
+		$this->assertTrue(isset($value->name));
+		$this->assertFalse(isset($value->nickname));
+		$this->assertFalse(isset($value->missing));
+		$this->assertSame('fallback', $value->missing ?? 'fallback');
+	}
+
+	public function testIssetUsesTheObjectsOwnIsset(): void
+	{
+		$value = $this->objectProxy(new class {
+			public function __isset(string $name): bool
+			{
+				return $name === 'virtual';
+			}
+		});
+
+		$this->assertTrue(isset($value->virtual));
+		$this->assertFalse(isset($value->other));
+	}
+
 	#[TestDox('Getter throws I')]
 	public function testGetterThrowsI(): void
 	{

@@ -80,11 +80,16 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 		}
 	}
 
-	/** @param array-key|StringProxy $offset */
+	/**
+	 * Backs `isset()` and `??`, so a null value counts as missing, as with a
+	 * plain array. Use `exists()` to test for the key alone.
+	 *
+	 * @param array-key|StringProxy $offset
+	 */
 	#[Override]
 	public function offsetExists(mixed $offset): bool
 	{
-		return array_key_exists(self::key($offset), $this->array);
+		return isset($this->array[self::key($offset)]);
 	}
 
 	/** @param array-key|StringProxy $offset */

@@ -206,13 +206,15 @@ final class ArrayProxyTest extends TestCase
 		$this->assertSame(3, $arrval['key']);
 	}
 
-	public function testOffsetExistsUsesArrayKeyExistsSemantics(): void
+	public function testIssetTreatsNullAsMissingLikeAPlainArray(): void
 	{
-		$arrval = $this->arrayProxy([1, null]);
+		$arrval = $this->arrayProxy(['set' => 1, 'null' => null]);
 
-		$this->assertTrue($arrval->offsetExists(0));
-		$this->assertTrue($arrval->offsetExists(1));
-		$this->assertFalse($arrval->offsetExists(2));
+		$this->assertTrue(isset($arrval['set']));
+		$this->assertFalse(isset($arrval['null']));
+		$this->assertFalse(isset($arrval['missing']));
+		$this->assertSame('fallback', $arrval['null'] ?? 'fallback');
+		$this->assertTrue($arrval->exists('null'));
 	}
 
 	public function testIteration(): void
