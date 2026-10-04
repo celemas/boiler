@@ -30,6 +30,9 @@ jobs:
       - name: Analyze coverage
         run: composer coverage:analyze
 
+      - name: Run mutation tests
+        run: composer mutation -- --coverage=.infection/coverage --skip-initial-tests
+
       - name: Deploy code coverage report
         if: ${{ always() && forgejo.ref == 'refs/heads/main' }}
         run: deploy-code-coverage .coverage
