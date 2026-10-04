@@ -12,3 +12,5 @@ clover.xml
 composer.lock
 phpunit.xml
 psalm.xml
+.infection/
+infection.json5

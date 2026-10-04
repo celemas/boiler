@@ -189,6 +189,14 @@ composer ci
 
 `composer ci:full` additionally lints Markdown and requires Node (`npx`).
 
+Mutation testing with [Infection](https://infection.github.io/) is not part of `composer ci`. Run it separately with:
+
+```console
+composer mutation
+```
+
+Reports are written to `.infection/`.
+
 ## License
 
 This project is licensed under the [MIT license](LICENSE.md).
