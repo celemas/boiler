@@ -959,6 +959,34 @@ final class EngineTest extends TestCase
 		}
 	}
 
+	public function testTemplateMethodsStayOnTheirTemplate(): void
+	{
+		$engine = Engine::create($this->templates());
+		$first = $engine->template('who')->method('who', static fn(): string => 'first');
+		$second = $engine->template('who')->method('who', static fn(): string => 'second');
+
+		$this->assertSame('first', trim($first->render()));
+		$this->assertSame('second', trim($second->render()));
+
+		$this->throws(RenderException::class, "Method 'who' does not exist");
+
+		$engine->render('who');
+	}
+
+	public function testTemplateMethodsLayerOverEngineMethods(): void
+	{
+		$engine = Engine::create($this->templates());
+		$template = $engine->template('who');
+		$engine->method('who', static fn(): string => 'engine');
+
+		$this->assertSame('engine', trim($template->render()));
+
+		$template->method('who', static fn(): string => 'template');
+
+		$this->assertSame('template', trim($template->render()));
+		$this->assertSame('engine', trim($engine->render('who')));
+	}
+
 	public function testCustomTemplateMethod(): void
 	{
 		$engine = Engine::create($this->templates());

@@ -87,7 +87,7 @@ final class Engine
 	{
 		$file = $this->resolve($path);
 		$template = new Template($file, engine: $this);
-		$template->setMethods($this->methods);
+		$template->setMethods(new Methods($this->methods));
 
 		return $template;
 	}
