@@ -19,6 +19,8 @@ use Override;
  *
  * @psalm-type ArrayCallable = callable(mixed, mixed):int
  * @psalm-type FilterCallable = callable(mixed):mixed
+ * @psalm-type MapCallable = callable(mixed):mixed
+ * @psalm-type ReduceCallable = callable(mixed, mixed):mixed
  *
  * @template-implements ArrayAccess<array-key|StringProxy, mixed>
  * @template-implements IteratorAggregate<mixed, mixed>
@@ -150,7 +152,7 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 		), $this->wrapper);
 	}
 
-	/** @psalm-param ArrayCallable $callable */
+	/** @psalm-param MapCallable $callable */
 	public function map(callable $callable): self
 	{
 		return new self(array_map($callable, $this->array), $this->wrapper);
@@ -162,7 +164,7 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Pro
 		return new self(array_filter($this->array, $callable), $this->wrapper);
 	}
 
-	/** @psalm-param ArrayCallable $callable */
+	/** @psalm-param ReduceCallable $callable */
 	public function reduce(callable $callable, mixed $initial = null): mixed
 	{
 		return $this->wrapper->wrap(array_reduce($this->array, $callable, $initial));
