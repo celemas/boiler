@@ -890,6 +890,51 @@ final class EngineTest extends TestCase
 		}
 	}
 
+	public function testRenderErrorKeepsOriginalExceptionAndCode(): void
+	{
+		$original = new \DomainException('Gone', 404);
+		$engine = Engine::create($this->templates())->method('boom', static fn() => throw $original);
+
+		try {
+			$engine->render('methodthrows');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($original, $e->getPrevious());
+			$this->assertSame(404, $e->getCode());
+		}
+	}
+
+	public function testRenderErrorFallsBackToZeroForNonIntegerCodes(): void
+	{
+		$original = new class('Database error') extends \RuntimeException {
+			public function __construct(string $message)
+			{
+				parent::__construct($message);
+				$this->code = 'HY000';
+			}
+		};
+		$engine = Engine::create($this->templates())->method('boom', static fn() => throw $original);
+
+		try {
+			$engine->render('methodthrows');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($original, $e->getPrevious());
+			$this->assertSame(0, $e->getCode());
+		}
+	}
+
+	public function testMissingInsertRaisesRenderErrorWithLookupCause(): void
+	{
+		try {
+			Engine::create($this->templates())->render('insertmissing');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertInstanceOf(LookupException::class, $e->getPrevious());
+			$this->assertSame(self::DEFAULT_DIR . '/insertmissing.php', $e->location()?->path);
+		}
+	}
+
 	public function testRenderExceptionReportsLocation(): void
 	{
 		$path = self::DEFAULT_DIR . '/unknownmethod.php';

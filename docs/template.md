@@ -99,5 +99,5 @@ Boiler resets per-render state such as assigned layouts and captured sections be
 ## Error handling
 
 - Boiler raises `LookupException` when the template file or its directory does not exist.
-- Boiler raises `LookupException` when a standalone layout or insert cannot be resolved relative to the template directory.
-- Boiler raises `RenderException` when the template itself throws during render, for example because of a parse error or runtime error inside the template.
+- Boiler raises `LookupException` when the template's layout cannot be resolved relative to the template directory.
+- Boiler raises `RenderException` when anything throws while the template runs, for example a parse error, a runtime error, or an insert that cannot be resolved. `getPrevious()` returns the original exception. See [errors inside templates](rendering.md#errors-inside-templates).

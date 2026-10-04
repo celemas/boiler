@@ -20,10 +20,16 @@ final class RenderException extends RuntimeException implements TemplateExceptio
 			? "Template rendering error ({$path})"
 			: "Template rendering error at {$location}";
 
+		// Keep the original code so handlers that read it, e.g. for an HTTP
+		// status, still can; non-integer codes such as PDO's SQLSTATE cannot
+		// be passed on.
+		$code = $throwable->getCode();
+
 		return new self(
 			$message . ': ' . $throwable->getMessage(),
-			previous: $throwable,
-			location: $location,
+			is_int($code) ? $code : 0,
+			$throwable,
+			$location,
 		);
 	}
 }

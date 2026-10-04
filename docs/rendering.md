@@ -130,6 +130,24 @@ You can expect `LookupException` for invalid lookup-related input, including:
 
 You can expect `UnexpectedValueException` when the template path itself is empty or contains invalid characters.
 
+These exceptions reach you directly for the template you render and for its layouts. A lookup that fails while a template runs, such as `$this->insert()` with a missing template, arrives wrapped in `RenderException` like every other error raised there.
+
+## Errors inside templates
+
+Any exception thrown while a template runs reaches the caller as `RenderException`. That includes lookup errors from `$this->insert()`, errors from template methods, and exceptions thrown by your own objects. The message and `location()` name the template file and line, `getPrevious()` returns the original exception, and `getCode()` returns the original code when it is an integer.
+
+```php
+use Celema\Boiler\Exception\RenderException;
+
+try {
+    $html = $engine->render('page');
+} catch (RenderException $e) {
+    $original = $e->getPrevious();
+}
+```
+
+An error in a nested insert is wrapped once, by the innermost template, and passes through the outer templates unchanged.
+
 ## Custom resolvers
 
 If you need custom lookup behavior (for example tenant-based themes or non-standard naming rules), instantiate the engine with a custom resolver:
