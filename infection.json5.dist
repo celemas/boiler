@@ -123,6 +123,13 @@
 		// than one name, and checkpoints differ in name or location as well.
 		FunctionCallRemoval: {
 			ignore: ['Celema\\Boiler\\Sections::end'],
+			// See GreaterThanNegotiation.
+			ignoreSourceCodeByRegex: ['ob_end_clean\\(\\);'],
+		},
+		// Mutating the output buffer cleanup loops only makes them endless, so
+		// these mutants never fail a test and just wait for the timeout.
+		GreaterThanNegotiation: {
+			ignoreSourceCodeByRegex: ['while \\(ob_get_level\\(\\) > \\$level\\) \\{'],
 		},
 		ArrayItem: {
 			ignoreSourceCodeByRegex: [
