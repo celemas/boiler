@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
-use Celema\Boiler\Context;
 use Celema\Boiler\Engine;
 use Celema\Boiler\Exception\LogicException as BoilerLogicException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException as BoilerRuntimeException;
 use Celema\Boiler\Location;
 use Celema\Boiler\SlotRenderer;
-use Celema\Boiler\Template;
 use Stringable;
 
 final class SlotTest extends TestCase
@@ -60,7 +58,6 @@ final class SlotTest extends TestCase
 					return '<i>returned</i>';
 				}
 			},
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -75,7 +72,6 @@ final class SlotTest extends TestCase
 
 				return '<i>returned</i>';
 			},
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -87,7 +83,6 @@ final class SlotTest extends TestCase
 		// `print` returns 1, which must not end up in the output.
 		$slot = new SlotRenderer(
 			static fn(): int => print '<b>printed</b>',
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -180,49 +175,6 @@ final class SlotTest extends TestCase
 		$this->assertSame($level, ob_get_level());
 	}
 
-	public function testTemplateSlotRendersTemplatePerSlotCall(): void
-	{
-		$engine = Engine::create(self::DEFAULT_DIR);
-
-		$this->assertSame(
-			'<ul><li><input name="row-a" value="1"></li><li><input name="row-b" value="&lt;x&gt;"></li></ul>',
-			$this->fullTrim($engine->render('slottemplate', [
-				'rows' => [
-					['name' => 'a', 'value' => '1'],
-					['name' => 'b', 'value' => '<x>'],
-				],
-			])),
-		);
-	}
-
-	public function testTemplateSlotUsesCallerContext(): void
-	{
-		$engine = Engine::create(self::DEFAULT_DIR);
-
-		$this->assertSame(
-			'<div class="box">caller</div>',
-			$this->fullTrim($engine->render('slottemplatecontext', ['shared' => 'caller'])),
-		);
-	}
-
-	public function testMissingTemplateSlotReportsDeclarationLocation(): void
-	{
-		$engine = Engine::create(self::DEFAULT_DIR);
-
-		try {
-			$engine->render('slottemplatemissing');
-			$this->fail('RenderException was not thrown');
-		} catch (RenderException $e) {
-			$path = self::DEFAULT_DIR . '/slottemplatemissing.php';
-
-			$this->assertSame($path, $e->getFile());
-			$this->assertSame(1, $e->getLine());
-			$this->assertSame($path, $e->location()?->path);
-			$this->assertSame(1, $e->location()?->line);
-			$this->assertStringContainsString('missing-slot-template', $e->getMessage());
-		}
-	}
-
 	public function testSlotPreservesNestedRenderException(): void
 	{
 		$exception = new RenderException(
@@ -231,7 +183,6 @@ final class SlotTest extends TestCase
 		);
 		$slot = new SlotRenderer(
 			static fn(): never => throw $exception,
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -249,7 +200,6 @@ final class SlotTest extends TestCase
 		$exception = new BoilerRuntimeException('located error', location: $location);
 		$slot = new SlotRenderer(
 			static fn(): never => throw $exception,
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -268,7 +218,6 @@ final class SlotTest extends TestCase
 		$exception = new BoilerLogicException('located error', location: $location);
 		$slot = new SlotRenderer(
 			static fn(): never => throw $exception,
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -284,7 +233,6 @@ final class SlotTest extends TestCase
 	{
 		$slot = new SlotRenderer(
 			static fn(): never => throw new BoilerRuntimeException('unlocated error'),
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -302,7 +250,6 @@ final class SlotTest extends TestCase
 	{
 		$slot = new SlotRenderer(
 			static fn(): never => throw new \RuntimeException('coded error', 42),
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -322,7 +269,6 @@ final class SlotTest extends TestCase
 		};
 		$slot = new SlotRenderer(
 			static fn(): never => throw $exception,
-			$this->slotContext(),
 			new Location('/tmp/caller.php', 7),
 		);
 
@@ -333,15 +279,5 @@ final class SlotTest extends TestCase
 			$this->assertSame(0, $e->getCode());
 			$this->assertSame($exception, $e->getPrevious());
 		}
-	}
-
-	private function slotContext(): Context
-	{
-		return new class(
-			new Template(self::DEFAULT_DIR . '/empty.php', engine: Engine::create(self::DEFAULT_DIR)),
-			[],
-			[],
-			true,
-		) extends Context {};
 	}
 }

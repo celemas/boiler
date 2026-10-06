@@ -54,30 +54,11 @@ Because the inserted template has finished when the loop body runs, it can print
 
 You can leave the loop early: iterations that `continue`, `break`, `return`, or a caught exception skip stay empty. The render fails if a loop never runs, or if you break out of a loop kept in a variable, such as `$rows = $this->each(...)`. The rest of the template would otherwise end up inside the pending iteration.
 
-## Template slots
-
-Use `Slot::template()` when a slot only renders another template:
-
-```php
-<?php
-use Celema\Boiler\Slot;
-
-foreach ($fields as $field) {
-    $this->insert(
-        'field-wrapper',
-        context: ['field' => $field],
-        slot: Slot::template($field->template, context: ['field' => $field]),
-    );
-}
-```
-
-The slot template receives the caller context, the `Slot::template()` context, and the data passed to `$this->slot([...])`. Later values override earlier values.
-
 ## Slot data and escaping
 
-The array you pass to `$this->slot([...])` is handed to the closure as-is or merged into the template slot context. Like every Boiler template, those values are **raw**, so escape them with `$this->escape()` when you output them. Slots keep the caller's render mode: in an escaped render `<?= $value ?>` still auto-escapes; in an [unescaped](values.md) render it does not.
+The array you pass to `$this->slot([...])` is handed to the closure as-is. Like every Boiler template, those values are **raw**, so escape them with `$this->escape()` when you output them. Slots keep the caller's render mode: in an escaped render `<?= $value ?>` still auto-escapes; in an [unescaped](values.md) render it does not.
 
-A slot closure can also `return` markup instead of echoing it, and can `insert()` further templates or use the engine's other helpers — `$this` is the calling template throughout. A template slot does not receive the slot again; use a closure if you need to pass a nested slot.
+A slot closure can also `return` markup instead of echoing it, and can `insert()` further templates or use the engine's other helpers — `$this` is the calling template throughout.
 
 ## Optional slots
 

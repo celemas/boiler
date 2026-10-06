@@ -14,8 +14,7 @@ use Throwable;
 final class SlotRenderer
 {
 	public function __construct(
-		private readonly Closure|Slot $slot,
-		private readonly Context $context,
+		private readonly Closure $slot,
 		private readonly Location $location,
 	) {}
 
@@ -29,7 +28,7 @@ final class SlotRenderer
 
 			try {
 				/** @psalm-suppress MixedAssignment slot may echo, return markup, or both */
-				$returned = $this->renderSlot($data);
+				$returned = ($this->slot)($data);
 			} catch (RuntimeException|LogicException $e) {
 				// Located errors, including nested render errors, pass through unchanged.
 				if ($e->location() !== null) {
@@ -51,18 +50,6 @@ final class SlotRenderer
 				ob_end_clean();
 			}
 		}
-	}
-
-	/** @param array<array-key, mixed> $data */
-	private function renderSlot(array $data): mixed
-	{
-		if ($this->slot instanceof Closure) {
-			return ($this->slot)($data);
-		}
-
-		$this->context->insert($this->slot->path(), array_merge($this->slot->context(), $data));
-
-		return null;
 	}
 
 	private function wrapException(Throwable $exception): RuntimeException

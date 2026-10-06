@@ -156,20 +156,19 @@ abstract class Context
 	 *
 	 * If no context is passed it shares the context of the calling template.
 	 *
-	 * The optional slot is a block of markup the inserted template can place,
-	 * and repeat, by calling `$this->slot([...])`. A closure receives the per-call
-	 * data as its argument and either echoes or returns markup. A `Slot::template()`
-	 * slot renders another template with the per-call data merged into its context.
-	 * Slot values are raw, so escape them like any other template data.
+	 * The optional slot is a closure the inserted template can render, and
+	 * repeat, by calling `$this->slot([...])`. It receives the per-call data as
+	 * its argument and either echoes or returns markup. Slot values are raw,
+	 * so escape them like any other template data.
 	 *
 	 * @param non-empty-string $path
 	 */
-	public function insert(string $path, array $context = [], Closure|Slot|null $slot = null): void
+	public function insert(string $path, array $context = [], ?Closure $slot = null): void
 	{
 		$template = $this->inserted($path);
 
 		if ($slot !== null) {
-			$template->setSlot(new SlotRenderer($slot, $this, $this->location()));
+			$template->setSlot(new SlotRenderer($slot, $this->location()));
 		}
 
 		echo $this->renderInserted($template, $this->get($context));

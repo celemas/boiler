@@ -70,6 +70,7 @@
 				'Celema\\Boiler\\Context::unwrap',
 				'Celema\\Boiler\\Context::layout',
 				'Celema\\Boiler\\Context::each',
+				'Celema\\Boiler\\Context::insert',
 				'Celema\\Boiler\\Context::slot',
 				'Celema\\Boiler\\Context::hasSlot',
 				'Celema\\Boiler\\Context::begin',

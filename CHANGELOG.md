@@ -14,6 +14,10 @@
 - `Engine::method()` and `Template::method()` reject the names of built-in template helpers, such as `insert`, `section`, `escape`, `slot`, or `body`, in any letter case, with `UnexpectedValueException`. A method registered under one of them was never reachable, because the helper took precedence; `body` worked in templates but not in layouts.
 - `isset($items['key'])` and `$items['key'] ?? $default` on a wrapped array treat a `null` value as missing, like a plain array. `exists()` still tests for the key alone.
 
+### Removed
+
+- `Slot::template()` and the `Slot` class are gone; `insert()` accepts only a closure as `slot`. Render the template from a closure, `slot: fn (array $data) => $this->insert('control', [...$context, ...$data])`, or from an `each()` loop.
+
 ### Fixed
 
 - Keys in loops over wrapped arrays and iterators are now escaped. They used to reach templates raw, so in an escaped render `<option value="<?= $key ?>">` let markup or a quote in a key through, for example from user-provided option values or category names. String keys of wrapped arrays and all keys of wrapped iterators are now wrapped like values; integer array keys stay integers. This is a breaking change for templates that compare keys with `===`, use them as offsets into unwrapped arrays, or pass them to `string` parameters under `strict_types`: use `$key->is()` or `$this->unwrap($key)`. `iterator_to_array()` on a wrapped array with string keys now fails; use `$this->unwrap()` instead. Wrapped arrays accept wrapped keys for array access and `exists()`.
