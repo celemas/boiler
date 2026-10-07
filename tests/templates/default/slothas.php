@@ -1,1 +1,1 @@
-<?php $this->insert('slotdefault', slot: function (): void { echo 'provided'; }); ?>
+<?php foreach ($this->each('slotdefault') as $_): ?>provided<?php endforeach; ?>

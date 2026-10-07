@@ -58,7 +58,6 @@
 				'Celema\\Boiler\\BaseTemplate::getContent',
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
 				'Celema\\Boiler\\Sections::end',
-				'Celema\\Boiler\\SlotRenderer::render',
 				'Celema\\Boiler\\SlotLoop::finish',
 			],
 		},

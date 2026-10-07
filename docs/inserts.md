@@ -71,4 +71,4 @@ Read [displaying values](values.md) for details.
 
 ## Slots
 
-To let an inserted template place and repeat a block of markup you supply at the call site, pass a `slot` closure, or insert it with `each()` and write the block as a loop body. See [slots](slots.md).
+To let an inserted template place and repeat a block of markup you supply at the call site, insert it with `each()` and write the block as a loop body. See [slots](slots.md).

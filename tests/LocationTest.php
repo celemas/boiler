@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Location;
 
@@ -37,6 +38,22 @@ final class LocationTest extends TestCase
 		$this->assertNull($exception->location()?->line);
 		$this->assertStringContainsString(
 			"Template rendering error ({$path}): Broken",
+			$exception->getMessage(),
+		);
+	}
+
+	public function testRenderExceptionKeepsLocationOfLocatedError(): void
+	{
+		// For example an error that a template method raises while it renders another template.
+		$location = new Location('/templates/partial.php', 3);
+		$exception = RenderException::fromThrowable(
+			'/templates/page.php',
+			new LogicException('Broken', location: $location),
+		);
+
+		$this->assertSame($location, $exception->location());
+		$this->assertStringContainsString(
+			'Template rendering error at /templates/partial.php:3: Broken',
 			$exception->getMessage(),
 		);
 	}

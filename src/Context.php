@@ -9,7 +9,6 @@ use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
-use Closure;
 use Generator;
 use Stringable;
 
@@ -156,22 +155,11 @@ abstract class Context
 	 *
 	 * If no context is passed it shares the context of the calling template.
 	 *
-	 * The optional slot is a closure the inserted template can render, and
-	 * repeat, by calling `$this->slot([...])`. It receives the per-call data as
-	 * its argument and either echoes or returns markup. Slot values are raw,
-	 * so escape them like any other template data.
-	 *
 	 * @param non-empty-string $path
 	 */
-	public function insert(string $path, array $context = [], ?Closure $slot = null): void
+	public function insert(string $path, array $context = []): void
 	{
-		$template = $this->inserted($path);
-
-		if ($slot !== null) {
-			$template->setSlot(new SlotRenderer($slot, $this->location()));
-		}
-
-		echo $this->renderInserted($template, $this->get($context));
+		echo $this->renderInserted($this->inserted($path), $this->get($context));
 	}
 
 	/**
@@ -208,7 +196,7 @@ abstract class Context
 	}
 
 	/**
-	 * Renders the slot passed to this template via `insert(..., slot: ...)`.
+	 * Renders the slot of a template inserted with `each()`.
 	 *
 	 * Call it once for a simple slot, or once per row to repeat the block with
 	 * different data. Throws when the template was inserted without a slot;

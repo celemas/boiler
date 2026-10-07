@@ -4,7 +4,7 @@
 
 ### Added
 
-- `$this->each('partial', [...])` inserts a template and turns the body of a `foreach` loop into its slot, so a slot no longer needs a closure. The inserted template renders first; every `$this->slot([...])` call in it becomes one iteration of the loop, with that data wrapped like other template values, and the iteration's output takes the place of the call. Iterations skipped by `break`, `return`, or an exception stay empty. A loop that never runs, a `break` out of a loop kept in a variable, and `slot()` inside a section capture fail the render. `each` is now a reserved template method name.
+- `$this->each('partial', [...])` inserts a template and turns the body of a `foreach` loop into its slot. The inserted template renders first; every `$this->slot([...])` call in it becomes one iteration of the loop, with that data wrapped like other template values, and the iteration's output takes the place of the call. Iterations skipped by `break`, `return`, or an exception stay empty. A loop that never runs, a `break` out of a loop kept in a variable, and `slot()` inside a section capture fail the render. `each` is now a reserved template method name.
 
 ### Changed
 
@@ -16,7 +16,7 @@
 
 ### Removed
 
-- `Slot::template()` and the `Slot` class are gone; `insert()` accepts only a closure as `slot`. Render the template from a closure, `slot: fn (array $data) => $this->insert('control', [...$context, ...$data])`, or from an `each()` loop.
+- Closure slots, `Slot::template()`, and the `Slot` class are gone, and `insert()` no longer takes a `slot` argument. Write the slot as the body of an `each()` loop instead: `foreach ($this->each('rows', [...]) as $row) { ... }`.
 
 ### Fixed
 

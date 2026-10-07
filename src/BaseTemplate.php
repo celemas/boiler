@@ -14,7 +14,7 @@ abstract class BaseTemplate
 {
 	private ?LayoutSpec $layout = null;
 	private Methods $methods;
-	private SlotRenderer|SlotLoop|null $slot = null;
+	private ?SlotLoop $slot = null;
 
 	/** @var list<SlotLoop> loops started by this template's current render */
 	private array $loops = [];
@@ -110,13 +110,13 @@ abstract class BaseTemplate
 	}
 
 	/** @internal */
-	public function setSlot(SlotRenderer|SlotLoop $slot): void
+	public function setSlot(SlotLoop $slot): void
 	{
 		$this->slot = $slot;
 	}
 
 	/** @internal */
-	public function slot(): SlotRenderer|SlotLoop|null
+	public function slot(): ?SlotLoop
 	{
 		return $this->slot;
 	}
