@@ -14,16 +14,15 @@ Section and slot helpers are renamed, closure slots are gone, and layouts print 
 | `<?= $this->body() ?>` in a layout | `<?= $this->slot() ?>` |
 | `<?php $this->slot() ?>` | `<?= $this->slot() ?>` |
 | `$this->insert('card', [...], slot: function () { ?>…<?php })` | `$this->component('card', [...])` … `$this->end()` |
-| `$this->insert('rows', [...], slot: function (array $row) { ?>…<?php })` | `foreach ($this->each('rows', [...]) as $row)` … `endforeach` |
-| `slot: Slot::template('control', [...])` | `$this->insert('control', $row)` in the body of an `each()` loop |
+| `$this->insert('rows', [...], slot: function (array $row) { ?>…<?php })` | a `foreach` loop at the call site with `$this->component('row')` … `$this->end()` per row |
+| `slot: Slot::template('control', [...])` | `'control'` passed as data, which the partial inserts per row with `$this->insert($control, [...])` |
 | `LayoutContext` or `TemplateContext` type hints | `Context` |
 
-A leftover `slot:` argument fails the render as an unknown named parameter, and a leftover reading `section('title')` opens a capture that is never closed, which fails it too. A leftover `<?php $this->slot() ?>` prints nothing. Without a rename, section output changes in two cases: repeated `append()` calls print in call order, and `section()` after `append()` or `prepend()` keeps the additions. Custom template methods named `component`, `each`, `hasSection`, or `yield` are now rejected.
+A leftover `slot:` argument fails the render as an unknown named parameter, and a leftover reading `section('title')` opens a capture that is never closed, which fails it too. A leftover `<?php $this->slot() ?>` prints nothing. Without a rename, section output changes in two cases: repeated `append()` calls print in call order, and `section()` after `append()` or `prepend()` keeps the additions. Custom template methods named `component`, `hasSection`, or `yield` are now rejected.
 
 ### Added
 
 - `$this->component('partial', [...])` … `$this->end()` inserts a template with the block in between as its slot, which the template prints with `<?= $this->slot() ?>`. The block runs at the call site before the template renders, so it uses the caller's variables. Sections and components share one stack of open blocks closed by `end()`, and `end('partial')` checks the name. A block of only whitespace counts as no slot for `hasSlot()`. `component` is now a reserved template method name.
-- `$this->each('partial', [...])` inserts a template and turns the body of a `foreach` loop into its slot. The inserted template renders first; every `$this->slot([...])` call in it becomes one iteration of the loop, with that data wrapped like other template values, and the iteration's output takes the place of the call. Iterations skipped by `break`, `return`, or an exception stay empty. A loop that never runs and a `break` out of a loop kept in a variable fail the render. `slot()` works anywhere in the template, including section captures and component blocks; functions applied to its result, such as `trim()` or case filters, see a placeholder. `each` is now a reserved template method name.
 - Section capture blocks can nest, so an inserted template that appends its script works inside a section. `$this->end()` closes the innermost open section; `$this->end('name')` also checks that it closes that section and fails the render at that line otherwise. A template can only close the sections it opened itself.
 
 ### Changed
@@ -39,7 +38,7 @@ A leftover `slot:` argument fails the render as an unknown named parameter, and 
 
 ### Removed
 
-- Closure slots, `Slot::template()`, and the `Slot` class are gone, and `insert()` no longer takes a `slot` argument. Pass the block with `component()` … `end()` instead, or write it as the body of an `each()` loop when the template repeats it with per-row data: `foreach ($this->each('rows', [...]) as $row) { ... }`.
+- Closure slots, `Slot::template()`, and the `Slot` class are gone, `insert()` no longer takes a `slot` argument, and `slot()` no longer takes data. Pass a block with `component()` … `end()` instead. To repeat a block per row, write the loop at the call site with a component per row, or pass the name of a row template to the partial, which inserts it per row. See [slots](docs/slots.md#repeat-a-block).
 - The `TemplateContext` class is gone. Templates run in `Context`, which is now final; replace `TemplateContext` type hints, such as `/** @var TemplateContext $this */`, with `Context`. The internal `BaseTemplate` class is merged into `Template`.
 
 ### Fixed

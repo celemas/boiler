@@ -155,7 +155,6 @@ Template helpers available via `$this` inside templates:
 - `$this->layout('layout')`, and `<?= $this->slot() ?>` in the layout to print the page
 - `$this->insert('partial', ['value' => '...'])`
 - `$this->component('partial', ['value' => '...'])` … `$this->end()` to pass the block in between, which the partial prints with `<?= $this->slot() ?>`
-- `foreach ($this->each('partial', ['value' => '...']) as $row)` to repeat the loop body wherever the partial calls `<?= $this->slot($row) ?>`
 - `$this->hasSlot()` to check whether there is a slot to print
 - `$this->section('name')`, `$this->append('name')`, or `$this->prepend('name')` … `$this->end()` to write a section
 - `<?= $this->yield('name', 'default') ?>` / `$this->hasSection('name')` to print or check a section

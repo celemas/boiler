@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Celema\Boiler;
 
-use Closure;
-
 /** @internal */
 final class Section
 {
@@ -27,14 +25,6 @@ final class Section
 	public function append(string $content, int $level): void
 	{
 		$this->appended[$level][] = $content;
-	}
-
-	/** @param Closure(string): string $map */
-	public function map(Closure $map): void
-	{
-		$this->value = $map($this->value);
-		$this->prepended = array_map(static fn(array $parts): array => array_map($map, $parts), $this->prepended);
-		$this->appended = array_map(static fn(array $parts): array => array_map($map, $parts), $this->appended);
 	}
 
 	public function empty(): bool

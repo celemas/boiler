@@ -42,6 +42,14 @@ final class LocationTest extends TestCase
 		);
 	}
 
+	public function testLocatedErrorReportsTemplateFileAndLine(): void
+	{
+		$exception = new LogicException('Broken', location: new Location('/templates/partial.php', 3));
+
+		$this->assertSame('/templates/partial.php', $exception->getFile());
+		$this->assertSame(3, $exception->getLine());
+	}
+
 	public function testRenderExceptionKeepsLocationOfLocatedError(): void
 	{
 		// For example an error that a template method raises while it renders another template.

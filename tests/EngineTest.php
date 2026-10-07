@@ -1038,6 +1038,20 @@ final class EngineTest extends TestCase
 		}
 	}
 
+	public function testRenderExceptionReportsLineOfErrorThrownInTemplate(): void
+	{
+		$path = self::DEFAULT_DIR . '/throwing.php';
+
+		try {
+			Engine::create($this->templates())->render('throwing');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(2, $e->location()?->line);
+			$this->assertStringEndsWith("at {$path}:2: Broken", $e->getMessage());
+		}
+	}
+
 	public function testRenderExceptionReportsInsertedLocation(): void
 	{
 		$path = self::DEFAULT_DIR . '/closesection.php';

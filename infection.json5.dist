@@ -57,14 +57,7 @@
 			ignore: [
 				'Celema\\Boiler\\Template::getContent',
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
-				'Celema\\Boiler\\SlotLoop::finish',
 			],
-		},
-
-		// PHP turns a numeric string key into an integer itself; the cast of
-		// the matched placeholder index is for Psalm.
-		CastInt: {
-			ignore: ['Celema\\Boiler\\SlotLoop::fill'],
 		},
 
 		// Templates run in the scope of their context object, so the template
@@ -73,7 +66,6 @@
 			ignore: [
 				'Celema\\Boiler\\Context::unwrap',
 				'Celema\\Boiler\\Context::layout',
-				'Celema\\Boiler\\Context::each',
 				'Celema\\Boiler\\Context::component',
 				'Celema\\Boiler\\Context::insert',
 				'Celema\\Boiler\\Context::slot',
@@ -87,20 +79,17 @@
 			],
 		},
 
-		// The default exception code is not part of the contract, and any
-		// length of the random placeholder token keeps it unique.
+		// The default exception code is not part of the contract.
 		DecrementInteger: {
 			ignore: [
 				'Celema\\Boiler\\Exception\\LogicException::__construct',
 				'Celema\\Boiler\\Exception\\RuntimeException::__construct',
-				'Celema\\Boiler\\SlotLoop::__construct',
 			],
 		},
 		IncrementInteger: {
 			ignore: [
 				'Celema\\Boiler\\Exception\\LogicException::__construct',
 				'Celema\\Boiler\\Exception\\RuntimeException::__construct',
-				'Celema\\Boiler\\SlotLoop::__construct',
 			],
 		},
 

@@ -26,7 +26,7 @@ final class Blocks
 	public function open(string $kind, string $name, Location $location, Closure $close): void
 	{
 		ob_start();
-		$this->open[] = new Block($kind, $name, $location, ob_get_level(), $close);
+		$this->open[] = new Block($kind, $name, $location, $close);
 	}
 
 	/**
@@ -44,30 +44,13 @@ final class Blocks
 			throw new LogicException("`end('{$name}')` does not match the open {$block->kind} `{$block->name}`");
 		}
 
-		// Another buffer is active, for example the one of an `each()` loop
-		// body, so the captured output would not be the block's own.
-		if ($block->level !== ob_get_level()) {
-			throw new LogicException(
-				ucfirst($block->kind)
-					. " `{$block->name}` cannot be closed here: it was opened outside the current"
-					. ' output buffer or `each()` loop body',
-			);
-		}
-
 		array_pop($this->open);
 		($block->close)((string) ob_get_clean());
 	}
 
-	/** The number of open blocks, to check later that the blocks opened since are closed. */
-	public function depth(): int
+	public function assertClosed(): void
 	{
-		return count($this->open);
-	}
-
-	public function assertClosed(int $depth = 0): void
-	{
-		// The outermost block opened since the given depth.
-		$block = $this->open[$depth] ?? null;
+		$block = $this->open[0] ?? null;
 
 		if ($block === null) {
 			return;

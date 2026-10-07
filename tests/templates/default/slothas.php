@@ -1,1 +1,1 @@
-<?php foreach ($this->each('slotdefault') as $_): ?>provided<?php endforeach; ?>
+<?php $this->component('slotdefault') ?>provided<?php $this->end() ?>

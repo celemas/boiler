@@ -15,10 +15,8 @@ final class Template
 {
 	private ?LayoutSpec $layout = null;
 	private Methods $methods;
-	private ?Slot $slot = null;
-
-	/** @var list<SlotLoop> loops started by this template's current render */
-	private array $loops = [];
+	/** what the template prints with `$this->slot()`: a layout's page or a component's block */
+	private ?string $slot = null;
 	private readonly bool $ownsSections;
 
 	public private(set) Engine $engine {
@@ -119,29 +117,15 @@ final class Template
 	}
 
 	/** @internal */
-	public function setSlot(Slot $slot): void
+	public function setSlot(string $slot): void
 	{
 		$this->slot = $slot;
 	}
 
 	/** @internal */
-	public function slot(): ?Slot
+	public function slot(): ?string
 	{
 		return $this->slot;
-	}
-
-	/** @internal */
-	public function addLoop(SlotLoop $loop): void
-	{
-		$this->loops[] = $loop;
-	}
-
-	/** @internal */
-	public function assertLoopsFinished(): void
-	{
-		foreach ($this->loops as $loop) {
-			$loop->assertFinished();
-		}
 	}
 
 	/** @param list<class-string> $trusted */
@@ -183,11 +167,7 @@ final class Template
 		$templateContext = new Context($this, $context, $trusted, $autoescape);
 
 		/** @mago-expect lint:prefer-static-closure Closure::call() binds $this to the template context at runtime. */
-		$load = function (
-			string $____template_path____,
-			array $____template_context____,
-			Template $____template_owner____,
-		): void {
+		$load = function (string $____template_path____, array $____template_context____): void {
 			// Must stay non-static so Closure::call() can bind $this to the template context.
 			// extract() skips names that already exist, so the parameter names
 			// are obscure to leave common names such as `$context` to the caller.
@@ -195,11 +175,6 @@ final class Template
 
 			/** @psalm-suppress UnresolvableInclude */
 			include $____template_path____;
-
-			// While the template's variables still exist: a loop kept in one
-			// would otherwise finish when they are released, after the rest
-			// of the template's output went into its capture buffer.
-			$____template_owner____->assertLoopsFinished();
 		};
 
 		$level = ob_get_level();
@@ -214,7 +189,6 @@ final class Template
 				$autoescape
 					? $templateContext->get()
 					: $context,
-				$this,
 			);
 			$this->blocks->assertClosed();
 
@@ -226,14 +200,6 @@ final class Template
 		} catch (Throwable $e) {
 			throw RenderException::fromThrowable($this->path, $e);
 		} finally {
-			// A loop kept beyond this render must not touch the output buffers
-			// of whatever renders when it is resumed or released.
-			foreach ($this->loops as $loop) {
-				$loop->close();
-			}
-
-			$this->loops = [];
-
 			while (ob_get_level() > $level) {
 				ob_end_clean();
 			}
@@ -264,7 +230,7 @@ final class Template
 				$methods = $template->methods();
 				$template = new Template($file, $this->sections, $template->engine);
 				$template->setMethods($methods);
-				$template->setSlot(new FixedSlot($content));
+				$template->setSlot($content);
 				$this->sections->setLevel(++$level);
 
 				$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);

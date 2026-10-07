@@ -61,16 +61,6 @@ final class SlotTest extends TestCase
 		$this->assertSame('<div>fallback</div><div>given</div>', $this->fullTrim($engine->render('componentempty')));
 	}
 
-	public function testComponentIgnoresSlotDataSoTemplatesForEachWorkToo(): void
-	{
-		$engine = Engine::create(self::DEFAULT_DIR);
-
-		$this->assertSame(
-			'<ul><li><b>row</b></li><li><b>row</b></li></ul>',
-			$this->fullTrim($engine->render('componentrows', ['rows' => [['name' => 'a'], ['name' => 'b']]])),
-		);
-	}
-
 	public function testComponentWithScriptWorksInsideSection(): void
 	{
 		$engine = Engine::create(self::DEFAULT_DIR);
@@ -78,16 +68,6 @@ final class SlotTest extends TestCase
 		$this->assertSame(
 			'<div class="widget"><p>body</p></div><script src="/widget.js"></script>',
 			$this->fullTrim($engine->render('componentinsection')),
-		);
-	}
-
-	public function testEachTemplateCanPassItsSlotToComponent(): void
-	{
-		$engine = Engine::create(self::DEFAULT_DIR);
-
-		$this->assertSame(
-			'<div class="box"><b>a</b></div><div class="box"><b>&lt;x&gt;</b></div>',
-			$this->fullTrim($engine->render('eachcomponent', ['rows' => [['name' => 'a'], ['name' => '<x>']]])),
 		);
 	}
 

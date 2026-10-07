@@ -19,14 +19,13 @@ The main differences from Plates are:
 
 ## Composition at a glance
 
-A template wraps a page, a block, or a row with `slot()`, and any template can write sections that a layout prints with `yield()`:
+A template prints the page or block it wraps with `slot()`, and any template can write sections that a layout prints with `yield()`:
 
 | To | Write | Print | Blade |
 | --- | --- | --- | --- |
 | Wrap a page in a layout | `$this->layout('layout')` | `<?= $this->slot() ?>` in the layout | `@extends('layout')` with `@yield('content')`, or a component layout with `{{ $slot }}` |
 | Include a partial | `$this->insert('card', ['title' => 'News'])` | — | `@include('card', ['title' => 'News'])` |
 | Pass a block into a partial | `$this->component('card')` … `$this->end()` | `<?= $this->slot() ?>` in the partial | `<x-card>` … `</x-card>`, `{{ $slot }}` |
-| Repeat the caller's block with the partial's data | `foreach ($this->each('rows') as $row)` | `<?= $this->slot($row) ?>` in the partial | none |
 | Write a named region from any template | `$this->section('title')`, `append()`, or `prepend()` … `$this->end()` | `<?= $this->yield('title', 'default') ?>` | `@section`, `@push`, `@prepend`, `@yield`, `@stack` |
 | Check a named region | — | `$this->hasSection('title')` | `@hasSection('title')` |
 

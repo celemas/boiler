@@ -79,4 +79,4 @@ Read [displaying values](values.md) for details.
 <?php $this->end() ?>
 ```
 
-When the inserted template should repeat the block with its own data per row, insert it with `each()` and write the block as the body of a `foreach` loop. See [slots](slots.md).
+To repeat a block for every item of a list, see [slots](slots.md#repeat-a-block).

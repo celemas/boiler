@@ -10,7 +10,6 @@ use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Closure;
-use Generator;
 use Stringable;
 
 /** @api */
@@ -182,7 +181,7 @@ final class Context
 			$path,
 			$this->location(),
 			function (string $content) use ($template, $context): void {
-				$template->setSlot(new FixedSlot($content));
+				$template->setSlot($content);
 
 				echo $this->renderInserted($template, $context);
 			},
@@ -190,55 +189,19 @@ final class Context
 	}
 
 	/**
-	 * Includes another template and turns the body of a foreach loop into its slot.
+	 * Returns what this template wraps: the page in a layout, or the block
+	 * passed with `component()`.
 	 *
-	 * The inserted template renders first. Each of its `$this->slot([...])`
-	 * calls becomes one iteration of the loop, with the passed data wrapped
-	 * like template context values, and the iteration's output takes the
-	 * place of the call. The result is printed when the loop ends:
-	 *
-	 *     foreach ($this->each('rows', ['items' => $items]) as $row) { ... }
-	 *
-	 * Iterations that a `break`, `return`, or exception skips stay empty. The
-	 * render fails if the loop never runs, or if it is kept in a variable and
-	 * left with `break`.
-	 *
-	 * @param non-empty-string $path
-	 *
-	 * @return Generator<int, array<array-key, mixed>, mixed, void>
+	 * Throws when the template has no slot, such as one inserted with `insert()`.
 	 */
-	public function each(string $path, array $context = []): Generator
+	public function slot(): string
 	{
-		$template = $this->inserted($path);
-		$loop = new SlotLoop($this->location(), $this->template->blocks, $this->template->sections);
-		$context = $this->get($context);
-
-		$template->setSlot($loop);
-		$this->template->addLoop($loop);
-
-		return $loop->run(
-			fn(): string => $this->renderInserted($template, $context),
-			fn(array $data): array => $this->autoescape ? $this->wrapAll($data) : $data,
-		);
-	}
-
-	/**
-	 * Returns what this template wraps: the page in a layout, the block passed
-	 * with `component()`, or a row of the loop body in a template inserted
-	 * with `each()`.
-	 *
-	 * An `each()` template calls it once per row with that row's data. Fixed
-	 * content ignores the data, so the same template works with both. Throws
-	 * when the template has no slot, such as one inserted with `insert()`.
-	 *
-	 * @param array<array-key, mixed> $data
-	 */
-	public function slot(array $data = []): string
-	{
-		return ($this->template->slot() ?? throw new RuntimeException(
+		$slot = $this->template->slot() ?? throw new RuntimeException(
 			'No slot was provided for this template',
 			location: $this->location(),
-		))->render($data);
+		);
+
+		return $this->hasSlot() ? $slot : '';
 	}
 
 	/**
@@ -247,7 +210,7 @@ final class Context
 	 */
 	public function hasSlot(): bool
 	{
-		return $this->template->slot()?->filled() ?? false;
+		return trim($this->template->slot() ?? '') !== '';
 	}
 
 	/**
