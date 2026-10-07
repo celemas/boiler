@@ -7,28 +7,24 @@ namespace Celema\Boiler;
 /** @internal */
 final class Section
 {
-	/** @var list<string> */
+	/** @var array<int, list<string>> per layout level, each in call order */
 	private array $prepended = [];
 
-	/** @var list<string> */
+	/** @var array<int, list<string>> per layout level, each in call order */
 	private array $appended = [];
 
 	public function __construct(
-		private string $value,
+		private string $value = '',
 	) {}
 
-	public function prepend(string $content): self
+	public function prepend(string $content, int $level): void
 	{
-		$this->prepended[] = $content;
-
-		return $this;
+		$this->prepended[$level][] = $content;
 	}
 
-	public function append(string $content): self
+	public function append(string $content, int $level): void
 	{
-		array_unshift($this->appended, $content);
-
-		return $this;
+		$this->appended[$level][] = $content;
 	}
 
 	public function empty(): bool
@@ -36,9 +32,19 @@ final class Section
 		return $this->value === '';
 	}
 
+	/**
+	 * The additions of a layout stay closer to the main content than those of
+	 * the template it wraps: page prepends, layout prepends, main content,
+	 * layout appends, page appends.
+	 */
 	public function get(): string
 	{
-		return implode('', array_merge($this->prepended, [$this->value], $this->appended));
+		$prepended = $this->prepended;
+		$appended = $this->appended;
+		ksort($prepended);
+		krsort($appended);
+
+		return implode('', array_merge(...$prepended)) . $this->value . implode('', array_merge(...$appended));
 	}
 
 	public function setValue(string $value): void

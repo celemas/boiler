@@ -579,6 +579,44 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testAdditionsKeepCallOrderAndLayoutAdditionsStayCloserToMainContent(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'[page-prepend-1][partial-prepend][page-prepend-2][layout-prepend][main]'
+				. '[layout-append-1][layout-append-2][page-append-1][partial-append][page-append-2]',
+			$this->fullTrim($engine->render('addorder')),
+		);
+	}
+
+	public function testLayoutOfInsertedTemplateLeavesAdditionsOfCallerInPlace(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'[page-prepend][partial-layout-prepend][main][partial-layout-append][page-append]',
+			$this->fullTrim($engine->render('addorderinsertlayout')),
+		);
+	}
+
+	public function testFailedLayoutOfInsertedTemplateLeavesAdditionsOfCallerInPlace(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'fallback[page-prepend][failed-layout-prepend][main][page-append]',
+			$this->fullTrim($engine->render('addorderfailing')),
+		);
+	}
+
+	public function testSectionSetsOnlyMainContentAndKeepsAdditions(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[prepend][main][append]', $this->fullTrim($engine->render('sectionkeepsadditions')));
+	}
+
 	public function testSectionsCanNest(): void
 	{
 		$engine = Engine::create($this->templates());

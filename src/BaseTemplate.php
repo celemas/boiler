@@ -249,27 +249,37 @@ abstract class BaseTemplate
 		string $content,
 		bool $autoescape,
 	): string {
-		while (($layout = $template->layout) !== null) {
-			try {
-				$file = $template->engine->resolve($layout->path);
-			} catch (LookupException|UnexpectedValueException $e) {
-				self::throwLayoutException($layout, $e);
+		// An inserted template can have layouts too; the template that
+		// inserts it continues at its own level.
+		$base = $this->sections->level();
+		$level = $base;
+
+		try {
+			while (($layout = $template->layout) !== null) {
+				try {
+					$file = $template->engine->resolve($layout->path);
+				} catch (LookupException|UnexpectedValueException $e) {
+					self::throwLayoutException($layout, $e);
+				}
+
+				$methods = $template->methods();
+				$template = new Layout(
+					$file,
+					$content,
+					$this->sections,
+					$template->engine,
+				);
+				$template->setMethods($methods);
+				$this->sections->setLevel(++$level);
+
+				$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);
+				$content = $rendered->content;
+				// The next layout builds on this one's context, like an insert
+				// builds on the context of the template that calls it.
+				$context = $rendered->templateContext;
 			}
-
-			$methods = $template->methods();
-			$template = new Layout(
-				$file,
-				$content,
-				$this->sections,
-				$template->engine,
-			);
-			$template->setMethods($methods);
-
-			$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);
-			$content = $rendered->content;
-			// The next layout builds on this one's context, like an insert
-			// builds on the context of the template that calls it.
-			$context = $rendered->templateContext;
+		} finally {
+			$this->sections->setLevel($base);
 		}
 
 		return $content;

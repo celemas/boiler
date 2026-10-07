@@ -55,7 +55,7 @@ Check for a section first when you need conditional markup:
 
 ## Append and prepend
 
-Use `append()` or `prepend()` instead of `section()` when you want to add content relative to existing section content:
+Use `append()` or `prepend()` instead of `section()` to add content before or after the main content of a section. Any template can add to a section: the page, its inserts, and its layouts.
 
 ```php
 <?php $this->prepend('scripts') ?>
@@ -67,13 +67,15 @@ Use `append()` or `prepend()` instead of `section()` when you want to add conten
 <?php $this->end() ?>
 ```
 
-When a layout renders a section with a default value, Boiler combines the parts in this order:
+Boiler combines the parts in this order:
 
 1. prepended content
-2. default value
+2. the main content: what `section()` captured, or else the default passed to `yield()`
 3. appended content
 
-Regular `section()` content becomes the main assigned section content.
+Additions keep the order of their calls, also across inserts, so two partials that append their scripts print them in the order they were inserted. A layout's additions stay closer to the main content than those of the page it wraps: page prepends, layout prepends, main content, layout appends, page appends. A script that the layout appends therefore comes before the scripts of the page.
+
+`section()` sets only the main content and keeps what was appended or prepended before.
 
 ## Nested sections
 
