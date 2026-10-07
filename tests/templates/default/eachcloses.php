@@ -1,7 +1,4 @@
+<?php $this->begin('list'); ?>
 <?php foreach ($this->each('slotrows', ['rows' => $rows]) as $row): ?>
-<?php if ($row['name']->is('a')) {
-	$this->begin('open');
-} else {
-	$this->end();
-} ?>
+<?php $this->end(); ?>
 <?php endforeach; ?>

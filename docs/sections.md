@@ -75,10 +75,21 @@ When a layout renders a section with a default value, Boiler combines the parts 
 
 Regular `begin()` content becomes the main assigned section content.
 
+## Nested sections
+
+Capture blocks can nest. A section can contain another section, or an insert whose template captures sections of its own, such as a widget that appends its script:
+
+```php
+<?php $this->begin('sidebar') ?>
+<?php $this->insert('widget') ?>
+<?php $this->end() ?>
+```
+
+`$this->end()` closes the innermost open section. Pass a name to check which one it closes: `$this->end('sidebar')` fails the render at that line when another section is open.
+
 ## Error handling
 
 - Section names are strings such as `scripts` or `sidebar`.
-- Section capture blocks must be closed with `$this->end()`.
-- Nested capture blocks are not allowed and raise a render error.
-- Calling `$this->end()` without an open section raises a render error.
+- Section capture blocks must be closed with `$this->end()` in the template that opened them.
+- Calling `$this->end()` without an open section raises a render error, and so does `$this->end('name')` when the innermost open section has another name.
 - Calling `$this->section()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, or check with `$this->has()` when the section is optional.

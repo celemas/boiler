@@ -5,6 +5,7 @@
 ### Added
 
 - `$this->each('partial', [...])` inserts a template and turns the body of a `foreach` loop into its slot. The inserted template renders first; every `$this->slot([...])` call in it becomes one iteration of the loop, with that data wrapped like other template values, and the iteration's output takes the place of the call. Iterations skipped by `break`, `return`, or an exception stay empty. A loop that never runs, a `break` out of a loop kept in a variable, and `slot()` inside a section capture fail the render. `each` is now a reserved template method name.
+- Section capture blocks can nest, so an inserted template that appends its script works inside a section. `$this->end()` closes the innermost open section; `$this->end('name')` also checks that it closes that section and fails the render at that line otherwise. A template can only close the sections it opened itself.
 
 ### Changed
 

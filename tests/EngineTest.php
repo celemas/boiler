@@ -539,11 +539,21 @@ final class EngineTest extends TestCase
 
 	public function testInsertCannotCloseParentSection(): void
 	{
-		$this->throws(RenderException::class, 'active output buffer');
+		$this->throws(RenderException::class, 'No open section to close');
 
 		$engine = Engine::create($this->templates());
 
 		$engine->render('closesectionfrominsert');
+	}
+
+	public function testInsertCanCaptureSectionsInsideSection(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'<ul><li>item</li></ul><script src="/item.js"></script>',
+			$this->fullTrim($engine->render('appendinsection')),
+		);
 	}
 
 	public function testAppendPrependToSection(): void
@@ -569,18 +579,40 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testNestedSectionsError(): void
+	public function testSectionsCanNest(): void
 	{
-		$this->throws(RenderException::class, 'Nested sections are not allowed');
-
 		$engine = Engine::create($this->templates());
 
-		$engine->render('nestedsections');
+		$this->assertSame('<b></b>|inner', $this->fullTrim($engine->render('nestedsections')));
+	}
+
+	public function testEndWithNameClosesThatSection(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('Title|script', $this->fullTrim($engine->render('endnamed')));
+	}
+
+	public function testEndWithNameOfAnotherSectionFailsAtThatLine(): void
+	{
+		$path = self::DEFAULT_DIR . '/endmismatch.php';
+
+		try {
+			Engine::create($this->templates())->render('endmismatch');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(3, $e->location()?->line);
+			$this->assertStringEndsWith(
+				"`end('title')` does not match the open section `scripts`",
+				$e->getMessage(),
+			);
+		}
 	}
 
 	public function testUnclosedSectionError(): void
 	{
-		$this->throws(RenderException::class, 'Unclosed section capture block');
+		$this->throws(RenderException::class, 'Unclosed section `scripts`');
 
 		$engine = Engine::create($this->templates());
 
@@ -589,11 +621,16 @@ final class EngineTest extends TestCase
 
 	public function testClosingUnopenedSectionError(): void
 	{
-		$this->throws(RenderException::class);
+		$path = self::DEFAULT_DIR . '/closeunopened.php';
 
-		$engine = Engine::create($this->templates());
-
-		$engine->render('closeunopened');
+		try {
+			Engine::create($this->templates())->render('closeunopened');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(5, $e->location()?->line);
+			$this->assertStringEndsWith('No open section to close', $e->getMessage());
+		}
 	}
 
 	public function testMissingSectionRendering(): void
@@ -988,7 +1025,7 @@ final class EngineTest extends TestCase
 		} catch (RenderException $e) {
 			$this->assertSame($path, $e->getFile());
 			$this->assertSame(1, $e->getLine());
-			$this->assertStringEndsWith("Unclosed section capture block `scripts` at {$path}:1", $e->getMessage());
+			$this->assertStringEndsWith("Unclosed section `scripts` at {$path}:1", $e->getMessage());
 		}
 	}
 

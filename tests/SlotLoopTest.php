@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use Celema\Boiler\Blocks;
 use Celema\Boiler\Engine;
 use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Location;
-use Celema\Boiler\Sections;
 use Celema\Boiler\SlotLoop;
 use Celema\Boiler\Template;
 use Generator;
@@ -187,6 +187,8 @@ final class SlotLoopTest extends TestCase
 				$this->fail('LogicException was not thrown');
 			} catch (LogicException $e) {
 				$this->assertStringContainsString('resumed after its template finished', $e->getMessage());
+				$this->assertSame(self::DEFAULT_DIR . '/eachkeep.php', $e->getFile());
+				$this->assertSame(1, $e->getLine());
 			}
 		}
 
@@ -254,10 +256,29 @@ final class SlotLoopTest extends TestCase
 			Engine::create(self::DEFAULT_DIR)->render('eachunclosed', ['rows' => self::ROWS]);
 			$this->fail('RenderException was not thrown');
 		} catch (RenderException $e) {
-			// Reported after the first iteration, before the next one opens it again.
-			$this->assertStringContainsString('Unclosed section capture block `open`', $e->getMessage());
+			// Reported after the first iteration, before the next one closes it.
+			$this->assertStringContainsString('Unclosed section `open`', $e->getMessage());
 			$this->assertSame(self::DEFAULT_DIR . '/eachunclosed.php', $e->location()?->path);
-			$this->assertSame(2, $e->location()?->line);
+			$this->assertSame(3, $e->location()?->line);
+		}
+
+		$this->assertSame($level, ob_get_level());
+	}
+
+	public function testLoopBodyCannotCloseSectionOpenedBeforeLoop(): void
+	{
+		$level = ob_get_level();
+
+		try {
+			Engine::create(self::DEFAULT_DIR)->render('eachcloses', ['rows' => self::ROWS]);
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertStringEndsWith(
+				'Section `list` cannot be closed here: it was opened outside the current output buffer or `each()` loop body',
+				$e->getMessage(),
+			);
+			$this->assertSame(self::DEFAULT_DIR . '/eachcloses.php', $e->location()?->path);
+			$this->assertSame(3, $e->location()?->line);
 		}
 
 		$this->assertSame($level, ob_get_level());
@@ -265,7 +286,11 @@ final class SlotLoopTest extends TestCase
 
 	public function testSlotAfterTemplateRenderedThrows(): void
 	{
-		$loop = new SlotLoop(new Location('/tmp/caller.php', 3), new Sections());
+		$loop = new SlotLoop(
+			new Location('/tmp/caller.php', 3),
+			new Blocks(),
+			new Template(self::DEFAULT_DIR . '/slotbox.php'),
+		);
 		iterator_to_array($loop->run(static fn(): string => '', static fn(array $data): array => $data));
 
 		$this->expectException(LogicException::class);

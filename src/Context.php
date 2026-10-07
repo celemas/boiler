@@ -9,6 +9,7 @@ use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
+use Closure;
 use Generator;
 use Stringable;
 
@@ -183,7 +184,7 @@ abstract class Context
 	public function each(string $path, array $context = []): Generator
 	{
 		$template = $this->inserted($path);
-		$loop = new SlotLoop($this->location(), $this->template->sections);
+		$loop = new SlotLoop($this->location(), $this->template->blocks, $template);
 		$context = $this->get($context);
 
 		$template->setSlot($loop);
@@ -220,22 +221,27 @@ abstract class Context
 
 	public function begin(string $name): void
 	{
-		$this->template->sections->begin($name, $this->location());
+		$this->openSection($name, $this->template->sections->assign(...));
 	}
 
 	public function append(string $name): void
 	{
-		$this->template->sections->append($name, $this->location());
+		$this->openSection($name, $this->template->sections->append(...));
 	}
 
 	public function prepend(string $name): void
 	{
-		$this->template->sections->prepend($name, $this->location());
+		$this->openSection($name, $this->template->sections->prepend(...));
 	}
 
-	public function end(): void
+	/**
+	 * Closes the innermost open section.
+	 *
+	 * With a name, the render fails unless that is the section being closed.
+	 */
+	public function end(?string $name = null): void
 	{
-		$this->template->sections->end();
+		$this->template->blocks->close($name);
 	}
 
 	/**
@@ -268,6 +274,17 @@ abstract class Context
 	private function location(): Location
 	{
 		return Location::fromBacktrace($this->template->path);
+	}
+
+	/** @param Closure(string, string): void $store */
+	private function openSection(string $name, Closure $store): void
+	{
+		$this->template->blocks->open(
+			'section',
+			$name,
+			$this->location(),
+			static fn(string $content) => $store($name, $content),
+		);
 	}
 
 	/** @param non-empty-string $path */

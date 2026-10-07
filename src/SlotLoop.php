@@ -29,21 +29,22 @@ final class SlotLoop
 	/** Random, so that placeholders of nested loops and in user data never match. */
 	private readonly string $token;
 
-	/**
-	 * The section state when the first pass started; null outside of it.
-	 *
-	 * @var array{mode: SectionMode, name: string|null, level: int|null, location: Location|null}|null
-	 */
-	private ?array $checkpoint = null;
+	/** Whether the inserted template is rendering, which is the first pass. */
+	private bool $rendering = false;
 
 	/** Whether an iteration's output is being captured. */
 	private bool $capturing = false;
 	private bool $finished = false;
 	private bool $closed = false;
 
+	/**
+	 * @param Blocks $blocks the open blocks of the template that runs the loop
+	 * @param BaseTemplate $template the inserted template
+	 */
 	public function __construct(
 		private readonly Location $location,
-		private readonly Sections $sections,
+		private readonly Blocks $blocks,
+		private readonly BaseTemplate $template,
 	) {
 		$this->token = bin2hex(random_bytes(8));
 	}
@@ -55,14 +56,14 @@ final class SlotLoop
 	 */
 	public function render(array $data): string
 	{
-		if ($this->checkpoint === null) {
+		if (!$this->rendering) {
 			throw new LogicException(
 				'The slot of an `each()` loop can only be rendered while its template renders',
 			);
 		}
 
 		// A section would keep the placeholder beyond the loop.
-		if ($this->sections->checkpoint() !== $this->checkpoint) {
+		if ($this->template->blocks->depth() !== 0) {
 			throw new LogicException('The slot of an `each()` loop cannot be rendered inside a section capture');
 		}
 
@@ -90,13 +91,13 @@ final class SlotLoop
 			$content = $this->renderTemplate($render);
 
 			foreach ($this->calls as $data) {
-				$checkpoint = $this->sections->checkpoint();
+				$depth = $this->blocks->depth();
 				ob_start();
 				$this->capturing = true;
 
 				yield $wrap($data);
 
-				$parts[] = $this->capture($checkpoint);
+				$parts[] = $this->capture($depth);
 			}
 		} finally {
 			// PHP destroys a generator that is left with break, return, or an
@@ -137,21 +138,20 @@ final class SlotLoop
 	/** @param Closure(): string $render */
 	private function renderTemplate(Closure $render): string
 	{
-		$this->checkpoint = $this->sections->checkpoint();
+		$this->rendering = true;
 
 		try {
 			return $render();
 		} finally {
-			$this->checkpoint = null;
+			$this->rendering = false;
 		}
 	}
 
-	/** @param array{mode: SectionMode, name: string|null, level: int|null, location: Location|null} $checkpoint */
-	private function capture(array $checkpoint): string
+	private function capture(int $depth): string
 	{
 		$this->assertOpen();
 		// Otherwise the section's buffer would be taken for the output.
-		$this->sections->assertClosed($checkpoint);
+		$this->blocks->assertClosed($depth);
 		$this->capturing = false;
 
 		return (string) ob_get_clean();

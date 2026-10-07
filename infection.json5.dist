@@ -57,7 +57,6 @@
 			ignore: [
 				'Celema\\Boiler\\BaseTemplate::getContent',
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
-				'Celema\\Boiler\\Sections::end',
 				'Celema\\Boiler\\SlotLoop::finish',
 			],
 		},
@@ -123,30 +122,14 @@
 		UnwrapArrayMap: {
 			ignore: ['Celema\\Boiler\\Resolver::segments'],
 		},
-		// name() throws the same exception without an open section.
-		Throw_: {
-			ignoreSourceCodeByRegex: ["throw new LogicException\\('No section started'\\);"],
-		},
-		// Nested sections are rejected, so the capture stack never holds more
-		// than one name, and checkpoints differ in name or location as well.
+		// See GreaterThanNegotiation.
 		FunctionCallRemoval: {
-			ignore: ['Celema\\Boiler\\Sections::end'],
-			// See GreaterThanNegotiation.
 			ignoreSourceCodeByRegex: ['ob_end_clean\\(\\);'],
 		},
 		// Mutating the output buffer cleanup loops only makes them endless, so
 		// these mutants never fail a test and just wait for the timeout.
 		GreaterThanNegotiation: {
 			ignoreSourceCodeByRegex: ['while \\(ob_get_level\\(\\) > \\$level\\) \\{'],
-		},
-		ArrayItem: {
-			ignoreSourceCodeByRegex: [
-				"'mode' => \\$this->sectionMode,",
-				"'level' => \\$this->captureLevel,",
-			],
-		},
-		ArrayItemRemoval: {
-			ignore: ['Celema\\Boiler\\Sections::checkpoint'],
 		},
 		// preg_match() reports errors through the handler and does not throw.
 		UnwrapFinally: {

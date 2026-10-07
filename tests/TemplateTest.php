@@ -273,10 +273,24 @@ final class TemplateTest extends TestCase
 
 	public function testUnclosedSectionCaptureThrowsRenderError(): void
 	{
-		$this->throws(RenderException::class, 'Unclosed section capture block');
+		$this->throws(RenderException::class, 'Unclosed section `scripts`');
 
 		$template = new Template($this->templates . 'unclosedsection.php');
 
 		$template->render();
+	}
+
+	public function testReusedTemplateForgetsSectionsLeftOpenByFailedRender(): void
+	{
+		$template = new Template($this->templates . 'unclosedonce.php');
+
+		try {
+			$template->render(['fail' => true]);
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertStringContainsString('Unclosed section `scripts`', $e->getMessage());
+		}
+
+		$this->assertSame('script', $this->fullTrim($template->render(['fail' => false])));
 	}
 }

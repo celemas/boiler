@@ -29,6 +29,8 @@ abstract class BaseTemplate
 		get => $this->sections;
 		set(Sections $value) => $this->sections = $value;
 	}
+	/** @internal the blocks open in this template's current render */
+	public private(set) Blocks $blocks;
 
 	public function __construct(
 		public readonly string $path,
@@ -37,6 +39,7 @@ abstract class BaseTemplate
 	) {
 		$this->ownsSections = $sections === null;
 		$this->sections = $sections ?? new Sections();
+		$this->blocks = new Blocks();
 		$this->methods = new Methods();
 
 		if ($engine === null) {
@@ -201,7 +204,7 @@ abstract class BaseTemplate
 		};
 
 		$level = ob_get_level();
-		$sections = $this->sections->checkpoint();
+		$this->blocks = new Blocks();
 
 		try {
 			ob_start();
@@ -214,7 +217,7 @@ abstract class BaseTemplate
 					: $context,
 				$this,
 			);
-			$this->sections->assertClosed($sections);
+			$this->blocks->assertClosed();
 
 			$content = (string) ob_get_clean();
 
