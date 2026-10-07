@@ -1,6 +1,6 @@
 # Sections
 
-Sections let child templates push named content into layouts. They are useful for repeated slots such as scripts, styles, sidebars, or page headers.
+Sections are named content that any template can write and a layout prints, such as the page title, scripts, styles, or a sidebar. The page, its inserts, and its layouts all write to the same sections.
 
 Assume the following directory structure:
 
@@ -9,19 +9,20 @@ path
 `-- to
     `-- templates
         |-- page.php
-        `-- layout.php
+        |-- layout.php
+        `-- widget.php
 ```
 
-## Define section content
+## Write and print a section
+
+Capture a section with `section()` … `end()`, and print it with `yield()`.
 
 Create `page.php`:
 
 ```php
 <?php $this->layout('layout') ?>
 
-<?php $this->section('scripts') ?>
-<script src="/page.js"></script>
-<?php $this->end() ?>
+<?php $this->section('title') ?>About<?php $this->end() ?>
 
 <p><?= $text ?></p>
 ```
@@ -29,42 +30,48 @@ Create `page.php`:
 Create `layout.php`:
 
 ```php
-<body>
-    <?= $this->slot() ?>
-    <?= $this->yield('scripts') ?>
-</body>
+<title><?= $this->yield('title') ?></title>
+<main><?= $this->slot() ?></main>
 ```
 
-Rendering `page` inserts the captured section content into the layout. Section capture runs while the page template executes, so the captured block can access the same variables as that template. When a layout later calls `$this->yield()`, Boiler outputs the captured string rather than rendering a separate template with its own context.
+Everything outside a section is the page content, which the layout prints as its [slot](slots.md). The section block runs while the page renders, so it uses the same variables as the page. When the layout calls `$this->yield()`, Boiler prints the captured string.
+
+A plain value such as the title can also reach the layout as data: `$this->layout('layout', ['title' => 'About'])`. Sections are for markup, and for content that several templates add to.
 
 ## Default content
 
-Use a default when the section may be missing:
+Pass a default when the section is optional:
 
 ```php
-<?= $this->yield('scripts', '<script src="/default.js"></script>') ?>
+<title><?= $this->yield('title', 'My site') ?></title>
 ```
 
-Check for a section first when you need conditional markup:
+Check for a section when you need conditional markup:
 
 ```php
-<?php if ($this->hasSection('scripts')) : ?>
-    <aside><?= $this->yield('scripts') ?></aside>
+<?php if ($this->hasSection('sidebar')) : ?>
+    <aside><?= $this->yield('sidebar') ?></aside>
 <?php endif; ?>
 ```
 
 ## Append and prepend
 
-Use `append()` or `prepend()` instead of `section()` to add content before or after the main content of a section. Any template can add to a section: the page, its inserts, and its layouts.
+Use `append()` or `prepend()` instead of `section()` to add content after or before the main content of a section. A partial can add its own script to the layout this way.
+
+Create `widget.php`:
 
 ```php
-<?php $this->prepend('scripts') ?>
-<script src="/first.js"></script>
-<?php $this->end() ?>
+<div class="widget"></div>
 
 <?php $this->append('scripts') ?>
-<script src="/last.js"></script>
+<script src="/widget.js"></script>
 <?php $this->end() ?>
+```
+
+Print the scripts in `layout.php`:
+
+```php
+<?= $this->yield('scripts', '') ?>
 ```
 
 Boiler combines the parts in this order:
@@ -77,21 +84,21 @@ Additions keep the order of their calls, also across inserts, so two partials th
 
 `section()` sets only the main content and keeps what was appended or prepended before.
 
-## Nested sections
+## Nested blocks
 
-Capture blocks can nest. A section can contain another section, or an insert whose template captures sections of its own, such as a widget that appends its script:
+Sections and [components](slots.md#pass-a-block-to-a-component) share one stack of open blocks, and `end()` closes the innermost one. Blocks can nest: a section can contain a component, another section, or an insert whose template captures sections of its own, such as the widget above.
 
 ```php
 <?php $this->section('sidebar') ?>
 <?php $this->insert('widget') ?>
-<?php $this->end() ?>
+<?php $this->end('sidebar') ?>
 ```
 
-`$this->end()` closes the innermost open section. Pass a name to check which one it closes: `$this->end('sidebar')` fails the render at that line when another section is open.
+Pass a name to check which block `end()` closes, like Twig's `{% endblock sidebar %}`: `$this->end('sidebar')` fails the render at that line when another section or component is open.
 
 ## Error handling
 
 - Section names are strings such as `scripts` or `sidebar`.
-- Section capture blocks must be closed with `$this->end()` in the template that opened them.
-- Calling `$this->end()` without an open section or [component](slots.md#pass-a-block-to-a-component) raises a render error, and so does `$this->end('name')` when the innermost open block has another name.
+- A section must be closed with `$this->end()` in the template that opened it. An unclosed section raises a render error that points to the line that opened it.
+- Calling `$this->end()` without an open section or component raises a render error, and so does `$this->end('name')` when the innermost open block has another name.
 - Calling `$this->yield()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, or check with `$this->hasSection()` when the section is optional.

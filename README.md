@@ -13,11 +13,11 @@ Boiler is a small template engine for PHP 8.5+, inspired by [Plates](https://pla
 Key differences from Plates:
 
 - Automatic escaping of strings and [Stringable](https://www.php.net/manual/en/class.stringable.php) values for enhanced security
-- Inherited render context across layouts, inserts, and section captures; custom insert or layout context merges on top and overrides duplicate keys
+- Inherited render context across layouts, inserts, components, and section captures; custom insert or layout context merges on top and overrides duplicate keys
 
 Other highlights:
 
-- Layouts, inserts/partials, and sections, including append and prepend support
+- Layouts, inserts, components, and sections, with concepts that map onto Blade's: `slot()` prints what a template wraps, and `yield()` prints a section that any template can write, append to, or prepend to
 - Wrapper-driven escaping and a pluggable filter system for value transformations
 - Custom template methods, including safe HTML helpers, and optional trusted classes
 
@@ -152,13 +152,13 @@ For filter safety rules and advanced wrapper, filter, and escaper customization,
 
 Template helpers available via `$this` inside templates:
 
-- `$this->layout('layout')`
+- `$this->layout('layout')`, and `<?= $this->slot() ?>` in the layout to print the page
 - `$this->insert('partial', ['value' => '...'])`
-- `$this->component('partial', ['value' => '...'])` … `$this->end()` to pass the block in between as the partial's slot
-- `foreach ($this->each('partial', ['value' => '...']) as $data)` to fill the partial's slot from the loop body
-- `<?= $this->slot() ?>` / `$this->hasSlot()` inside layouts and components, and `<?= $this->slot(['value' => '...']) ?>` inside templates inserted with `each()`
-- `$this->section('name')` / `$this->append('name')` / `$this->prepend('name')` / `$this->end()`
-- `$this->yield('name', 'default')` / `$this->hasSection('name')`
+- `$this->component('partial', ['value' => '...'])` … `$this->end()` to pass the block in between, which the partial prints with `<?= $this->slot() ?>`
+- `foreach ($this->each('partial', ['value' => '...']) as $row)` to repeat the loop body wherever the partial calls `<?= $this->slot($row) ?>`
+- `$this->hasSlot()` to check whether there is a slot to print
+- `$this->section('name')`, `$this->append('name')`, or `$this->prepend('name')` … `$this->end()` to write a section
+- `<?= $this->yield('name', 'default') ?>` / `$this->hasSection('name')` to print or check a section
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
 - `$this->escape($value)` and `$this->wrap($value)` when you need proxy behavior such as string filters on a raw value
 

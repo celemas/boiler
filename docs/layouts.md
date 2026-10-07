@@ -49,6 +49,8 @@ This produces:
 
 The layout prints the rendered page content with `$this->slot()`, as it would print any other [slot](slots.md). It also receives all values from the page template context by default.
 
+To fill other parts of the layout, such as the title or scripts, write [sections](sections.md) in the page and print them in the layout with `$this->yield()`. Everything the page prints outside a section is its content. When that is nothing but whitespace, `$this->hasSlot()` is false in the layout and `$this->slot()` returns an empty string.
+
 ## Override layout context
 
 Pass a second argument when the layout should receive extra values or override existing ones:

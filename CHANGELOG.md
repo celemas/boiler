@@ -2,6 +2,24 @@
 
 ## [Unreleased](https://codefloe.com/celema/boiler/compare/0.8.0...HEAD)
 
+### Migration
+
+Section and slot helpers are renamed, closure slots are gone, and layouts print the page with `slot()`. Update templates as follows, renaming the reading `section(` to `yield(` before renaming `begin(` to `section(`:
+
+| Before | After |
+| --- | --- |
+| `<?php $this->begin('title') ?>` … `<?php $this->end() ?>` | `<?php $this->section('title') ?>` … `<?php $this->end() ?>` |
+| `<?= $this->section('title', 'default') ?>` | `<?= $this->yield('title', 'default') ?>` |
+| `$this->has('title')` | `$this->hasSection('title')` |
+| `<?= $this->body() ?>` in a layout | `<?= $this->slot() ?>` |
+| `<?php $this->slot() ?>` | `<?= $this->slot() ?>` |
+| `$this->insert('card', [...], slot: function () { ?>…<?php })` | `$this->component('card', [...])` … `$this->end()` |
+| `$this->insert('rows', [...], slot: function (array $row) { ?>…<?php })` | `foreach ($this->each('rows', [...]) as $row)` … `endforeach` |
+| `slot: Slot::template('control', [...])` | `$this->insert('control', $row)` in the body of an `each()` loop |
+| `LayoutContext` type hints | `TemplateContext` |
+
+A leftover `slot:` argument fails the render as an unknown named parameter, and a leftover reading `section('title')` opens a capture that is never closed, which fails it too. A leftover `<?php $this->slot() ?>` prints nothing. Without a rename, section output changes in two cases: repeated `append()` calls print in call order, and `section()` after `append()` or `prepend()` keeps the additions. Custom template methods named `component`, `each`, `hasSection`, or `yield` are now rejected.
+
 ### Added
 
 - `$this->component('partial', [...])` … `$this->end()` inserts a template with the block in between as its slot, which the template prints with `<?= $this->slot() ?>`. The block runs at the call site before the template renders, so it uses the caller's variables. Sections and components share one stack of open blocks closed by `end()`, and `end('partial')` checks the name. A block of only whitespace counts as no slot for `hasSlot()`. `component` is now a reserved template method name.
@@ -12,7 +30,7 @@
 
 - `$this->slot()` returns the slot content instead of printing it, like `yield()`: write `<?= $this->slot() ?>`. A leftover `<?php $this->slot() ?>` prints nothing.
 - Layouts print the page they wrap with `$this->slot()` instead of `$this->body()`, so one call prints whatever a template wraps. `body()` and the `LayoutContext` class are gone; layouts run in a `TemplateContext` like other templates. In a layout, `hasSlot()` is false when the page printed nothing but whitespace, and `slot()` then returns `''`. `body` is no longer a reserved template method name.
-- The section helpers are renamed after the side they work on, as in Blade: `$this->section('name')` … `$this->end()` captures a section (formerly `begin()`), `$this->yield('name', 'default')` prints it (formerly the reading `section()`), and `$this->hasSection('name')` checks it (formerly `has()`). Migrate templates by renaming the reading `section(` to `yield(` before renaming `begin(` to `section(`. A leftover reading `section('name')` call opens a capture that is never closed and fails the render. `yield` and `hasSection` are now reserved template method names; `begin` and `has` are free.
+- The section helpers are renamed after the side they work on, as in Blade: `$this->section('name')` … `$this->end()` captures a section (formerly `begin()`), `$this->yield('name', 'default')` prints it (formerly the reading `section()`), and `$this->hasSection('name')` checks it (formerly `has()`). A leftover reading `section('name')` call opens a capture that is never closed and fails the render. `yield` and `hasSection` are now reserved template method names; `begin` and `has` are free.
 - `$this->yield('name')` (formerly the reading `$this->section('name')`) without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->hasSection()` for optional sections. The default parameter is now `?string $default = null`; passing `null` is the same as omitting it.
 - `ArrayProxy` implements `IteratorAggregate` instead of `Iterator`, so its public `current()`, `key()`, `next()`, `rewind()`, and `valid()` methods are gone. `IteratorProxy` implements `IteratorAggregate` instead of extending `IteratorIterator`, and its `unwrap()` returns the wrapped `Traversable` itself instead of `?Iterator`. `foreach`, `count()`, array access, and the predicate methods work as before.
 - `RenderException` now carries the integer code of the exception it wraps instead of `0`, so error handlers that derive a status from the code keep working for exceptions thrown inside templates. Non-integer codes, such as PDO's SQLSTATE, still become `0`.

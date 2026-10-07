@@ -69,6 +69,14 @@ Inserts use the current render mode:
 
 Read [displaying values](values.md) for details.
 
-## Slots
+## Pass a block of markup
 
-To pass a block of markup to an inserted template, insert it with `component()` … `end()`. To let it repeat the block with its own data per row, insert it with `each()` and write the block as a loop body. See [slots](slots.md).
+`insert()` passes values. To pass a block of markup that the inserted template prints with `$this->slot()`, insert it as a component:
+
+```php
+<?php $this->component('card', ['title' => 'News']) ?>
+<p>Text</p>
+<?php $this->end() ?>
+```
+
+When the inserted template should repeat the block with its own data per row, insert it with `each()` and write the block as the body of a `foreach` loop. See [slots](slots.md).
