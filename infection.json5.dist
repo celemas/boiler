@@ -47,7 +47,7 @@
 			ignore: [
 				'Celema\\Boiler\\Wrapper::isTrusted',
 				// dirname() only returns '' for an empty path.
-				'Celema\\Boiler\\BaseTemplate::__construct',
+				'Celema\\Boiler\\Template::__construct',
 			],
 		},
 
@@ -55,7 +55,7 @@
 		// active buffer, interpolated keys, and Stringable concatenation.
 		CastString: {
 			ignore: [
-				'Celema\\Boiler\\BaseTemplate::getContent',
+				'Celema\\Boiler\\Template::getContent',
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
 				'Celema\\Boiler\\SlotLoop::finish',
 			],
@@ -85,9 +85,6 @@
 				'Celema\\Boiler\\Context::yield',
 				'Celema\\Boiler\\Context::hasSection',
 			],
-		},
-		ProtectedVisibility: {
-			ignore: ['Celema\\Boiler\\Context::wrapAll'],
 		},
 
 		// The default exception code is not part of the contract, and any

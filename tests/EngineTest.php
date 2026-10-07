@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Celema\Boiler\Tests;
 
 use ArrayObject;
+use Celema\Boiler\Context;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Contract\Filter;
 use Celema\Boiler\Engine;
@@ -17,7 +18,6 @@ use Celema\Boiler\Exception\UnexpectedValueException;
 use Celema\Boiler\Proxy\StringProxy;
 use Celema\Boiler\Resolver;
 use Celema\Boiler\Template;
-use Celema\Boiler\TemplateContext;
 use Celema\Boiler\Wrapper;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -857,9 +857,9 @@ final class EngineTest extends TestCase
 		$this->assertTrue(new \ReflectionClass(Template::class)->isFinal());
 	}
 
-	public function testTemplateContextIsFinal(): void
+	public function testContextIsFinal(): void
 	{
-		$this->assertTrue(new \ReflectionClass(TemplateContext::class)->isFinal());
+		$this->assertTrue(new \ReflectionClass(Context::class)->isFinal());
 	}
 
 	#[TestDox('Config error wrong template format I')]
@@ -1349,7 +1349,7 @@ final class EngineTest extends TestCase
 			TestCase::DEFAULT_DIR . '/simple.php',
 			engine: $engine,
 		);
-		$context = new TemplateContext($template, ['text' => '<tag>'], [], true);
+		$context = new Context($template, ['text' => '<tag>'], [], true);
 
 		$this->assertSame('&LT;TAG&GT;', $context->escape('<tag>', 'caps'));
 	}

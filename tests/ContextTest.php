@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use Celema\Boiler\Context;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Engine;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\StringProxy;
 use Celema\Boiler\Template;
-use Celema\Boiler\TemplateContext;
 
-final class TemplateContextTest extends TestCase
+final class ContextTest extends TestCase
 {
 	private string $templates;
 	private Template $template;
@@ -25,7 +25,7 @@ final class TemplateContextTest extends TestCase
 
 	public function testGetContext(): void
 	{
-		$tmplContext = new TemplateContext(
+		$tmplContext = new Context(
 			$this->template,
 			[
 				'value1' => 'Value 1',
@@ -47,7 +47,7 @@ final class TemplateContextTest extends TestCase
 	public function testTrustedObjectMatchesLaterTrustedEntry(): void
 	{
 		$value = new TrustedValue();
-		$tmplContext = new TemplateContext(
+		$tmplContext = new Context(
 			$this->template,
 			['value' => $value],
 			[\stdClass::class, TrustedBase::class],
@@ -60,7 +60,7 @@ final class TemplateContextTest extends TestCase
 
 	public function testAddingToContext(): void
 	{
-		$tmplContext = new TemplateContext($this->template, ['value1' => 'Value 1'], [], true);
+		$tmplContext = new Context($this->template, ['value1' => 'Value 1'], [], true);
 		$value2 = $tmplContext->add('value2', '<i>Value 2</i>');
 		$context = $tmplContext->get();
 
@@ -74,7 +74,7 @@ final class TemplateContextTest extends TestCase
 
 	public function testAddingToEscapedContextInvalidatesCachedContext(): void
 	{
-		$tmplContext = new TemplateContext($this->template, ['value1' => 'Value 1'], [], true);
+		$tmplContext = new Context($this->template, ['value1' => 'Value 1'], [], true);
 		$tmplContext->get();
 		$tmplContext->add('value2', '<i>Value 2</i>');
 		$context = $tmplContext->get();
@@ -85,7 +85,7 @@ final class TemplateContextTest extends TestCase
 
 	public function testAddingToUnescapedContextReturnsRawValue(): void
 	{
-		$tmplContext = new TemplateContext($this->template, [], [], false);
+		$tmplContext = new Context($this->template, [], [], false);
 		$value = $tmplContext->add('value', '<i>Value</i>');
 		$context = $tmplContext->get();
 
@@ -99,7 +99,7 @@ final class TemplateContextTest extends TestCase
 		assert(is_resource($resource), 'tmpfile() must return a valid resource for this test');
 
 		try {
-			$tmplContext = new TemplateContext($this->template, ['value' => $resource], [], true);
+			$tmplContext = new Context($this->template, ['value' => $resource], [], true);
 			$context = $tmplContext->get();
 
 			$this->assertSame($resource, $context['value']);
@@ -110,7 +110,7 @@ final class TemplateContextTest extends TestCase
 
 	public function testEscapesStringableObjects(): void
 	{
-		$tmplContext = new TemplateContext($this->template, [], [], true);
+		$tmplContext = new Context($this->template, [], [], true);
 		$value = new class {
 			public function __toString(): string
 			{
@@ -123,7 +123,7 @@ final class TemplateContextTest extends TestCase
 
 	public function testEscapeAlwaysEscapesSafeStringProxy(): void
 	{
-		$tmplContext = new TemplateContext($this->template, [], [], true);
+		$tmplContext = new Context($this->template, [], [], true);
 		$value = $tmplContext->wrap('<b>Value</b>');
 		assert($value instanceof StringProxy, 'wrap() must return a string proxy for string input');
 
@@ -142,7 +142,7 @@ final class TemplateContextTest extends TestCase
 					}
 				}),
 		);
-		$tmplContext = new TemplateContext($template, [], [], true);
+		$tmplContext = new Context($template, [], [], true);
 		$value = $tmplContext->wrap('<b>tag</b>');
 		assert($value instanceof StringProxy, 'wrap() must return a string proxy for string input');
 
@@ -153,13 +153,13 @@ final class TemplateContextTest extends TestCase
 	{
 		$this->throws(RuntimeException::class, 'cannot be escaped as string');
 
-		$tmplContext = new TemplateContext($this->template, [], [], true);
+		$tmplContext = new Context($this->template, [], [], true);
 		$tmplContext->escape($this->objectProxy(new class {}));
 	}
 
 	public function testWrapReturnsWrappedValueInUnescapedContext(): void
 	{
-		$tmplContext = new TemplateContext($this->template, [], [], false);
+		$tmplContext = new Context($this->template, [], [], false);
 		$wrapped = $tmplContext->wrap('<b>Value</b>');
 
 		$this->assertInstanceOf(StringProxy::class, $wrapped);

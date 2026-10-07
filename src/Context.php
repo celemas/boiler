@@ -14,19 +14,19 @@ use Generator;
 use Stringable;
 
 /** @api */
-abstract class Context
+final class Context
 {
 	/** @var array<array-key, mixed>|null */
 	private ?array $wrappedContext = null;
 
-	protected readonly Wrapper $wrapper;
+	private readonly Wrapper $wrapper;
 
 	/**
 	 * @param list<class-string> $trusted
 	 */
 	public function __construct(
-		protected readonly BaseTemplate $template,
-		protected array $context,
+		private readonly Template $template,
+		private array $context,
 		public readonly array $trusted,
 		public readonly bool $autoescape,
 	) {
@@ -62,7 +62,7 @@ abstract class Context
 	 * @param array<array-key, mixed> $values
 	 * @return array<array-key, mixed>
 	 */
-	protected function wrapAll(array $values): array
+	private function wrapAll(array $values): array
 	{
 		$wrapped = [];
 
