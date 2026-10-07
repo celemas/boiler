@@ -77,7 +77,6 @@
 				'Celema\\Boiler\\Context::section',
 				'Celema\\Boiler\\Context::yield',
 				'Celema\\Boiler\\Context::hasSection',
-				'Celema\\Boiler\\LayoutContext::body',
 			],
 		},
 		ProtectedVisibility: {

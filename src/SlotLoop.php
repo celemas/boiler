@@ -7,6 +7,7 @@ namespace Celema\Boiler;
 use Celema\Boiler\Exception\LogicException;
 use Closure;
 use Generator;
+use Override;
 
 /**
  * Fills the slot of an inserted template from the body of the caller's
@@ -21,7 +22,7 @@ use Generator;
  *
  * @internal
  */
-final class SlotLoop
+final class SlotLoop implements Slot
 {
 	/** @var list<array<array-key, mixed>> the data of every `slot()` call, in order */
 	private array $calls = [];
@@ -49,11 +50,19 @@ final class SlotLoop
 		$this->token = bin2hex(random_bytes(8));
 	}
 
+	/** The loop body is the slot, even when it prints nothing. */
+	#[Override]
+	public function filled(): bool
+	{
+		return true;
+	}
+
 	/**
 	 * Called through `$this->slot()` in the inserted template.
 	 *
 	 * @param array<array-key, mixed> $data
 	 */
+	#[Override]
 	public function render(array $data): string
 	{
 		if (!$this->rendering) {

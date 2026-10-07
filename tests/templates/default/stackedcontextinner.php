@@ -1,1 +1,1 @@
-<?php $this->layout('stackedcontextouter') ?><div><?= $title ?><?= $this->body() ?></div>
+<?php $this->layout('stackedcontextouter') ?><div><?= $title ?><?= $this->slot() ?></div>

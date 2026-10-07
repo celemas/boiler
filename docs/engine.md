@@ -365,7 +365,7 @@ Boiler unwraps proxy arguments before it calls your method, so the callable rece
 
 In escaped renders, Boiler wraps the return value again before exposing it to the template. In unescaped renders, it returns the unwrapped value.
 
-The names of Boiler's own template helpers, such as `insert`, `section`, `escape`, `slot`, or `body`, are reserved in any letter case. Registering one throws `UnexpectedValueException`, because the built-in helper would always take precedence.
+The names of Boiler's own template helpers, such as `insert`, `section`, `yield`, `escape`, or `slot`, are reserved in any letter case. Registering one throws `UnexpectedValueException`, because the built-in helper would always take precedence.
 
 Pass `safe: true` when a helper returns safe HTML:
 

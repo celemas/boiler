@@ -1,1 +1,1 @@
-<title><?= $title ?></title><?= $text ?><?= $this->body() ?>
+<title><?= $title ?></title><?= $text ?><?= $this->slot() ?>

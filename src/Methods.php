@@ -52,7 +52,7 @@ final class Methods
 	{
 		return in_array(
 			strtolower($name),
-			array_map(strtolower(...), get_class_methods(LayoutContext::class)),
+			array_map(strtolower(...), get_class_methods(TemplateContext::class)),
 			true,
 		);
 	}

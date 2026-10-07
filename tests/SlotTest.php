@@ -29,6 +29,20 @@ final class SlotTest extends TestCase
 		);
 	}
 
+	public function testLayoutPrintsPageAsSlot(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		$this->assertSame("filled[<p>page</p>\n]Title", $engine->render('slotfilledpage'));
+	}
+
+	public function testPageOfOnlyWhitespaceCountsAsNoSlot(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		$this->assertSame('empty[]Title', $engine->render('slotemptypage'));
+	}
+
 	public function testCallingSlotWithoutProvidingOneThrows(): void
 	{
 		try {

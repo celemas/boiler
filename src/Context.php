@@ -197,26 +197,30 @@ abstract class Context
 	}
 
 	/**
-	 * Renders the slot of a template inserted with `each()`.
+	 * Returns what this template wraps: the page in a layout, or a row of the
+	 * loop body in a template inserted with `each()`.
 	 *
-	 * Call it once for a simple slot, or once per row to repeat the block with
-	 * different data. Throws when the template was inserted without a slot;
-	 * guard with `hasSlot()` when a slot is optional.
+	 * An `each()` template calls it once per row with that row's data. Fixed
+	 * content ignores the data, so the same template works with both. Throws
+	 * when the template has no slot, such as one inserted with `insert()`.
 	 *
 	 * @param array<array-key, mixed> $data
 	 */
-	public function slot(array $data = []): void
+	public function slot(array $data = []): string
 	{
-		echo
-			($this->template->slot() ?? throw new RuntimeException(
-				'No slot was provided for this template',
-				location: $this->location(),
-			))->render($data);
+		return ($this->template->slot() ?? throw new RuntimeException(
+			'No slot was provided for this template',
+			location: $this->location(),
+		))->render($data);
 	}
 
+	/**
+	 * Whether there is a slot to print. Content of only whitespace counts as
+	 * none, and `slot()` returns `''` for it.
+	 */
 	public function hasSlot(): bool
 	{
-		return $this->template->slot() !== null;
+		return $this->template->slot()?->filled() ?? false;
 	}
 
 	/**

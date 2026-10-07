@@ -30,7 +30,7 @@ Create `layout.php`:
 
 ```php
 <body>
-    <?= $this->body() ?>
+    <?= $this->slot() ?>
     <?= $this->yield('scripts') ?>
 </body>
 ```

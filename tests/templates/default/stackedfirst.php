@@ -1,2 +1,2 @@
 <?php $this->layout('stackedsecond'); ?>
-<div class="stackedfirst"><?= $this->body(); ?></div>
+<div class="stackedfirst"><?= $this->slot(); ?></div>

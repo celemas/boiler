@@ -51,7 +51,7 @@
     </header>
 
     <main>
-        <?= $this->body() ?>
+        <?= $this->slot() ?>
     </main>
 
     <footer>

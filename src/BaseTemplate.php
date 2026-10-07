@@ -14,7 +14,7 @@ abstract class BaseTemplate
 {
 	private ?LayoutSpec $layout = null;
 	private Methods $methods;
-	private ?SlotLoop $slot = null;
+	private ?Slot $slot = null;
 
 	/** @var list<SlotLoop> loops started by this template's current render */
 	private array $loops = [];
@@ -113,13 +113,13 @@ abstract class BaseTemplate
 	}
 
 	/** @internal */
-	public function setSlot(SlotLoop $slot): void
+	public function setSlot(Slot $slot): void
 	{
 		$this->slot = $slot;
 	}
 
 	/** @internal */
-	public function slot(): ?SlotLoop
+	public function slot(): ?Slot
 	{
 		return $this->slot;
 	}
@@ -263,13 +263,9 @@ abstract class BaseTemplate
 				}
 
 				$methods = $template->methods();
-				$template = new Layout(
-					$file,
-					$content,
-					$this->sections,
-					$template->engine,
-				);
+				$template = new Template($file, $this->sections, $template->engine);
 				$template->setMethods($methods);
+				$template->setSlot(new FixedSlot($content));
 				$this->sections->setLevel(++$level);
 
 				$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);

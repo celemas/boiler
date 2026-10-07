@@ -27,7 +27,7 @@ Create `inner.php`:
 
 ```php
 <body>
-    <?= $this->body() ?>
+    <?= $this->slot() ?>
     <footer><?= $text ?></footer>
 </body>
 ```
@@ -47,7 +47,7 @@ This produces:
 </body>
 ```
 
-The layout accesses the rendered page content through `$this->body()`. It also receives all values from the page template context by default.
+The layout prints the rendered page content with `$this->slot()`, as it would print any other [slot](slots.md). It also receives all values from the page template context by default.
 
 ## Override layout context
 
@@ -67,7 +67,7 @@ Layouts can assign another layout:
 <?php $this->layout('outer') ?>
 
 <div class="inner">
-    <?= $this->body() ?>
+    <?= $this->slot() ?>
 </div>
 ```
 
@@ -76,7 +76,7 @@ Create `outer.php`:
 ```php
 <body>
     <main>
-        <?= $this->body() ?>
+        <?= $this->slot() ?>
     </main>
 </body>
 ```

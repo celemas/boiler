@@ -29,7 +29,7 @@ Create `/path/to/templates/layout.php`:
 <!doctype html>
 <html lang="en">
     <body>
-        <?= $this->body() ?>
+        <?= $this->slot() ?>
     </body>
 </html>
 ```

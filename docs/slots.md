@@ -1,6 +1,6 @@
 # Slots
 
-A slot is a block of markup you hand to an inserted template, which the template can place — and repeat — wherever it calls `$this->slot()`. Where [sections](sections.md) push content _up_ into a layout as a fixed string, a slot passes a block _down_ into a partial that decides where and how often to render it, with different data each time.
+A slot is what a template wraps, which it prints wherever it calls `<?= $this->slot() ?>`: the page in a [layout](layouts.md), or a block of markup you hand to an inserted template, which the template can place — and repeat. Where [sections](sections.md) push content _up_ into a layout as a fixed string, a slot passes a block _down_ into a partial that decides where and how often to render it, with different data each time.
 
 Slots are the tool for a reusable wrapper around a varying control: a field row, a table row, a card body. Pass the wrapper once and keep the varying markup at the call site.
 
@@ -31,7 +31,7 @@ Create `rows.php`:
 ```php
 <ul>
 <?php foreach ($this->unwrap($items) as $row): ?>
-    <li><?php $this->slot($row); ?></li>
+    <li><?= $this->slot($row) ?></li>
 <?php endforeach; ?>
 </ul>
 ```
@@ -53,11 +53,13 @@ Use `hasSlot()` when a template should work with or without a slot:
 ```php
 <div>
 <?php if ($this->hasSlot()): ?>
-    <?php $this->slot(); ?>
+    <?= $this->slot() ?>
 <?php else: ?>
     <em>No content</em>
 <?php endif; ?>
 </div>
 ```
+
+`hasSlot()` is false when the slot holds nothing but whitespace, such as a page that only captures sections, and `slot()` then returns an empty string. The slot of an `each()` template always counts as filled.
 
 Calling `$this->slot()` on a template that was inserted without one, such as with `insert()`, fails the render. Guard with `hasSlot()` whenever the slot is optional.

@@ -1,2 +1,2 @@
-<?php $this->section('captured'); ?><?php $this->slot(); ?><?php $this->end(); ?>
+<?php $this->section('captured'); ?><?= $this->slot() ?><?php $this->end(); ?>
 <div><?= $this->yield('captured') ?></div>

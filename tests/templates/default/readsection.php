@@ -1,4 +1,4 @@
-<div><?= $this->body(); ?><?= $text; ?></div>
+<div><?= $this->slot(); ?><?= $text; ?></div>
 <?php if ($this->hasSection('list')) { ?>
     <?= $this->yield('list'); ?>
 <?php } else { ?>

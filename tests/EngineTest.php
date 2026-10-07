@@ -1134,7 +1134,7 @@ final class EngineTest extends TestCase
 		yield 'helper' => ['section'];
 		yield 'helper in other case' => ['Section'];
 		yield 'camel case helper' => ['hasSlot'];
-		yield 'layout helper' => ['body'];
+		yield 'keyword helper' => ['yield'];
 	}
 
 	#[DataProvider('reservedMethodNames')]
