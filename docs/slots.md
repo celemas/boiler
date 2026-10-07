@@ -11,8 +11,34 @@ path
 `-- to
     `-- templates
         |-- page.php
+        |-- card.php
         `-- rows.php
 ```
+
+## Pass a block to a component
+
+Use `component()` … `end()` to insert a template with a block of markup as its slot.
+
+Create `page.php`:
+
+```php
+<?php $this->component('card', ['title' => 'News']) ?>
+<p><?= $text ?></p>
+<?php $this->end() ?>
+```
+
+Create `card.php`:
+
+```php
+<div class="card">
+    <h2><?= $title ?></h2>
+    <?= $this->slot() ?>
+</div>
+```
+
+The block runs once, at the call site, before `card.php` renders, so it uses the page's variables. The card receives the finished markup: it can print it anywhere, check it with `hasSlot()`, or place it in a section. Any template can serve as a component; there are no component classes or prop declarations. Like `insert()`, `component()` shares the calling template's context and merges the values you pass on top.
+
+Sections and components share one stack of open blocks, and `end()` closes the innermost one. Pass the template name to check which block it closes: `$this->end('card')`.
 
 ## Fill a slot from a loop
 
@@ -37,6 +63,8 @@ Create `rows.php`:
 ```
 
 The partial owns the repeated structure (the list, the row wrapper); the call site owns the control. `each()` renders `rows.php` first. Every `$this->slot($row)` call in it becomes one iteration of the loop, with the data passed to `slot()`, and the iteration's output takes the place of that call. The result appears where the loop is, once the loop has finished. Destructuring works as in any `foreach`: `as ['name' => $name, 'value' => $value]`.
+
+A template written for `each()` also works as a component or a layout: fixed content ignores the data passed to `slot()`, so every call prints the same block.
 
 Because the inserted template has finished when the loop body runs, it can print its slot but not inspect it. Calling `$this->slot()` inside a section capture fails the render. Sections the loop body captures come after the ones the inserted template captured.
 

@@ -66,8 +66,8 @@ Use `safe: true` only when the helper itself guarantees safe HTML for the values
 Standalone templates can use the same composition helpers as engine-backed renders:
 
 - `$this->layout('layout')`
-- `$this->insert('partial')` and `$this->each('partial')`
-- `$this->slot()` and `$this->hasSlot()` inside layouts and templates inserted with `each()`
+- `$this->insert('partial')`, `$this->component('partial')`, and `$this->each('partial')`
+- `$this->slot()` and `$this->hasSlot()` inside layouts and templates inserted with `component()` or `each()`
 - sections via `$this->section()`, `$this->end()`, and `$this->yield()`
 
 Those template references are resolved relative to the directory that contains the original template file.

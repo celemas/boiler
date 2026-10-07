@@ -154,8 +154,9 @@ Template helpers available via `$this` inside templates:
 
 - `$this->layout('layout')`
 - `$this->insert('partial', ['value' => '...'])`
+- `$this->component('partial', ['value' => '...'])` … `$this->end()` to pass the block in between as the partial's slot
 - `foreach ($this->each('partial', ['value' => '...']) as $data)` to fill the partial's slot from the loop body
-- `<?= $this->slot() ?>` / `$this->hasSlot()` inside layouts, and `<?= $this->slot(['value' => '...']) ?>` inside templates inserted with `each()`
+- `<?= $this->slot() ?>` / `$this->hasSlot()` inside layouts and components, and `<?= $this->slot(['value' => '...']) ?>` inside templates inserted with `each()`
 - `$this->section('name')` / `$this->append('name')` / `$this->prepend('name')` / `$this->end()`
 - `$this->yield('name', 'default')` / `$this->hasSection('name')`
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper

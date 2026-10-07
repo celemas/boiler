@@ -539,7 +539,7 @@ final class EngineTest extends TestCase
 
 	public function testInsertCannotCloseParentSection(): void
 	{
-		$this->throws(RenderException::class, 'No open section to close');
+		$this->throws(RenderException::class, 'No open section or component to close');
 
 		$engine = Engine::create($this->templates());
 
@@ -667,7 +667,7 @@ final class EngineTest extends TestCase
 		} catch (RenderException $e) {
 			$this->assertSame($path, $e->location()?->path);
 			$this->assertSame(5, $e->location()?->line);
-			$this->assertStringEndsWith('No open section to close', $e->getMessage());
+			$this->assertStringEndsWith('No open section or component to close', $e->getMessage());
 		}
 	}
 

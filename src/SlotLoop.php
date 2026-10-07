@@ -71,8 +71,9 @@ final class SlotLoop implements Slot
 			);
 		}
 
-		// A section would keep the placeholder beyond the loop.
-		if ($this->template->blocks->depth() !== 0) {
+		// A section would keep the placeholder beyond the loop; a component
+		// prints it.
+		if ($this->template->blocks->contains('section')) {
 			throw new LogicException('The slot of an `each()` loop cannot be rendered inside a section capture');
 		}
 

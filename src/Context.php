@@ -164,6 +164,32 @@ abstract class Context
 	}
 
 	/**
+	 * Includes another template with the output up to the matching `end()`
+	 * as its slot, which it prints with `$this->slot()`.
+	 *
+	 * The block runs at the call site, before the inserted template renders.
+	 * If no context is passed it shares the context of the calling template.
+	 *
+	 * @param non-empty-string $path
+	 */
+	public function component(string $path, array $context = []): void
+	{
+		$template = $this->inserted($path);
+		$context = $this->get($context);
+
+		$this->template->blocks->open(
+			'component',
+			$path,
+			$this->location(),
+			function (string $content) use ($template, $context): void {
+				$template->setSlot(new FixedSlot($content));
+
+				echo $this->renderInserted($template, $context);
+			},
+		);
+	}
+
+	/**
 	 * Includes another template and turns the body of a foreach loop into its slot.
 	 *
 	 * The inserted template renders first. Each of its `$this->slot([...])`
@@ -197,8 +223,9 @@ abstract class Context
 	}
 
 	/**
-	 * Returns what this template wraps: the page in a layout, or a row of the
-	 * loop body in a template inserted with `each()`.
+	 * Returns what this template wraps: the page in a layout, the block passed
+	 * with `component()`, or a row of the loop body in a template inserted
+	 * with `each()`.
 	 *
 	 * An `each()` template calls it once per row with that row's data. Fixed
 	 * content ignores the data, so the same template works with both. Throws
@@ -243,9 +270,10 @@ abstract class Context
 	}
 
 	/**
-	 * Closes the innermost open section.
+	 * Closes the innermost open section or component.
 	 *
-	 * With a name, the render fails unless that is the section being closed.
+	 * With a name, the render fails unless that is the section or component
+	 * being closed, as passed to `section()` or `component()`.
 	 */
 	public function end(?string $name = null): void
 	{

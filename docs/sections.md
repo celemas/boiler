@@ -93,5 +93,5 @@ Capture blocks can nest. A section can contain another section, or an insert who
 
 - Section names are strings such as `scripts` or `sidebar`.
 - Section capture blocks must be closed with `$this->end()` in the template that opened them.
-- Calling `$this->end()` without an open section raises a render error, and so does `$this->end('name')` when the innermost open section has another name.
+- Calling `$this->end()` without an open section or [component](slots.md#pass-a-block-to-a-component) raises a render error, and so does `$this->end('name')` when the innermost open block has another name.
 - Calling `$this->yield()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, or check with `$this->hasSection()` when the section is optional.

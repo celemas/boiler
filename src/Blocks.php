@@ -9,11 +9,11 @@ use Closure;
 
 /**
  * The capture blocks that a template's current render has opened and not
- * yet closed, innermost last.
+ * yet closed, innermost last: sections and components.
  *
  * Every template render has its own stack, so a template can only close the
- * blocks it opened itself. Blocks may nest: a section can contain another
- * section, or an insert whose template opens and closes its own blocks.
+ * blocks it opened itself. Blocks may nest: a section can contain a component,
+ * another section, or an insert whose template opens and closes its own blocks.
  *
  * @internal
  */
@@ -37,7 +37,7 @@ final class Blocks
 		$block = end($this->open);
 
 		if ($block === false) {
-			throw new LogicException('No open section to close');
+			throw new LogicException('No open section or component to close');
 		}
 
 		if ($name !== null && $name !== $block->name) {
@@ -56,6 +56,17 @@ final class Blocks
 
 		array_pop($this->open);
 		($block->close)((string) ob_get_clean());
+	}
+
+	public function contains(string $kind): bool
+	{
+		foreach ($this->open as $block) {
+			if ($block->kind === $kind) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/** The number of open blocks, to check later that the blocks opened since are closed. */
