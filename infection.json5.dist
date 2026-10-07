@@ -61,6 +61,12 @@
 			],
 		},
 
+		// PHP turns a numeric string key into an integer itself; the cast of
+		// the matched placeholder index is for Psalm.
+		CastInt: {
+			ignore: ['Celema\\Boiler\\SlotLoop::fill'],
+		},
+
 		// Templates run in the scope of their context object, so the template
 		// API works with any visibility.
 		PublicVisibility: {

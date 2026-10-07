@@ -66,7 +66,7 @@ The partial owns the repeated structure (the list, the row wrapper); the call si
 
 A template written for `each()` also works as a component or a layout: fixed content ignores the data passed to `slot()`, so every call prints the same block.
 
-Because the inserted template has finished when the loop body runs, it can print its slot but not inspect it. Calling `$this->slot()` inside a section capture fails the render. Sections the loop body captures come after the ones the inserted template captured.
+Because the inserted template has finished when the loop body runs, it can place its slot but not inspect it: `$this->slot()` returns a placeholder, which the output of the loop body replaces once the loop has finished, in the template's output and in the sections it captured. Functions applied to the result, such as `trim()`, escaping, or case filters, change the placeholder, not the output of the loop body. Sections the loop body captures come after the ones the inserted template captured.
 
 You can leave the loop early: iterations that `continue`, `break`, `return`, or a caught exception skip stay empty. The render fails if a loop never runs, or if you break out of a loop kept in a variable, such as `$rows = $this->each(...)`. The rest of the template would otherwise end up inside the pending iteration.
 

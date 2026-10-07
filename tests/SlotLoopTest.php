@@ -9,6 +9,7 @@ use Celema\Boiler\Engine;
 use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Location;
+use Celema\Boiler\Sections;
 use Celema\Boiler\SlotLoop;
 use Celema\Boiler\Template;
 use Generator;
@@ -126,20 +127,32 @@ final class SlotLoopTest extends TestCase
 		);
 	}
 
-	public function testSlotInsideSectionOfInsertedTemplateFailsRender(): void
+	public function testSlotInsideSectionOfInsertedTemplate(): void
 	{
-		$level = ob_get_level();
+		$engine = Engine::create(self::DEFAULT_DIR);
 
-		try {
-			Engine::create(self::DEFAULT_DIR)->render('eachinsection');
-			$this->fail('RenderException was not thrown');
-		} catch (RenderException $e) {
-			$this->assertStringContainsString('cannot be rendered inside a section capture', $e->getMessage());
-			$this->assertSame(self::DEFAULT_DIR . '/eachcaptured.php', $e->location()?->path);
-			$this->assertSame(1, $e->location()?->line);
-		}
+		$this->assertSame('<div><b>body</b></div>', $this->fullTrim($engine->render('eachinsection')));
+	}
 
-		$this->assertSame($level, ob_get_level());
+	public function testSlotInsideSectionsThatLayoutPrints(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		$this->assertSame(
+			'<main><p><b>output</b></p></main>[<b>prepend</b>][<b>&lt;main&gt;</b>][<b>append</b>]',
+			$this->fullTrim($engine->render('eachsections')),
+		);
+	}
+
+	public function testSlotSurvivesTrimEscapingAndCaseFilters(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		// The functions apply to the placeholder; the loop body's output takes its place unchanged.
+		$this->assertSame(
+			'<i>a</i><u>a</u><s>a</s><q>a</q><p>a</p><i>b</i><u>b</u><s>b</s><q>b</q><p>b</p>',
+			$this->fullTrim($engine->render('eachfiltered', ['rows' => [['name' => 'a'], ['name' => 'b']]])),
+		);
 	}
 
 	public function testLoopThatIsNeverIteratedFailsRender(): void
@@ -286,11 +299,7 @@ final class SlotLoopTest extends TestCase
 
 	public function testSlotAfterTemplateRenderedThrows(): void
 	{
-		$loop = new SlotLoop(
-			new Location('/tmp/caller.php', 3),
-			new Blocks(),
-			new Template(self::DEFAULT_DIR . '/slotbox.php'),
-		);
+		$loop = new SlotLoop(new Location('/tmp/caller.php', 3), new Blocks(), new Sections());
 		iterator_to_array($loop->run(static fn(): string => '', static fn(array $data): array => $data));
 
 		$this->expectException(LogicException::class);

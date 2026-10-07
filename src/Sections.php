@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Celema\Boiler;
 
+use Closure;
+
 /**
  * The sections captured during a render, shared by the rendered template,
  * its inserts, and its layouts.
@@ -45,6 +47,14 @@ final class Sections
 	public function setLevel(int $level): void
 	{
 		$this->level = $level;
+	}
+
+	/** @param Closure(string): string $map applied to every part of every section */
+	public function map(Closure $map): void
+	{
+		foreach ($this->sections as $section) {
+			$section->map($map);
+		}
 	}
 
 	public function get(string $name): string

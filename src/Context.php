@@ -210,7 +210,7 @@ abstract class Context
 	public function each(string $path, array $context = []): Generator
 	{
 		$template = $this->inserted($path);
-		$loop = new SlotLoop($this->location(), $this->template->blocks, $template);
+		$loop = new SlotLoop($this->location(), $this->template->blocks, $this->template->sections);
 		$context = $this->get($context);
 
 		$template->setSlot($loop);

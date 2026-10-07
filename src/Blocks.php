@@ -58,17 +58,6 @@ final class Blocks
 		($block->close)((string) ob_get_clean());
 	}
 
-	public function contains(string $kind): bool
-	{
-		foreach ($this->open as $block) {
-			if ($block->kind === $kind) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	/** The number of open blocks, to check later that the blocks opened since are closed. */
 	public function depth(): int
 	{

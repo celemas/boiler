@@ -14,11 +14,11 @@ use Override;
  * `foreach` loop, in two passes.
  *
  * The first pass renders the inserted template completely. Every
- * `$this->slot()` call records its data and prints a placeholder. The second
+ * `$this->slot()` call records its data and returns a placeholder. The second
  * pass yields the recorded data to the loop, captures the output of each
- * iteration, and replaces the placeholders before the result is printed.
- * Only the caller's own generator is suspended in between, never the
- * inserted template.
+ * iteration, and replaces the placeholders, in the inserted template's output
+ * and in sections, before the result is printed. Only the caller's own
+ * generator is suspended in between, never the inserted template.
  *
  * @internal
  */
@@ -27,7 +27,11 @@ final class SlotLoop implements Slot
 	/** @var list<array<array-key, mixed>> the data of every `slot()` call, in order */
 	private array $calls = [];
 
-	/** Random, so that placeholders of nested loops and in user data never match. */
+	/**
+	 * Random, so that placeholders of nested loops and in user data never
+	 * match. Hex digits only, so that placeholders survive escaping and,
+	 * matched case-insensitively, case filters.
+	 */
 	private readonly string $token;
 
 	/** Whether the inserted template is rendering, which is the first pass. */
@@ -38,14 +42,11 @@ final class SlotLoop implements Slot
 	private bool $finished = false;
 	private bool $closed = false;
 
-	/**
-	 * @param Blocks $blocks the open blocks of the template that runs the loop
-	 * @param BaseTemplate $template the inserted template
-	 */
+	/** @param Blocks $blocks the open blocks of the template that runs the loop */
 	public function __construct(
 		private readonly Location $location,
 		private readonly Blocks $blocks,
-		private readonly BaseTemplate $template,
+		private readonly Sections $sections,
 	) {
 		$this->token = bin2hex(random_bytes(8));
 	}
@@ -69,12 +70,6 @@ final class SlotLoop implements Slot
 			throw new LogicException(
 				'The slot of an `each()` loop can only be rendered while its template renders',
 			);
-		}
-
-		// A section would keep the placeholder beyond the loop; a component
-		// prints it.
-		if ($this->template->blocks->contains('section')) {
-			throw new LogicException('The slot of an `each()` loop cannot be rendered inside a section capture');
 		}
 
 		$placeholder = $this->placeholder(count($this->calls));
@@ -169,7 +164,8 @@ final class SlotLoop implements Slot
 
 	/**
 	 * Prints the inserted template with the captured output in place of its
-	 * slot calls. Iterations that were not reached stay empty.
+	 * slot calls, which sections it captured get as well. Iterations that were
+	 * not reached stay empty.
 	 *
 	 * @param list<string> $parts
 	 */
@@ -185,6 +181,7 @@ final class SlotLoop implements Slot
 
 		if ($content !== null) {
 			echo $this->fill($content, $parts);
+			$this->sections->map(fn(string $section): string => $this->fill($section, $parts));
 		}
 
 		$this->finished = true;
@@ -201,20 +198,24 @@ final class SlotLoop implements Slot
 		}
 	}
 
+	/**
+	 * Letters, digits, and hyphens only, which `trim()`, HTML, URL, and
+	 * JavaScript escaping leave alone.
+	 */
 	private function placeholder(int $index): string
 	{
-		return "\0{$this->token}:{$index}\0";
+		return "boiler-slot-{$this->token}-{$index}-";
 	}
 
 	/** @param list<string> $parts */
 	private function fill(string $content, array $parts): string
 	{
-		$replacements = [];
-
-		foreach (array_keys($this->calls) as $index) {
-			$replacements[$this->placeholder($index)] = $parts[$index] ?? '';
-		}
-
-		return strtr($content, $replacements);
+		return (
+			preg_replace_callback(
+				"/boiler-slot-{$this->token}-(\\d+)-/i",
+				static fn(array $match): string => $parts[(int) $match[1]] ?? '',
+				$content,
+			) ?? $content
+		);
 	}
 }
