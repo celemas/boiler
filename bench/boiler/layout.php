@@ -5,11 +5,11 @@
     <meta charset="utf-8">
     <title><?= $title->trim() ?></title>
     <link rel="stylesheet" href="css/style.css">
-    <?php if ($this->has('head')): ?>
-        <?= $this->section('head') ?>
+    <?php if ($this->hasSection('head')): ?>
+        <?= $this->yield('head') ?>
     <?php endif ?>
-    <?php if ($this->has('script')): ?>
-        <?= $this->section('script') ?>
+    <?php if ($this->hasSection('script')): ?>
+        <?= $this->yield('script') ?>
     <?php endif ?>
 </head>
 

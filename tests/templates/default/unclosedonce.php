@@ -1,4 +1,4 @@
-<?php $this->begin('scripts'); ?>script<?php if (!$fail) {
+<?php $this->section('scripts'); ?>script<?php if (!$fail) {
 	$this->end();
-	echo $this->section('scripts');
+	echo $this->yield('scripts');
 } ?>

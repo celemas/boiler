@@ -1,1 +1,1 @@
-<?= $this->section('notset', '<p>default value</p>');
+<?= $this->yield('notset', '<p>default value</p>');

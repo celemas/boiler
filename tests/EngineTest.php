@@ -655,7 +655,7 @@ final class EngineTest extends TestCase
 			$this->assertSame(2, $e->location()?->line);
 			$this->assertInstanceOf(LookupException::class, $e->getPrevious());
 			$this->assertStringEndsWith(
-				'Section `sidebar` is not defined; pass a default or check it with has()',
+				'Section `sidebar` is not defined; pass a default or check it with hasSection()',
 				$e->getMessage(),
 			);
 		}

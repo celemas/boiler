@@ -1,2 +1,2 @@
 <main>content</main>
-<aside><?= $this->section('sidebar') ?></aside>
+<aside><?= $this->yield('sidebar') ?></aside>

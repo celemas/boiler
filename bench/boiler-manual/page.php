@@ -1,6 +1,6 @@
 <?php $this->layout('layout') ?>
 
-<?php $this->begin('head'); ?>
+<?php $this->section('head'); ?>
 <meta name="description" content="<?= $this->escape($this->wrap($campaign['title'])->trim()->upper()) ?>">
 <link rel="canonical" href="/products?campaign=<?= $this->escape(trim($campaign['code'])) ?>">
 <?php $this->end(); ?>
@@ -90,7 +90,7 @@
     <div>Revenue: $<?= number_format($stats['revenue'], 2) ?></div>
 </section>
 
-<?php $this->begin('script'); ?>
+<?php $this->section('script'); ?>
 <script>
     console.log('Product page loaded');
     const userId = <?= $user['id'] ?>;

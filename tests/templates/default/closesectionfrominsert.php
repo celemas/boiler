@@ -1,4 +1,4 @@
 <?php $this->layout('readsection'); ?>
-<?php $this->begin('list'); ?>
+<?php $this->section('list'); ?>
 <?php $this->insert('closesection'); ?>
 <?php $this->end(); ?>

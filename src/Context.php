@@ -219,7 +219,11 @@ abstract class Context
 		return $this->template->slot() !== null;
 	}
 
-	public function begin(string $name): void
+	/**
+	 * Captures the output up to the matching `end()` as the content of a
+	 * section, which `yield()` prints.
+	 */
+	public function section(string $name): void
 	{
 		$this->openSection($name, $this->template->sections->assign(...));
 	}
@@ -248,9 +252,9 @@ abstract class Context
 	 * Returns the captured content of a section.
 	 *
 	 * Without a default the section is required and a missing section throws;
-	 * pass a default, even `''`, or guard with `has()` when it is optional.
+	 * pass a default, even `''`, or guard with `hasSection()` when it is optional.
 	 */
-	public function section(string $name, ?string $default = null): string
+	public function yield(string $name, ?string $default = null): string
 	{
 		if ($default !== null) {
 			return $this->template->sections->getOr($name, $default);
@@ -258,7 +262,7 @@ abstract class Context
 
 		if (!$this->template->sections->has($name)) {
 			throw new LookupException(
-				"Section `{$name}` is not defined; pass a default or check it with has()",
+				"Section `{$name}` is not defined; pass a default or check it with hasSection()",
 				location: $this->location(),
 			);
 		}
@@ -266,7 +270,7 @@ abstract class Context
 		return $this->template->sections->get($name);
 	}
 
-	public function has(string $name): bool
+	public function hasSection(string $name): bool
 	{
 		return $this->template->sections->has($name);
 	}

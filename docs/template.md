@@ -68,7 +68,7 @@ Standalone templates can use the same composition helpers as engine-backed rende
 - `$this->layout('layout')`
 - `$this->insert('partial')` and `$this->each('partial')`
 - `$this->slot()` and `$this->hasSlot()` inside templates inserted with `each()`
-- sections via `$this->begin()` and `$this->section()`
+- sections via `$this->section()`, `$this->end()`, and `$this->yield()`
 
 Those template references are resolved relative to the directory that contains the original template file.
 

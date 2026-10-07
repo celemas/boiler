@@ -1,6 +1,6 @@
 <?php $this->layout('readsection'); ?>
 <p><?= $text; ?></p>
-<?php $this->begin('list'); ?>
+<?php $this->section('list'); ?>
 <ul>
     <li><?= $text; ?></li>
 </ul>

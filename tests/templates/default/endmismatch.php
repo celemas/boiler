@@ -1,3 +1,3 @@
-<?php $this->begin('title'); ?>
-<?php $this->begin('scripts'); ?>
+<?php $this->section('title'); ?>
+<?php $this->section('scripts'); ?>
 <?php $this->end('title'); ?>
