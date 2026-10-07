@@ -10,6 +10,7 @@ use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Closure;
+use Generator;
 use Stringable;
 
 /** @api */
@@ -165,20 +166,46 @@ abstract class Context
 	 */
 	public function insert(string $path, array $context = [], Closure|Slot|null $slot = null): void
 	{
-		$path = $this->template->engine->resolve($path);
-		$template = new Template(
-			$path,
-			sections: $this->template->sections,
-			engine: $this->template->engine,
+		$template = $this->inserted($path);
+
+		if ($slot !== null) {
+			$template->setSlot(new SlotRenderer($slot, $this, $this->location()));
+		}
+
+		echo $this->renderInserted($template, $this->get($context));
+	}
+
+	/**
+	 * Includes another template and turns the body of a foreach loop into its slot.
+	 *
+	 * The inserted template renders first. Each of its `$this->slot([...])`
+	 * calls becomes one iteration of the loop, with the passed data wrapped
+	 * like template context values, and the iteration's output takes the
+	 * place of the call. The result is printed when the loop ends:
+	 *
+	 *     foreach ($this->each('rows', ['items' => $items]) as $row) { ... }
+	 *
+	 * Iterations that a `break`, `return`, or exception skips stay empty. The
+	 * render fails if the loop never runs, or if it is kept in a variable and
+	 * left with `break`.
+	 *
+	 * @param non-empty-string $path
+	 *
+	 * @return Generator<int, array<array-key, mixed>, mixed, void>
+	 */
+	public function each(string $path, array $context = []): Generator
+	{
+		$template = $this->inserted($path);
+		$loop = new SlotLoop($this->location(), $this->template->sections);
+		$context = $this->get($context);
+
+		$template->setSlot($loop);
+		$this->template->addLoop($loop);
+
+		return $loop->run(
+			fn(): string => $this->renderInserted($template, $context),
+			fn(array $data): array => $this->autoescape ? $this->wrapAll($data) : $data,
 		);
-
-		$template->setMethods($this->template->methods());
-		$template->setSlot($slot, $this, $this->location());
-
-		echo
-			$this->autoescape
-				? $template->renderEscaped($this->get($context), $this->trusted)
-				: $template->renderUnescaped($this->get($context), $this->trusted);
 	}
 
 	/**
@@ -254,5 +281,25 @@ abstract class Context
 	private function location(): Location
 	{
 		return Location::fromBacktrace($this->template->path);
+	}
+
+	/** @param non-empty-string $path */
+	private function inserted(string $path): Template
+	{
+		$template = new Template(
+			$this->template->engine->resolve($path),
+			sections: $this->template->sections,
+			engine: $this->template->engine,
+		);
+		$template->setMethods($this->template->methods());
+
+		return $template;
+	}
+
+	private function renderInserted(Template $template, array $context): string
+	{
+		return $this->autoescape
+			? $template->renderEscaped($context, $this->trusted)
+			: $template->renderUnescaped($context, $this->trusted);
 	}
 }

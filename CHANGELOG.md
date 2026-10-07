@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://codefloe.com/celema/boiler/compare/0.8.0...HEAD)
 
+### Added
+
+- `$this->each('partial', [...])` inserts a template and turns the body of a `foreach` loop into its slot, so a slot no longer needs a closure. The inserted template renders first; every `$this->slot([...])` call in it becomes one iteration of the loop, with that data wrapped like other template values, and the iteration's output takes the place of the call. Iterations skipped by `break`, `return`, or an exception stay empty. A loop that never runs, a `break` out of a loop kept in a variable, and `slot()` inside a section capture fail the render. `each` is now a reserved template method name.
+
 ### Changed
 
 - `$this->section('name')` without a default now raises a render error with a clear message and the calling location when the section was never captured. Previously it failed with an undefined array key warning followed by an `Error`. Pass a default, even `''`, or check with `$this->has()` for optional sections. The default parameter is now `?string $default = null`; passing `null` is the same as omitting it.

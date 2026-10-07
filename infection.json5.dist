@@ -59,6 +59,7 @@
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
 				'Celema\\Boiler\\Sections::end',
 				'Celema\\Boiler\\SlotRenderer::render',
+				'Celema\\Boiler\\SlotLoop::finish',
 			],
 		},
 
@@ -68,6 +69,7 @@
 			ignore: [
 				'Celema\\Boiler\\Context::unwrap',
 				'Celema\\Boiler\\Context::layout',
+				'Celema\\Boiler\\Context::each',
 				'Celema\\Boiler\\Context::slot',
 				'Celema\\Boiler\\Context::hasSlot',
 				'Celema\\Boiler\\Context::begin',
@@ -83,17 +85,20 @@
 			ignore: ['Celema\\Boiler\\Context::wrapAll'],
 		},
 
-		// The default exception code is not part of the contract.
+		// The default exception code is not part of the contract, and any
+		// length of the random placeholder token keeps it unique.
 		DecrementInteger: {
 			ignore: [
 				'Celema\\Boiler\\Exception\\LogicException::__construct',
 				'Celema\\Boiler\\Exception\\RuntimeException::__construct',
+				'Celema\\Boiler\\SlotLoop::__construct',
 			],
 		},
 		IncrementInteger: {
 			ignore: [
 				'Celema\\Boiler\\Exception\\LogicException::__construct',
 				'Celema\\Boiler\\Exception\\RuntimeException::__construct',
+				'Celema\\Boiler\\SlotLoop::__construct',
 			],
 		},
 

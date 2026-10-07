@@ -8,14 +8,16 @@ use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
-use Closure;
 use Throwable;
 
 abstract class BaseTemplate
 {
 	private ?LayoutSpec $layout = null;
 	private Methods $methods;
-	private ?SlotRenderer $slot = null;
+	private SlotRenderer|SlotLoop|null $slot = null;
+
+	/** @var list<SlotLoop> loops started by this template's current render */
+	private array $loops = [];
 	private readonly bool $ownsSections;
 
 	public private(set) Engine $engine {
@@ -108,18 +110,29 @@ abstract class BaseTemplate
 	}
 
 	/** @internal */
-	public function setSlot(
-		Closure|Slot|null $slot,
-		Context $context,
-		Location $location,
-	): void {
-		$this->slot = $slot === null ? null : new SlotRenderer($slot, $context, $location);
+	public function setSlot(SlotRenderer|SlotLoop $slot): void
+	{
+		$this->slot = $slot;
 	}
 
 	/** @internal */
-	public function slot(): ?SlotRenderer
+	public function slot(): SlotRenderer|SlotLoop|null
 	{
 		return $this->slot;
+	}
+
+	/** @internal */
+	public function addLoop(SlotLoop $loop): void
+	{
+		$this->loops[] = $loop;
+	}
+
+	/** @internal */
+	public function assertLoopsFinished(): void
+	{
+		foreach ($this->loops as $loop) {
+			$loop->assertFinished();
+		}
 	}
 
 	/** @param list<class-string> $trusted */
@@ -168,7 +181,11 @@ abstract class BaseTemplate
 		$templateContext = $this->context($context, $trusted, $autoescape);
 
 		/** @mago-expect lint:prefer-static-closure Closure::call() binds $this to the template context at runtime. */
-		$load = function (string $____template_path____, array $____template_context____): void {
+		$load = function (
+			string $____template_path____,
+			array $____template_context____,
+			BaseTemplate $____template_owner____,
+		): void {
 			// Must stay non-static so Closure::call() can bind $this to the template context.
 			// extract() skips names that already exist, so the parameter names
 			// are obscure to leave common names such as `$context` to the caller.
@@ -176,6 +193,11 @@ abstract class BaseTemplate
 
 			/** @psalm-suppress UnresolvableInclude */
 			include $____template_path____;
+
+			// While the template's variables still exist: a loop kept in one
+			// would otherwise finish when they are released, after the rest
+			// of the template's output went into its capture buffer.
+			$____template_owner____->assertLoopsFinished();
 		};
 
 		$level = ob_get_level();
@@ -190,6 +212,7 @@ abstract class BaseTemplate
 				$autoescape
 					? $templateContext->get()
 					: $context,
+				$this,
 			);
 			$this->sections->assertClosed($sections);
 
@@ -201,6 +224,14 @@ abstract class BaseTemplate
 		} catch (Throwable $e) {
 			throw RenderException::fromThrowable($this->path, $e);
 		} finally {
+			// A loop kept beyond this render must not touch the output buffers
+			// of whatever renders when it is resumed or released.
+			foreach ($this->loops as $loop) {
+				$loop->close();
+			}
+
+			$this->loops = [];
+
 			while (ob_get_level() > $level) {
 				ob_end_clean();
 			}
