@@ -123,6 +123,10 @@
 		GreaterThanNegotiation: {
 			ignoreSourceCodeByRegex: ['while \\(ob_get_level\\(\\) > \\$level\\) \\{'],
 		},
+		// Likewise for the index of the position comparison of section appends.
+		Increment: {
+			ignore: ['Celema\\Boiler\\Section::compare'],
+		},
 		// preg_match() reports errors through the handler and does not throw.
 		UnwrapFinally: {
 			ignore: ['Celema\\Boiler\\Proxy\\StringProxy::matches'],

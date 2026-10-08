@@ -173,7 +173,7 @@ final class Template
 	 */
 	public function renderPartial(array $context, array $trusted, bool $autoescape): string
 	{
-		return $this->renderIsolated($context, $trusted, $autoescape);
+		return $this->sections->nest(fn(): string => $this->renderIsolated($context, $trusted, $autoescape));
 	}
 
 	/** @param list<class-string> $trusted */
@@ -262,33 +262,24 @@ final class Template
 		string $content,
 		bool $autoescape,
 	): string {
-		// An inserted template can have layouts too; the template that
-		// inserts it continues at its own level.
-		$base = $this->sections->level();
-		$level = $base;
-
-		try {
-			while (($layout = $template->layout) !== null) {
-				try {
-					$file = $template->engine->resolve($layout->path);
-				} catch (LookupException|UnexpectedValueException $e) {
-					self::throwLayoutException($layout, $e);
-				}
-
-				$methods = $template->methods();
-				$template = new Template($file, $this->sections, $template->engine);
-				$template->setMethods($methods);
-				$template->setSlot($content);
-				$this->sections->setLevel(++$level);
-
-				$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);
-				$content = $rendered->content;
-				// The next layout builds on this one's context, like an insert
-				// builds on the context of the template that calls it.
-				$context = $rendered->templateContext;
+		while (($layout = $template->layout) !== null) {
+			try {
+				$file = $template->engine->resolve($layout->path);
+			} catch (LookupException|UnexpectedValueException $e) {
+				self::throwLayoutException($layout, $e);
 			}
-		} finally {
-			$this->sections->setLevel($base);
+
+			$methods = $template->methods();
+			$template = new Template($file, $this->sections, $template->engine);
+			$template->setMethods($methods);
+			$template->setSlot($content);
+			$this->sections->enterLayout();
+
+			$rendered = $template->getContent($context->get($layout->context), $trusted, $autoescape);
+			$content = $rendered->content;
+			// The next layout builds on this one's context, like an insert
+			// builds on the context of the template that calls it.
+			$context = $rendered->templateContext;
 		}
 
 		return $content;

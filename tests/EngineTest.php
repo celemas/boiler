@@ -607,13 +607,34 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testLayoutOfInsertedTemplateLeavesAdditionsOfCallerInPlace(): void
+	public function testInsertWithLayoutKeepsItsPlaceInCallOrder(): void
 	{
 		$engine = Engine::create($this->templates());
 
 		$this->assertSame(
-			'[page-prepend][partial-layout-prepend][main][partial-layout-append][page-append]',
+			'[partial-layout-prepend][page-prepend][main][partial-layout-append][page-append]',
 			$this->fullTrim($engine->render('addorderinsertlayout')),
+		);
+	}
+
+	public function testLayoutOfInsertStaysCloserToMainContentAtThePlaceOfTheInsert(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'[partial-prepend][partial-layout-prepend][page-prepend][layout-prepend][main]'
+				. '[layout-append-1][layout-append-2][page-append][partial-layout-append][partial-append]',
+			$this->fullTrim($engine->render('addordernested')),
+		);
+	}
+
+	public function testInsertInsideInsertKeepsItsPlaceInCallOrder(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'[partial-layout-prepend][main][partial-layout-append][outer-append]',
+			$this->fullTrim($engine->render('addorderdeep')),
 		);
 	}
 
@@ -622,7 +643,7 @@ final class EngineTest extends TestCase
 		$engine = Engine::create($this->templates());
 
 		$this->assertSame(
-			'fallback[page-prepend][failed-layout-prepend][main][page-append]',
+			'fallback[failed-layout-prepend][page-prepend][main][page-append]',
 			$this->fullTrim($engine->render('addorderfailing')),
 		);
 	}

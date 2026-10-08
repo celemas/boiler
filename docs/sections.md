@@ -82,7 +82,7 @@ Boiler combines the parts in this order:
 2. the main content: what `section()` captured, or else the default passed to `yield()`
 3. appended content
 
-Additions keep the order of their calls, also across inserts, so two partials that append their scripts print them in the order they were inserted. A layout's additions stay closer to the main content than those of the page it wraps: page prepends, layout prepends, main content, layout appends, page appends. A script that the layout appends therefore comes before the scripts of the page.
+Additions keep the order of their calls, also across inserts, so two partials that append their scripts print them in the order they were inserted. A layout's additions stay closer to the main content than those of the page it wraps: page prepends, layout prepends, main content, layout appends, page appends. A script that the layout appends therefore comes before the scripts of the page. An inserted template with a layout of its own follows the same rule, and its additions and those of its layout stay together at the place of the `insert()` call.
 
 `section()` sets only the main content and keeps what was appended or prepended before.
 
