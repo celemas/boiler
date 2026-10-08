@@ -57,15 +57,48 @@ final class Section
 	}
 
 	/**
+	 * Whether the template at position $a wraps the one at $b: it is a
+	 * layout of that template or of a template it was inserted into, or a
+	 * template that such a layout inserted. That is the case when the
+	 * positions first differ in a layout level, as $a must render later and
+	 * layout levels only grow while a template renders. Positions as
+	 * numbered by Sections.
+	 *
+	 * @param list<int> $a
+	 * @param list<int> $b
+	 */
+	public static function wraps(array $a, array $b): bool
+	{
+		return (self::divergence($a, $b) % 2) === 0;
+	}
+
+	/**
 	 * Orders two appends at the first difference of their positions: a
-	 * higher layout level first, otherwise call order. Even parts are layout
-	 * levels, odd parts call numbers. Call numbers are unique, so two
-	 * positions always differ before either ends.
+	 * higher layout level first, otherwise call order.
 	 *
 	 * @param list<int> $a
 	 * @param list<int> $b
 	 */
 	private static function compare(array $a, array $b): int
+	{
+		$index = self::divergence($a, $b);
+
+		if (($index % 2) === 0) {
+			return $b[$index] <=> $a[$index];
+		}
+
+		return $a[$index] <=> $b[$index];
+	}
+
+	/**
+	 * The index of the first difference of two positions. Even parts are
+	 * layout levels, odd parts call numbers. Call numbers are unique, so two
+	 * positions always differ before either ends.
+	 *
+	 * @param list<int> $a
+	 * @param list<int> $b
+	 */
+	private static function divergence(array $a, array $b): int
 	{
 		$index = 0;
 
@@ -73,10 +106,6 @@ final class Section
 			$index++;
 		}
 
-		if (($index % 2) === 0) {
-			return $b[$index] <=> $a[$index];
-		}
-
-		return $a[$index] <=> $b[$index];
+		return $index;
 	}
 }

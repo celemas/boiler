@@ -56,7 +56,27 @@ For a default made of markup, such as an insert, pass a closure that prints it. 
 
 The closure prints its content, like a section block; returning a string instead fails the render. Content appended or prepended to the section prints around the default, as for a string default.
 
-A render captures each section once. A second `section()` capture of the same section fails the render at its `section()` call, and the error names where the first capture happened. A layout renders after the page it wraps, so a layout that captured a section itself would replace the page's content instead of providing a fallback. Pass the fallback to `yield()`, and add content with `append()` or `prepend()`.
+### Defaults in a layout
+
+A layout between the page and the layout that prints a section provides a default with `section()`. A layout's capture is a default for the templates it wraps: the page, its inner layouts, and everything they insert. Those render first, so when one of them captured the section, the layout's capture is discarded, and so is everything it would add to sections, such as the scripts of a partial it inserts. Otherwise its capture becomes the main content, which the next layout out treats the same way, so the innermost capture wins.
+
+Create `mid.php`, a layout between the page and `layout.php`:
+
+```php
+<?php $this->layout('layout') ?>
+
+<?php $this->section('sidebar') ?>
+<?php $this->insert('widget') ?>
+<?php $this->end() ?>
+
+<?= $this->slot() ?>
+```
+
+A page that uses `mid` as its layout shows the widget in the sidebar. A page that captures `sidebar` itself replaces it, and the widget's script, which it [appends](#append-and-prepend) to `scripts`, is not added either. A page that only appends to `sidebar` keeps the widget and adds to it, and a page that captures `sidebar` empty switches it off. This is how a layout's `@section` works in Blade and a parent's `{% block %}` in Twig.
+
+The code of a discarded default still runs; only its output and its additions to sections are dropped. In the layout that prints a section, pass the default to `yield()` instead: a `section()` call after the `yield()` of the same section comes too late to print.
+
+Any other second capture of a section fails the render at its `section()` call, and the error names where the first capture happened. That covers a template that captures a section twice, a page and one of its partials, and a page and the layout of a partial it inserts, which wraps only that partial.
 
 Check for a section when you need conditional markup:
 
@@ -66,7 +86,7 @@ Check for a section when you need conditional markup:
 <?php endif; ?>
 ```
 
-`hasSection()` is also true when templates only appended or prepended to the section. To fill in missing main content, pass a default to `yield()` instead of checking.
+`hasSection()` is also true when templates only appended or prepended to the section. To fill in missing main content, pass a default to `yield()` or capture one in a layout instead of checking.
 
 ## Append and prepend
 

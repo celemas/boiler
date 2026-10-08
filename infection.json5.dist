@@ -122,7 +122,7 @@
 		},
 		// Likewise for the index of the position comparison of section appends.
 		Increment: {
-			ignore: ['Celema\\Boiler\\Section::compare'],
+			ignore: ['Celema\\Boiler\\Section::divergence'],
 		},
 		// preg_match() reports errors through the handler and does not throw.
 		UnwrapFinally: {

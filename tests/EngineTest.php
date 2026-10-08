@@ -732,20 +732,73 @@ final class EngineTest extends TestCase
 		$this->assertSame('[prepend][main][append]', $this->fullTrim($engine->render('sectionkeepsadditions')));
 	}
 
-	public function testCapturingSectionTwiceFailsAtSecondCapture(): void
+	/** @return iterable<string, array{string, string}> */
+	public static function layoutSectionDefaults(): iterable
 	{
-		$path = self::DEFAULT_DIR . '/sectiontwicelayout.php';
-		$first = self::DEFAULT_DIR . '/sectiontwice.php';
+		yield 'used when the page captures nothing' => [
+			'sectiondefault',
+			'<title>[mid-title]</title><main>[page]</main><aside>[widget]</aside>'
+				. '<js>[widget-pre][base-js][widget-js][mid-js]</js><modal>[widget-modal]</modal>',
+		];
+		yield 'replaced by the page, adding nothing' => [
+			'sectiondefaultreplaced',
+			'<title>[page-title]</title><main>[page]</main><aside>[page-sidebar]</aside>'
+				. '<js>[base-js][mid-js][page-js]</js><modal></modal>',
+		];
+		yield 'extended by the page' => [
+			'sectiondefaultextended',
+			'<title>[mid-title]</title><main>[page]</main><aside>[widget][page-sidebar]</aside>'
+				. '<js>[widget-pre][base-js][widget-js][mid-js]</js><modal>[widget-modal]</modal>',
+		];
+		yield 'switched off by an empty capture' => [
+			'sectiondefaultemptied',
+			'<title>[mid-title]</title><main>[page]</main><aside></aside><js>[base-js][mid-js]</js><modal></modal>',
+		];
+		yield 'replaced by a partial in its own layout' => [
+			'sectiondefaultinsert',
+			'[card]<badge>[card-badge]</badge>',
+		];
+	}
+
+	#[DataProvider('layoutSectionDefaults')]
+	public function testLayoutSectionIsDefaultForWrappedTemplates(string $page, string $expected): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame($expected, $this->fullTrim($engine->render($page)));
+	}
+
+	public function testFailedInsertDoesNotLeaveSectionsMuted(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[card][after]', $this->fullTrim($engine->render('sectionmutefail')));
+	}
+
+	/** @return iterable<string, array{string, string, string}> */
+	public static function sectionCapturedTwice(): iterable
+	{
+		yield 'by a partial and the page' => ['sectiontwice', 'sectiontwice.php:2', 'sectiontwicepartial.php:1'];
+		yield "by the page and a partial's layout" => [
+			'sectiontwiceinsertlayout',
+			'sectiontwicepanel.php:1',
+			'sectiontwiceinsertlayout.php:1',
+		];
+	}
+
+	#[DataProvider('sectionCapturedTwice')]
+	public function testCapturingSectionTwiceFailsAtSecondCapture(string $page, string $second, string $first): void
+	{
+		$dir = self::DEFAULT_DIR . '/';
 
 		try {
-			Engine::create($this->templates())->render('sectiontwice');
+			Engine::create($this->templates())->render($page);
 			$this->fail('RenderException was not thrown');
 		} catch (RenderException $e) {
-			$this->assertSame($path, $e->location()?->path);
-			$this->assertSame(1, $e->location()?->line);
+			$this->assertSame($dir . $second, (string) $e->location());
 			$this->assertStringEndsWith(
-				"Section `title` was already captured at {$first}:2; "
-					. 'add to it with append() or prepend(), or pass a fallback to yield()',
+				"Section `title` was already captured at {$dir}{$first}; "
+					. 'add to it with append() or prepend(), or capture defaults in a layout',
 				$e->getMessage(),
 			);
 		}

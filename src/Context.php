@@ -164,18 +164,12 @@ final class Context
 	 * Captures the output up to the matching `end()` as the content of a
 	 * section, which `yield()` prints.
 	 *
-	 * A render captures each section once; `end()` fails the render when an
-	 * earlier `section()` call captured it already.
+	 * In a layout, the capture is a default for the templates it wraps. Any
+	 * other second capture fails the render at `end()`.
 	 */
 	public function section(string $name): void
 	{
-		$sections = $this->rendering->sections;
-
-		$this->rendering->capture('section', $name, static fn(string $content, Location $location) => $sections->assign(
-			$name,
-			$content,
-			$location,
-		));
+		$this->rendering->capture('section', $name, $this->rendering->sections->open($name));
 	}
 
 	public function append(string $name): void

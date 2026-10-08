@@ -36,42 +36,68 @@ final class Sections
 	private int $calls = 0;
 
 	/**
-	 * Where the main content of each section was captured.
+	 * Where and at which position the main content of each section was
+	 * captured.
 	 *
-	 * @var array<string, Location>
+	 * @var array<string, array{Location, list<int>}>
 	 */
 	private array $captured = [];
 
 	/**
-	 * Sets only the main content; prepended and appended content stays.
-	 *
-	 * A second capture fails instead of replacing the first. As a layout
-	 * renders after the page, it would otherwise override the page's section
-	 * where it meant a fallback.
-	 *
-	 * @param Location $location where `section()` opened the capture
+	 * How many discarded defaults are open. While one is, nothing reaches the
+	 * sections, so a default that is not used adds nothing, not even through
+	 * the templates it inserts.
 	 */
-	public function assign(string $name, string $content, Location $location): void
+	private int $muted = 0;
+
+	/**
+	 * Opens a capture of the main content and returns what closes it with the
+	 * captured output and where `section()` opened it.
+	 *
+	 * A layout's capture is a default: a template it wraps renders first, so
+	 * when one of those captured the section already, the layout's capture is
+	 * discarded. Any other second capture fails instead of replacing the
+	 * first.
+	 *
+	 * @return Closure(string, Location): void
+	 */
+	public function open(string $name): Closure
 	{
-		if (isset($this->captured[$name])) {
-			throw new LogicException(
-				"Section `{$name}` was already captured at {$this->captured[$name]}; "
-					. 'add to it with append() or prepend(), or pass a fallback to yield()',
-				location: $location,
-			);
+		if ($this->muted > 0) {
+			return static function (): void {};
 		}
 
-		$this->captured[$name] = $location;
-		($this->sections[$name] ??= new Section())->setValue($content);
+		$position = $this->position();
+		$captured = $this->captured[$name] ?? null;
+
+		if ($captured !== null && Section::wraps($position, $captured[1])) {
+			$this->muted++;
+
+			return function (): void {
+				$this->muted--;
+			};
+		}
+
+		return function (string $content, Location $location) use ($name, $position): void {
+			$this->assign($name, $content, $location, $position);
+		};
 	}
 
 	public function append(string $name, string $content): void
 	{
+		if ($this->muted > 0) {
+			return;
+		}
+
 		($this->sections[$name] ??= new Section())->append($content, $this->position());
 	}
 
 	public function prepend(string $name, string $content): void
 	{
+		if ($this->muted > 0) {
+			return;
+		}
+
 		($this->sections[$name] ??= new Section())->prepend($content);
 	}
 
@@ -85,6 +111,7 @@ final class Sections
 	{
 		$insert = $this->insert;
 		$level = $this->level;
+		$muted = $this->muted;
 		$this->insert = [...$insert, $level, ++$this->calls];
 
 		try {
@@ -92,6 +119,8 @@ final class Sections
 		} finally {
 			$this->insert = $insert;
 			$this->level = $level;
+			// A failed insert that the caller catches may leave a default open.
+			$this->muted = $muted;
 		}
 	}
 
@@ -127,6 +156,25 @@ final class Sections
 	public function has(string $name): bool
 	{
 		return isset($this->sections[$name]);
+	}
+
+	/**
+	 * Sets only the main content; prepended and appended content stays.
+	 *
+	 * @param list<int> $position
+	 */
+	private function assign(string $name, string $content, Location $location, array $position): void
+	{
+		if (isset($this->captured[$name])) {
+			throw new LogicException(
+				"Section `{$name}` was already captured at {$this->captured[$name][0]}; "
+					. 'add to it with append() or prepend(), or capture defaults in a layout',
+				location: $location,
+			);
+		}
+
+		$this->captured[$name] = [$location, $position];
+		($this->sections[$name] ??= new Section())->setValue($content);
 	}
 
 	/** @return list<int> */
