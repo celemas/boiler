@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Celema\Boiler;
 
 use Celema\Boiler\Exception\UnexpectedValueException;
+use ReflectionClass;
+use ReflectionMethod;
 
 /** @internal */
 final class Methods
@@ -47,12 +49,17 @@ final class Methods
 	/**
 	 * Templates reach registered methods through Context::__call(), which PHP
 	 * only calls for names the context does not define itself, ignoring case.
+	 * Templates run in the scope of the context, so its non-public methods
+	 * count too.
 	 */
 	private static function isReserved(string $name): bool
 	{
 		return in_array(
 			strtolower($name),
-			array_map(strtolower(...), get_class_methods(Context::class)),
+			array_map(
+				static fn(ReflectionMethod $method): string => strtolower($method->name),
+				new ReflectionClass(Context::class)->getMethods(),
+			),
 			true,
 		);
 	}

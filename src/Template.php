@@ -8,6 +8,7 @@ use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
+use Closure;
 use Throwable;
 
 /** @api */
@@ -126,6 +127,53 @@ final class Template
 	public function slot(): ?string
 	{
 		return $this->slot;
+	}
+
+	/**
+	 * Where this template's code currently runs, for errors raised by helpers.
+	 *
+	 * @internal
+	 */
+	public function location(): Location
+	{
+		return Location::fromBacktrace($this->path);
+	}
+
+	/**
+	 * Captures this template's output up to the matching `end()`.
+	 *
+	 * @internal
+	 * @param Closure(string): void $close receives the captured output
+	 */
+	public function capture(string $kind, string $name, Closure $close): void
+	{
+		$this->blocks->open($kind, $name, $this->location(), $close);
+	}
+
+	/**
+	 * A template for `$path` that shares this one's sections, engine, and methods.
+	 *
+	 * @internal
+	 * @param non-empty-string $path
+	 */
+	public function partial(string $path): self
+	{
+		$template = new self($this->engine->resolve($path), $this->sections, $this->engine);
+		$template->setMethods($this->methods);
+
+		return $template;
+	}
+
+	/**
+	 * Renders this template inside another one, with the trusted classes and
+	 * escaping of that one's render.
+	 *
+	 * @internal
+	 * @param list<class-string> $trusted
+	 */
+	public function renderPartial(array $context, array $trusted, bool $autoescape): string
+	{
+		return $this->renderIsolated($context, $trusted, $autoescape);
 	}
 
 	/** @param list<class-string> $trusted */

@@ -27,10 +27,10 @@
 		// recomputes the same value.
 		AssignCoalesce: {
 			ignore: [
-				'Celema\\Boiler\\Context::wrappedContext',
 				'Celema\\Boiler\\Engine::wrapper',
 				'Celema\\Boiler\\Filter\\Sanitize::sanitizer',
 				'Celema\\Boiler\\Proxy\\StringProxy::__toString',
+				'Celema\\Boiler\\Values::wrapped',
 			],
 		},
 		ReturnRemoval: {
@@ -41,7 +41,7 @@
 				// class tests cover it.
 				'Celema\\Boiler\\Wrapper::isTrusted',
 			],
-			ignoreSourceCodeByRegex: ['return \\$this->wrappedContext\\(\\);'],
+			ignoreSourceCodeByRegex: ['return \\$this->wrapped\\(\\);'],
 		},
 		LogicalOr: {
 			ignore: [

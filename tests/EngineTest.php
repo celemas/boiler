@@ -1177,6 +1177,15 @@ final class EngineTest extends TestCase
 		Engine::create($this->templates())->method($name, static fn(): string => '');
 	}
 
+	public function testMethodNamedAfterNoHelperReachesTemplate(): void
+	{
+		// `location` once named an internal method of the template context, which shadowed the method.
+		$engine = Engine::create($this->templates())
+			->method('location', static fn(string $city): string => "City: {$city}");
+
+		$this->assertSame('<p>City: Bamberg</p>', trim($engine->render('methodlocation')));
+	}
+
 	public function testCustomTemplateMethod(): void
 	{
 		$engine = Engine::create($this->templates());

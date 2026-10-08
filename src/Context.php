@@ -4,32 +4,36 @@ declare(strict_types=1);
 
 namespace Celema\Boiler;
 
-use Celema\Boiler\Contract\Wrapper;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
-use Closure;
 use Stringable;
 
-/** @api */
+/**
+ * The `$this` of template code: the template helpers and the registered
+ * template methods.
+ *
+ * Templates run in the scope of this object, so a method of any visibility
+ * here would shadow a registered template method of the same name. Keep
+ * helper code in Template and Values instead of private methods.
+ *
+ * @api
+ */
 final class Context
 {
-	/** @var array<array-key, mixed>|null */
-	private ?array $wrappedContext = null;
-
-	private readonly Wrapper $wrapper;
+	private readonly Values $values;
 
 	/**
 	 * @param list<class-string> $trusted
 	 */
 	public function __construct(
 		private readonly Template $template,
-		private array $context,
+		array $context,
 		public readonly array $trusted,
 		public readonly bool $autoescape,
 	) {
-		$this->wrapper = $template->engine->wrapper()->withTrusted($trusted);
+		$this->values = new Values($context, $template->engine->wrapper()->withTrusted($trusted), $autoescape);
 	}
 
 	public function __call(string $name, array $args): mixed
@@ -39,52 +43,22 @@ final class Context
 		/** @var array<array-key, mixed> $args */
 		$args = $this->unwrap($args);
 
-		return $this->templateValue(($method->callable)(...$args), safe: $method->safe);
+		return $this->values->output(($method->callable)(...$args), safe: $method->safe);
 	}
 
 	public function get(array $values = []): array
 	{
-		if (!$this->autoescape) {
-			return $values === []
-				? $this->context
-				: array_merge($this->context, $values);
-		}
-
-		if ($values === []) {
-			return $this->wrappedContext();
-		}
-
-		return array_merge($this->wrappedContext(), $this->wrapAll($values));
-	}
-
-	/**
-	 * @param array<array-key, mixed> $values
-	 * @return array<array-key, mixed>
-	 */
-	private function wrapAll(array $values): array
-	{
-		$wrapped = [];
-
-		/** @var mixed $value */
-		foreach ($values as $key => $value) {
-			/** @psalm-suppress MixedAssignment wrapper returns mixed by design */
-			$wrapped[$key] = $this->wrapper->wrap($value);
-		}
-
-		return $wrapped;
+		return $this->values->get($values);
 	}
 
 	public function unwrap(mixed $value): mixed
 	{
-		return $this->wrapper->unwrap($value);
+		return $this->values->wrapper->unwrap($value);
 	}
 
 	public function add(string $key, mixed $value): mixed
 	{
-		$this->context[$key] = $value;
-		$this->wrappedContext = null;
-
-		return $this->templateValue($value);
+		return $this->values->add($key, $value);
 	}
 
 	public function escape(
@@ -92,7 +66,7 @@ final class Context
 		?string $escaper = null,
 	): string {
 		if ($value instanceof StringProxy) {
-			return $this->wrapper->escape($value->unwrap(), $escaper);
+			return $this->values->wrapper->escape($value->unwrap(), $escaper);
 		}
 
 		if ($value instanceof ObjectProxy) {
@@ -103,43 +77,16 @@ final class Context
 			}
 		}
 
-		return $this->wrapper->escape((string) $value, $escaper);
+		return $this->values->wrapper->escape((string) $value, $escaper);
 	}
 
 	public function wrap(mixed $value): mixed
 	{
-		// Explicit wrapping bypasses the trusted list.
-		// Deliberately not `$this->wrapper`: that one honors trust, which would
-		// turn this call into a no-op for an instance of a trusted class and
-		// leave the template no way to get a proxy at all.
+		// Explicit wrapping bypasses the trusted list. Deliberately not the
+		// wrapper of the values: that one honors trust, which would turn this
+		// call into a no-op for an instance of a trusted class and leave the
+		// template no way to get a proxy at all.
 		return $this->template->engine->wrapper()->wrap($value);
-	}
-
-	/** @return array<array-key, mixed> */
-	private function wrappedContext(): array
-	{
-		return $this->wrappedContext ??= $this->wrapAll($this->context);
-	}
-
-	private function templateValue(mixed $value, bool $safe = false): mixed
-	{
-		if (!$this->autoescape) {
-			return $this->wrapper->unwrap($value);
-		}
-
-		if (!$safe) {
-			return $this->wrapper->wrap($value);
-		}
-
-		if ($value instanceof StringProxy) {
-			return StringProxy::safe($value->unwrap(), $this->wrapper);
-		}
-
-		if (is_string($value) || $value instanceof Stringable) {
-			return StringProxy::safe((string) $value, $this->wrapper);
-		}
-
-		throw new RuntimeException('Safe template methods must return string or Stringable values');
 	}
 
 	/**
@@ -147,7 +94,7 @@ final class Context
 	 */
 	public function layout(string $path, array $context = []): void
 	{
-		$this->template->setLayout(new LayoutSpec($path, $this->location(), $context));
+		$this->template->setLayout(new LayoutSpec($path, $this->template->location(), $context));
 	}
 
 	/**
@@ -159,7 +106,7 @@ final class Context
 	 */
 	public function insert(string $path, array $context = []): void
 	{
-		echo $this->renderInserted($this->inserted($path), $this->get($context));
+		echo $this->template->partial($path)->renderPartial($this->get($context), $this->trusted, $this->autoescape);
 	}
 
 	/**
@@ -173,19 +120,14 @@ final class Context
 	 */
 	public function component(string $path, array $context = []): void
 	{
-		$template = $this->inserted($path);
+		$template = $this->template->partial($path);
 		$context = $this->get($context);
 
-		$this->template->blocks->open(
-			'component',
-			$path,
-			$this->location(),
-			function (string $content) use ($template, $context): void {
-				$template->setSlot($content);
+		$this->template->capture('component', $path, function (string $content) use ($template, $context): void {
+			$template->setSlot($content);
 
-				echo $this->renderInserted($template, $context);
-			},
-		);
+			echo $template->renderPartial($context, $this->trusted, $this->autoescape);
+		});
 	}
 
 	/**
@@ -198,7 +140,7 @@ final class Context
 	{
 		$slot = $this->template->slot() ?? throw new RuntimeException(
 			'No slot was provided for this template',
-			location: $this->location(),
+			location: $this->template->location(),
 		);
 
 		return $this->hasSlot() ? $slot : '';
@@ -219,17 +161,23 @@ final class Context
 	 */
 	public function section(string $name): void
 	{
-		$this->openSection($name, $this->template->sections->assign(...));
+		$sections = $this->template->sections;
+
+		$this->template->capture('section', $name, static fn(string $content) => $sections->assign($name, $content));
 	}
 
 	public function append(string $name): void
 	{
-		$this->openSection($name, $this->template->sections->append(...));
+		$sections = $this->template->sections;
+
+		$this->template->capture('section', $name, static fn(string $content) => $sections->append($name, $content));
 	}
 
 	public function prepend(string $name): void
 	{
-		$this->openSection($name, $this->template->sections->prepend(...));
+		$sections = $this->template->sections;
+
+		$this->template->capture('section', $name, static fn(string $content) => $sections->prepend($name, $content));
 	}
 
 	/**
@@ -258,7 +206,7 @@ final class Context
 		if (!$this->template->sections->has($name)) {
 			throw new LookupException(
 				"Section `{$name}` is not defined; pass a default or check it with hasSection()",
-				location: $this->location(),
+				location: $this->template->location(),
 			);
 		}
 
@@ -268,41 +216,5 @@ final class Context
 	public function hasSection(string $name): bool
 	{
 		return $this->template->sections->has($name);
-	}
-
-	private function location(): Location
-	{
-		return Location::fromBacktrace($this->template->path);
-	}
-
-	/** @param Closure(string, string): void $store */
-	private function openSection(string $name, Closure $store): void
-	{
-		$this->template->blocks->open(
-			'section',
-			$name,
-			$this->location(),
-			static fn(string $content) => $store($name, $content),
-		);
-	}
-
-	/** @param non-empty-string $path */
-	private function inserted(string $path): Template
-	{
-		$template = new Template(
-			$this->template->engine->resolve($path),
-			sections: $this->template->sections,
-			engine: $this->template->engine,
-		);
-		$template->setMethods($this->template->methods());
-
-		return $template;
-	}
-
-	private function renderInserted(Template $template, array $context): string
-	{
-		return $this->autoescape
-			? $template->renderEscaped($context, $this->trusted)
-			: $template->renderUnescaped($context, $this->trusted);
 	}
 }
