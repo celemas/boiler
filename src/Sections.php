@@ -130,11 +130,6 @@ final class Sections
 		$this->level++;
 	}
 
-	public function get(string $name): string
-	{
-		return $this->sections[$name]->get();
-	}
-
 	/**
 	 * The default stands in for main content that was never captured. A
 	 * closure runs only then, and before the additions are collected, so

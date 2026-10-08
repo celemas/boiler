@@ -1,6 +1,2 @@
 <div><?= $this->slot(); ?><?= $text; ?></div>
-<?php if ($this->hasSection('list')) { ?>
-    <?= $this->yield('list'); ?>
-<?php } else { ?>
-    <p>no list</p>
-<?php } ?>
+<?= $this->yield('list', '<p>no list</p>'); ?>

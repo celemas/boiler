@@ -562,6 +562,30 @@ final class EngineTest extends TestCase
 		$this->assertSame('[]', trim($engine->render('sectionemptydefault')));
 	}
 
+	/** @return iterable<string, array{string, string}> */
+	public static function yieldResultsForWrapper(): iterable
+	{
+		yield 'missing section' => ['yieldwrappernone', '<main>page</main>'];
+		yield 'captured section' => ['yieldwrappercaptured', '<aside><nav>[sidebar]</nav></aside><main>page</main>'];
+		yield 'appended section' => ['yieldwrapperappended', '<aside>[ad]</aside><main>page</main>'];
+		yield 'section of only whitespace' => ['yieldwrapperblank', '<main>page</main>'];
+	}
+
+	#[DataProvider('yieldResultsForWrapper')]
+	public function testYieldResultTellsWhetherThereIsAnythingToPrint(string $page, string $expected): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame($expected, $this->fullTrim($engine->render($page)));
+	}
+
+	public function testYieldKeepsWhitespaceAroundContent(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[ x ]', trim($engine->render('yieldkeepswhitespace')));
+	}
+
 	public function testEveryYieldUsesItsOwnDefault(): void
 	{
 		$engine = Engine::create($this->templates());
@@ -887,7 +911,7 @@ final class EngineTest extends TestCase
 			$this->assertSame(2, $e->location()?->line);
 			$this->assertInstanceOf(LookupException::class, $e->getPrevious());
 			$this->assertStringEndsWith(
-				'Section `sidebar` is not defined; pass a default or check it with hasSection()',
+				"Section `sidebar` is not defined; pass a default, even '', when it is optional",
 				$e->getMessage(),
 			);
 		}

@@ -198,37 +198,34 @@ final class Context
 	}
 
 	/**
-	 * Returns the captured content of a section.
+	 * Returns the content of a section: what was prepended, the main content
+	 * or else the default, and what was appended.
 	 *
 	 * Without a default the section is required and a missing section throws;
-	 * pass a default, even `''`, or guard with `hasSection()` when it is optional.
-	 * A closure default prints its content, such as an insert, and runs only
-	 * when no main content was captured.
+	 * pass a default, even `''`, when it is optional. A closure default prints
+	 * its content, such as an insert, and runs only when no main content was
+	 * captured.
 	 *
 	 * @param string|Closure(): mixed|null $default
 	 */
 	public function yield(string $name, string|Closure|null $default = null): string
 	{
-		if ($default instanceof Closure) {
-			return $this->rendering->sections->getOr($name, fn(): string => $this->rendering->output($default));
-		}
+		$sections = $this->rendering->sections;
 
-		if ($default !== null) {
-			return $this->rendering->sections->getOr($name, $default);
-		}
-
-		if (!$this->rendering->sections->has($name)) {
+		if ($default === null && !$sections->has($name)) {
 			throw new LookupException(
-				"Section `{$name}` is not defined; pass a default or check it with hasSection()",
+				"Section `{$name}` is not defined; pass a default, even '', when it is optional",
 				location: $this->rendering->location(),
 			);
 		}
 
-		return $this->rendering->sections->get($name);
-	}
+		$content = $sections->getOr(
+			$name,
+			$default instanceof Closure ? fn(): string => $this->rendering->output($default) : $default ?? '',
+		);
 
-	public function hasSection(string $name): bool
-	{
-		return $this->rendering->sections->has($name);
+		// Like slot(), content of only whitespace counts as none, so the result
+		// tells whether there is anything to print.
+		return trim($content) === '' ? '' : $content;
 	}
 }

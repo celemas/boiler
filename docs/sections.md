@@ -78,16 +78,6 @@ The code of a discarded default still runs; only its output and its additions to
 
 Any other second capture of a section fails the render at its `section()` call, and the error names where the first capture happened. That covers a template that captures a section twice, a page and one of its partials, and a page and the layout of a partial it inserts, which wraps only that partial.
 
-Check for a section when you need conditional markup:
-
-```php
-<?php if ($this->hasSection('sidebar')) : ?>
-    <aside><?= $this->yield('sidebar') ?></aside>
-<?php endif; ?>
-```
-
-`hasSection()` is also true when templates only appended or prepended to the section. To fill in missing main content, pass a default to `yield()` or capture one in a layout instead of checking.
-
 ## Append and prepend
 
 Use `append()` or `prepend()` instead of `section()` to add content after or before the main content of a section. A partial can add its own script to the layout this way.
@@ -118,6 +108,19 @@ Additions keep the order of their calls, also across inserts, so two partials th
 
 `section()` sets only the main content and keeps what was appended or prepended before.
 
+## Print markup only when there is content
+
+`yield()` returns `''` for a section that holds nothing but whitespace, like `slot()` does for a slot. With `''` as the default, the result tells whether there is anything to print, so markup around a section can depend on it:
+
+```php
+<?php $sidebar = $this->yield('sidebar', '') ?>
+<?php if ($sidebar) : ?>
+    <aside><?= $sidebar ?></aside>
+<?php endif ?>
+```
+
+This counts everything the section prints: the main content or a default, and what templates appended or prepended. Other content comes back unchanged, including the whitespace around it. To fill in missing main content, pass a default to `yield()` or capture one in a layout instead.
+
 ## Nested blocks
 
 Sections and [components](slots.md#pass-a-block-to-a-component) share one stack of open blocks, and `end()` closes the innermost one. Blocks can nest: a section can contain a component, another section, or an insert whose template captures sections of its own, such as the widget above.
@@ -135,4 +138,4 @@ Pass a name to check which block `end()` closes, like Twig's `{% endblock sideba
 - Section names are strings such as `scripts` or `sidebar`.
 - A section must be closed with `$this->end()` in the template that opened it. An unclosed section raises a render error that points to the line that opened it.
 - Calling `$this->end()` without an open section or component raises a render error, and so does `$this->end('name')` when the innermost open block has another name.
-- Calling `$this->yield()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, or check with `$this->hasSection()` when the section is optional.
+- Calling `$this->yield()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, when the section is optional.

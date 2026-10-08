@@ -5,12 +5,8 @@
     <meta charset="utf-8">
     <title><?= $title->trim() ?></title>
     <link rel="stylesheet" href="css/style.css">
-    <?php if ($this->hasSection('head')): ?>
-        <?= $this->yield('head') ?>
-    <?php endif ?>
-    <?php if ($this->hasSection('script')): ?>
-        <?= $this->yield('script') ?>
-    <?php endif ?>
+    <?= $this->yield('head', '') ?>
+    <?= $this->yield('script', '') ?>
 </head>
 
 <body id="catalog">
