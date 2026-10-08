@@ -32,7 +32,7 @@ $engine = \Celema\Boiler\Engine::create([
 ]);
 ```
 
-Boiler searches directories in order. If a template is not found in the first one, it keeps searching the next one.
+Boiler searches directories in order. If a template is not found in the first one, it keeps searching the next one. If no directory has it, the `LookupException` names the reason for each directory, separated by semicolons.
 
 ## Use namespaces
 

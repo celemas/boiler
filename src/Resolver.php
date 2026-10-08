@@ -39,13 +39,8 @@ final class Resolver implements Contract\Resolver
 		}
 
 		[$namespace, $file] = $this->segments($path);
-		$candidate = $this->path($namespace, $file);
 
-		if (!$candidate->isValid()) {
-			throw new LookupException($candidate->error());
-		}
-
-		return $this->pathCache[$path] = $candidate->path();
+		return $this->pathCache[$path] = $this->path($namespace, $file);
 	}
 
 	/** @return list{null|non-empty-string, non-empty-string} */
@@ -73,26 +68,36 @@ final class Resolver implements Contract\Resolver
 		);
 	}
 
-	/** @param non-empty-string $file */
-	private function path(?string $namespace, string $file): Path
+	/**
+	 * @param non-empty-string $file
+	 *
+	 * @return non-empty-string
+	 */
+	private function path(?string $namespace, string $file): string
 	{
-		if ($namespace !== null) {
-			if (array_key_exists($namespace, $this->dirs)) {
-				return new Path($this->dirs[$namespace], $file);
-			}
-
+		if ($namespace === null) {
+			$dirs = $this->dirs;
+		} elseif (array_key_exists($namespace, $this->dirs)) {
+			$dirs = [$this->dirs[$namespace]];
+		} else {
 			throw new LookupException("Template namespace `{$namespace}` does not exist");
 		}
 
-		foreach ($this->dirs as $dir) {
+		$errors = [];
+
+		foreach ($dirs as $dir) {
 			$candidate = new Path($dir, $file);
 
 			if ($candidate->isValid()) {
-				return $candidate;
+				return $candidate->path();
 			}
+
+			$errors[] = $candidate->error();
 		}
 
-		return $candidate;
+		// Name every directory searched, not just the last, as each can fail
+		// for its own reason, such as a path that leads outside its root.
+		throw new LookupException(implode('; ', $errors));
 	}
 
 	/**

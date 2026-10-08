@@ -84,6 +84,20 @@ final class ResolverTest extends TestCase
 		$resolver->resolve('übersicht');
 	}
 
+	public function testMissNamesEveryDirectory(): void
+	{
+		$additional = realpath(self::ROOT_DIR . 'additional');
+		$default = realpath(self::DEFAULT_DIR);
+		$resolver = new Resolver($this->templates($this->additional()));
+
+		$this->expectException(LookupException::class);
+		$this->expectExceptionMessage(
+			"Template not found: {$additional}/missing; Template not found: {$default}/missing",
+		);
+
+		$resolver->resolve('missing');
+	}
+
 	public function testRejectsInvalidTemplateFormat(): void
 	{
 		$this->throws(LookupException::class, 'Invalid template format');
