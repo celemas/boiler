@@ -88,6 +88,7 @@ Boiler renders layouts from the innermost template outward. Each layout receives
 ## Error handling
 
 - A template can set only one layout. Calling `$this->layout()` twice raises a runtime error.
+- A template can appear only once in a chain of layouts. A layout cycle, such as `inner` using the layout `outer` and `outer` using `inner` again, raises `LogicException` at the `$this->layout()` call that closes it.
 - If the referenced layout cannot be found, Boiler raises `LookupException`.
 - Layout lookup follows the same rules as normal template rendering, including namespaces and directory overrides.
 - Standalone `Template` instances resolve layouts relative to the directory of the template file.

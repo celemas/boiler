@@ -11,6 +11,7 @@ use Celema\Boiler\Contract\Filter;
 use Celema\Boiler\Engine;
 use Celema\Boiler\Environment;
 use Celema\Boiler\Escapers;
+use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
@@ -508,6 +509,30 @@ final class EngineTest extends TestCase
 		$this->throws(RuntimeException::class, 'layout already set');
 
 		Engine::create($this->templates())->render('multilayout');
+	}
+
+	/** @return iterable<string, array{string, string, string}> */
+	public static function layoutCycles(): iterable
+	{
+		yield 'between layouts' => ['layoutcycle', 'layoutcyclesecond', 'layoutcyclefirst'];
+		yield 'back to the page' => ['layoutcycleback', 'layoutcyclebacklayout', 'layoutcycleback'];
+	}
+
+	#[DataProvider('layoutCycles')]
+	public function testLayoutCycleFailsAtClosingLayoutCall(string $page, string $closing, string $repeated): void
+	{
+		$location = self::DEFAULT_DIR . "/{$closing}.php:1";
+
+		try {
+			Engine::create($this->templates())->render($page);
+			$this->fail('LogicException was not thrown');
+		} catch (LogicException $e) {
+			$this->assertSame($location, (string) $e->location());
+			$this->assertSame(
+				"Layout cycle: `{$repeated}` is already in the layout chain (referenced at {$location})",
+				$e->getMessage(),
+			);
+		}
 	}
 
 	public function testSectionRendering(): void

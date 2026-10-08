@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler;
 
+use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
@@ -45,11 +46,16 @@ final class Rendering
 		$this->blocks = new Blocks();
 	}
 
-	/** Runs the template and wraps its output in its layouts, innermost first. */
+	/**
+	 * Runs the template and wraps its output in its layouts, innermost first.
+	 * A template can appear only once in the chain, as a layout that wraps a
+	 * template of its own chain would wrap forever.
+	 */
 	public function render(array $context): string
 	{
 		$rendering = $this;
 		$content = $this->run($context);
+		$chain = [$this->path];
 
 		while (($layout = $rendering->layout) !== null) {
 			try {
@@ -58,6 +64,14 @@ final class Rendering
 				self::throwLayoutException($layout, $e);
 			}
 
+			if (in_array($file, $chain, true)) {
+				throw new LogicException(
+					"Layout cycle: `{$layout->path}` is already in the layout chain (referenced at {$layout->location})",
+					location: $layout->location,
+				);
+			}
+
+			$chain[] = $file;
 			$rendering = $this->with($file, $content->content);
 			$this->sections->enterLayout();
 			// A layout builds on the context of the template it wraps, like an
