@@ -46,6 +46,8 @@ Pass a default when the section is optional:
 <title><?= $this->yield('title', 'My site') ?></title>
 ```
 
+The default applies only while no template captured the section with `section()`. A section captured empty prints nothing, as an empty `@section` does in Blade, so skip the `section()` call when the default should show.
+
 Check for a section when you need conditional markup:
 
 ```php

@@ -54,17 +54,7 @@ final class Sections
 
 	public function getOr(string $name, string $default): string
 	{
-		$section = $this->sections[$name] ?? null;
-
-		if ($section === null) {
-			return $default;
-		}
-
-		if ($section->empty()) {
-			$section->setValue($default);
-		}
-
-		return $section->get();
+		return ($this->sections[$name] ?? null)?->get($default) ?? $default;
 	}
 
 	public function has(string $name): bool

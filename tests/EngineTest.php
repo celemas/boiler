@@ -527,6 +527,23 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testEmptySectionOverridesDefault(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[]', trim($engine->render('sectionemptydefault')));
+	}
+
+	public function testEveryYieldUsesItsOwnDefault(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'[first][added]|[second][added]|[added]',
+			trim($engine->render('sectiondefaults')),
+		);
+	}
+
 	public function testInsertRenderingInsideSection(): void
 	{
 		$engine = Engine::create($this->templates());

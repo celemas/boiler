@@ -13,9 +13,8 @@ final class Section
 	/** @var array<int, list<string>> per layout level, each in call order */
 	private array $appended = [];
 
-	public function __construct(
-		private string $value = '',
-	) {}
+	/** The main content, null until `section()` captures it, even when empty. */
+	private ?string $value = null;
 
 	public function prepend(string $content, int $level): void
 	{
@@ -27,24 +26,24 @@ final class Section
 		$this->appended[$level][] = $content;
 	}
 
-	public function empty(): bool
-	{
-		return $this->value === '';
-	}
-
 	/**
 	 * The additions of a layout stay closer to the main content than those of
 	 * the template it wraps: page prepends, layout prepends, main content,
-	 * layout appends, page appends.
+	 * layout appends, page appends. The default stands in for main content
+	 * that was never captured.
 	 */
-	public function get(): string
+	public function get(string $default = ''): string
 	{
 		$prepended = $this->prepended;
 		$appended = $this->appended;
 		ksort($prepended);
 		krsort($appended);
 
-		return implode('', array_merge(...$prepended)) . $this->value . implode('', array_merge(...$appended));
+		return (
+			implode('', array_merge(...$prepended))
+				. ($this->value ?? $default)
+				. implode('', array_merge(...$appended))
+		);
 	}
 
 	public function setValue(string $value): void
