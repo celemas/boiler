@@ -165,7 +165,7 @@ Wrapped values are proxy objects, and so are string keys in loops over wrapped a
 
 ## Error handling
 
-Boiler fails fast on invalid lookups and render state, such as missing templates, invalid template names, duplicate layouts, unclosed sections, missing slots, or unknown methods and filters. See [rendering templates](docs/rendering.md), [layouts](docs/layouts.md), [sections](docs/sections.md), [slots](docs/slots.md), and [template](docs/template.md) for the exact rules.
+Boiler fails fast on invalid lookups and render state, such as missing templates, invalid template names, duplicate layouts, sections captured twice, unclosed sections, missing slots, or unknown methods and filters. See [rendering templates](docs/rendering.md), [layouts](docs/layouts.md), [sections](docs/sections.md), [slots](docs/slots.md), and [template](docs/template.md) for the exact rules.
 
 Exceptions thrown while a template runs, including those from your own helpers and objects, arrive wrapped in `RenderException` with the template file and line. `getPrevious()` returns the original exception, and `getCode()` its code.
 

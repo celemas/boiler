@@ -11,7 +11,7 @@ final readonly class Block
 {
 	/**
 	 * @param string $kind what the block is, for error messages, e.g. `section`
-	 * @param Closure(string): void $close receives the captured output
+	 * @param Closure(string, Location): void $close receives the captured output and where the block opened
 	 */
 	public function __construct(
 		public string $kind,

@@ -101,7 +101,7 @@ final class Rendering
 	/**
 	 * Captures the template's output up to the matching `end()`.
 	 *
-	 * @param Closure(string): void $close receives the captured output
+	 * @param Closure(string, Location): void $close receives the captured output and where the block opened
 	 */
 	public function capture(string $kind, string $name, Closure $close): void
 	{

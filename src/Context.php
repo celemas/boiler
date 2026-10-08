@@ -162,12 +162,19 @@ final class Context
 	/**
 	 * Captures the output up to the matching `end()` as the content of a
 	 * section, which `yield()` prints.
+	 *
+	 * A render captures each section once; `end()` fails the render when an
+	 * earlier `section()` call captured it already.
 	 */
 	public function section(string $name): void
 	{
 		$sections = $this->rendering->sections;
 
-		$this->rendering->capture('section', $name, static fn(string $content) => $sections->assign($name, $content));
+		$this->rendering->capture('section', $name, static fn(string $content, Location $location) => $sections->assign(
+			$name,
+			$content,
+			$location,
+		));
 	}
 
 	public function append(string $name): void

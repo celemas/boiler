@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler;
 
+use Celema\Boiler\Exception\LogicException;
 use Closure;
 
 /**
@@ -34,9 +35,33 @@ final class Sections
 	/** Numbers appends and inserts in call order. */
 	private int $calls = 0;
 
-	/** Sets only the main content; prepended and appended content stays. */
-	public function assign(string $name, string $content): void
+	/**
+	 * Where the main content of each section was captured.
+	 *
+	 * @var array<string, Location>
+	 */
+	private array $captured = [];
+
+	/**
+	 * Sets only the main content; prepended and appended content stays.
+	 *
+	 * A second capture fails instead of replacing the first. As a layout
+	 * renders after the page, it would otherwise override the page's section
+	 * where it meant a fallback.
+	 *
+	 * @param Location $location where `section()` opened the capture
+	 */
+	public function assign(string $name, string $content, Location $location): void
 	{
+		if (isset($this->captured[$name])) {
+			throw new LogicException(
+				"Section `{$name}` was already captured at {$this->captured[$name]}; "
+					. 'add to it with append() or prepend(), or pass a fallback to yield()',
+				location: $location,
+			);
+		}
+
+		$this->captured[$name] = $location;
 		($this->sections[$name] ??= new Section())->setValue($content);
 	}
 

@@ -658,6 +658,32 @@ final class EngineTest extends TestCase
 		$this->assertSame('[prepend][main][append]', $this->fullTrim($engine->render('sectionkeepsadditions')));
 	}
 
+	public function testCapturingSectionTwiceFailsAtSecondCapture(): void
+	{
+		$path = self::DEFAULT_DIR . '/sectiontwicelayout.php';
+		$first = self::DEFAULT_DIR . '/sectiontwice.php';
+
+		try {
+			Engine::create($this->templates())->render('sectiontwice');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(1, $e->location()?->line);
+			$this->assertStringEndsWith(
+				"Section `title` was already captured at {$first}:2; "
+					. 'add to it with append() or prepend(), or pass a fallback to yield()',
+				$e->getMessage(),
+			);
+		}
+	}
+
+	public function testUnfinishedCaptureLeavesSectionFree(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[page]', $this->fullTrim($engine->render('sectionfailedcapture')));
+	}
+
 	public function testSectionsCanNest(): void
 	{
 		$engine = Engine::create($this->templates());

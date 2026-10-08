@@ -48,6 +48,8 @@ Pass a default when the section is optional:
 
 The default applies only while no template captured the section with `section()`. A section captured empty prints nothing, as an empty `@section` does in Blade, so skip the `section()` call when the default should show.
 
+A render captures each section once. A second `section()` capture of the same section fails the render at its `section()` call, and the error names where the first capture happened. A layout renders after the page it wraps, so a layout that captured a section itself would replace the page's content instead of providing a fallback. Pass the fallback to `yield()`, and add content with `append()` or `prepend()`.
+
 Check for a section when you need conditional markup:
 
 ```php

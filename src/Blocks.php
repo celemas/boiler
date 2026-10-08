@@ -22,7 +22,7 @@ final class Blocks
 	/** @var list<Block> */
 	private array $open = [];
 
-	/** @param Closure(string): void $close receives the captured output */
+	/** @param Closure(string, Location): void $close receives the captured output and where the block opened */
 	public function open(string $kind, string $name, Location $location, Closure $close): void
 	{
 		ob_start();
@@ -45,7 +45,7 @@ final class Blocks
 		}
 
 		array_pop($this->open);
-		($block->close)((string) ob_get_clean());
+		($block->close)((string) ob_get_clean(), $block->location);
 	}
 
 	public function assertClosed(): void
