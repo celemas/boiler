@@ -15,7 +15,7 @@ final class Engine
 {
 	private readonly Contract\Environment $environment;
 	private readonly Contract\Resolver $resolver;
-	private Methods $methods;
+	private readonly Methods $methods;
 	private ?Contract\Wrapper $wrapper = null;
 
 	/** @param list<class-string> $trusted */
@@ -63,6 +63,12 @@ final class Engine
 		return $this;
 	}
 
+	/** @internal */
+	public function methods(): Methods
+	{
+		return $this->methods;
+	}
+
 	public function wrapper(): Contract\Wrapper
 	{
 		return $this->wrapper ??= $this->environment->wrapper();
@@ -85,11 +91,7 @@ final class Engine
 	/** @param non-empty-string $path */
 	public function template(string $path): Template
 	{
-		$file = $this->resolve($path);
-		$template = new Template($file, engine: $this);
-		$template->setMethods(new Methods($this->methods));
-
-		return $template;
+		return new Template($this->resolve($path), engine: $this);
 	}
 
 	/** @param non-empty-string $path */

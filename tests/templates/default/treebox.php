@@ -1,0 +1,1 @@
+<box><?= $this->slot() ?></box>

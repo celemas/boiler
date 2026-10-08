@@ -16,29 +16,34 @@ use Stringable;
  *
  * Templates run in the scope of this object, so a method of any visibility
  * here would shadow a registered template method of the same name. Keep
- * helper code in Template and Values instead of private methods.
+ * helper code in Rendering and Values instead of private methods.
  *
  * @api
  */
 final class Context
 {
+	/** @var list<class-string> */
+	public readonly array $trusted;
+	public readonly bool $autoescape;
 	private readonly Values $values;
 
-	/**
-	 * @param list<class-string> $trusted
-	 */
+	/** @internal Templates receive their context; they never create one. */
 	public function __construct(
-		private readonly Template $template,
+		private readonly Rendering $rendering,
 		array $context,
-		public readonly array $trusted,
-		public readonly bool $autoescape,
 	) {
-		$this->values = new Values($context, $template->engine->wrapper()->withTrusted($trusted), $autoescape);
+		$this->trusted = $rendering->trusted;
+		$this->autoescape = $rendering->autoescape;
+		$this->values = new Values(
+			$context,
+			$rendering->engine->wrapper()->withTrusted($rendering->trusted),
+			$rendering->autoescape,
+		);
 	}
 
 	public function __call(string $name, array $args): mixed
 	{
-		$method = $this->template->methods()->get($name);
+		$method = $this->rendering->methods->get($name);
 
 		/** @var array<array-key, mixed> $args */
 		$args = $this->unwrap($args);
@@ -86,7 +91,7 @@ final class Context
 		// wrapper of the values: that one honors trust, which would turn this
 		// call into a no-op for an instance of a trusted class and leave the
 		// template no way to get a proxy at all.
-		return $this->template->engine->wrapper()->wrap($value);
+		return $this->rendering->engine->wrapper()->wrap($value);
 	}
 
 	/**
@@ -94,7 +99,7 @@ final class Context
 	 */
 	public function layout(string $path, array $context = []): void
 	{
-		$this->template->setLayout(new LayoutSpec($path, $this->template->location(), $context));
+		$this->rendering->setLayout(new LayoutSpec($path, $this->rendering->location(), $context));
 	}
 
 	/**
@@ -106,7 +111,7 @@ final class Context
 	 */
 	public function insert(string $path, array $context = []): void
 	{
-		echo $this->template->partial($path)->renderPartial($this->get($context), $this->trusted, $this->autoescape);
+		echo $this->rendering->insert($this->rendering->engine->resolve($path), $this->get($context));
 	}
 
 	/**
@@ -120,13 +125,12 @@ final class Context
 	 */
 	public function component(string $path, array $context = []): void
 	{
-		$template = $this->template->partial($path);
+		// Resolved before the block runs, so a missing template fails at this call.
+		$file = $this->rendering->engine->resolve($path);
 		$context = $this->get($context);
 
-		$this->template->capture('component', $path, function (string $content) use ($template, $context): void {
-			$template->setSlot($content);
-
-			echo $template->renderPartial($context, $this->trusted, $this->autoescape);
+		$this->rendering->capture('component', $path, function (string $content) use ($file, $context): void {
+			echo $this->rendering->insert($file, $context, slot: $content);
 		});
 	}
 
@@ -138,9 +142,9 @@ final class Context
 	 */
 	public function slot(): string
 	{
-		$slot = $this->template->slot() ?? throw new RuntimeException(
+		$slot = $this->rendering->slot ?? throw new RuntimeException(
 			'No slot was provided for this template',
-			location: $this->template->location(),
+			location: $this->rendering->location(),
 		);
 
 		return $this->hasSlot() ? $slot : '';
@@ -152,7 +156,7 @@ final class Context
 	 */
 	public function hasSlot(): bool
 	{
-		return trim($this->template->slot() ?? '') !== '';
+		return trim($this->rendering->slot ?? '') !== '';
 	}
 
 	/**
@@ -161,23 +165,23 @@ final class Context
 	 */
 	public function section(string $name): void
 	{
-		$sections = $this->template->sections;
+		$sections = $this->rendering->sections;
 
-		$this->template->capture('section', $name, static fn(string $content) => $sections->assign($name, $content));
+		$this->rendering->capture('section', $name, static fn(string $content) => $sections->assign($name, $content));
 	}
 
 	public function append(string $name): void
 	{
-		$sections = $this->template->sections;
+		$sections = $this->rendering->sections;
 
-		$this->template->capture('section', $name, static fn(string $content) => $sections->append($name, $content));
+		$this->rendering->capture('section', $name, static fn(string $content) => $sections->append($name, $content));
 	}
 
 	public function prepend(string $name): void
 	{
-		$sections = $this->template->sections;
+		$sections = $this->rendering->sections;
 
-		$this->template->capture('section', $name, static fn(string $content) => $sections->prepend($name, $content));
+		$this->rendering->capture('section', $name, static fn(string $content) => $sections->prepend($name, $content));
 	}
 
 	/**
@@ -188,7 +192,7 @@ final class Context
 	 */
 	public function end(?string $name = null): void
 	{
-		$this->template->blocks->close($name);
+		$this->rendering->blocks->close($name);
 	}
 
 	/**
@@ -200,21 +204,21 @@ final class Context
 	public function yield(string $name, ?string $default = null): string
 	{
 		if ($default !== null) {
-			return $this->template->sections->getOr($name, $default);
+			return $this->rendering->sections->getOr($name, $default);
 		}
 
-		if (!$this->template->sections->has($name)) {
+		if (!$this->rendering->sections->has($name)) {
 			throw new LookupException(
 				"Section `{$name}` is not defined; pass a default or check it with hasSection()",
-				location: $this->template->location(),
+				location: $this->rendering->location(),
 			);
 		}
 
-		return $this->template->sections->get($name);
+		return $this->rendering->sections->get($name);
 	}
 
 	public function hasSection(string $name): bool
 	{
-		return $this->template->sections->has($name);
+		return $this->rendering->sections->has($name);
 	}
 }

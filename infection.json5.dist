@@ -55,8 +55,8 @@
 		// active buffer, interpolated keys, and Stringable concatenation.
 		CastString: {
 			ignore: [
-				'Celema\\Boiler\\Template::getContent',
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
+				'Celema\\Boiler\\Rendering::run',
 			],
 		},
 

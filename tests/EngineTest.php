@@ -15,8 +15,11 @@ use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
+use Celema\Boiler\Methods;
 use Celema\Boiler\Proxy\StringProxy;
+use Celema\Boiler\Rendering;
 use Celema\Boiler\Resolver;
+use Celema\Boiler\Sections;
 use Celema\Boiler\Template;
 use Celema\Boiler\Wrapper;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -1406,11 +1409,15 @@ final class EngineTest extends TestCase
 				}
 			});
 
-		$template = new Template(
+		$rendering = new Rendering(
 			TestCase::DEFAULT_DIR . '/simple.php',
-			engine: $engine,
+			$engine,
+			new Methods(),
+			new Sections(),
+			[],
+			true,
 		);
-		$context = new Context($template, ['text' => '<tag>'], [], true);
+		$context = new Context($rendering, ['text' => '<tag>']);
 
 		$this->assertSame('&LT;TAG&GT;', $context->escape('<tag>', 'caps'));
 	}
@@ -1437,6 +1444,24 @@ final class EngineTest extends TestCase
 		$engine->render('unknownmethod');
 	}
 
+	public function testTemplateCanRenderAgainFromWithinItsOwnRender(): void
+	{
+		$template = Engine::create($this->templates())->template('tree');
+		$template->method(
+			'children',
+			static fn(array $kids): string => implode('', array_map(
+				static fn(array $kid): string => $template->render($kid),
+				$kids,
+			)),
+			safe: true,
+		);
+
+		$this->assertSame(
+			'<li><box>root<li><box>leaf</box></li></box></li>',
+			$this->fullTrim($template->render(['name' => 'root', 'kids' => [['name' => 'leaf', 'kids' => []]]])),
+		);
+	}
+
 	public function testTemplateInstancesFromEngineCanBeRenderedMultipleTimes(): void
 	{
 		$engine = Engine::create($this->templates());
@@ -1446,12 +1471,10 @@ final class EngineTest extends TestCase
 			'<div><p>first</p>first</div><ul><li>first</li></ul>',
 			$this->fullTrim($template->render(['text' => 'first'])),
 		);
-		$this->assertFalse($template->sections->has('list'));
 
 		$this->assertSame(
 			'<div><p>second</p>second</div><ul><li>second</li></ul>',
 			$this->fullTrim($template->render(['text' => 'second'])),
 		);
-		$this->assertFalse($template->sections->has('list'));
 	}
 }

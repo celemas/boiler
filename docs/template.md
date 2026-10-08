@@ -85,7 +85,7 @@ $html = $template->render(
 
 ## Reuse a template instance
 
-A `Template` instance can be rendered multiple times safely:
+A `Template` instance can be rendered multiple times safely, even from within its own render:
 
 ```php
 $template = new \Celema\Boiler\Template('/path/to/templates/page.php');

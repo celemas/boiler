@@ -165,13 +165,11 @@ final class TemplateTest extends TestCase
 			'<div><p>first</p>first</div><ul><li>first</li></ul>',
 			$this->fullTrim($template->render(['text' => 'first'])),
 		);
-		$this->assertFalse($template->sections->has('list'));
 
 		$this->assertSame(
 			'<div><p>second</p>second</div><ul><li>second</li></ul>',
 			$this->fullTrim($template->render(['text' => 'second'])),
 		);
-		$this->assertFalse($template->sections->has('list'));
 	}
 
 	public function testOverwriteLayoutContext(): void
