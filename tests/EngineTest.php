@@ -1567,10 +1567,7 @@ final class EngineTest extends TestCase
 		$template = Engine::create($this->templates())->template('tree');
 		$template->method(
 			'children',
-			static fn(array $kids): string => implode('', array_map(
-				static fn(array $kid): string => $template->render($kid),
-				$kids,
-			)),
+			static fn(array $kids): string => implode('', array_map($template->render(...), $kids)),
 			safe: true,
 		);
 
