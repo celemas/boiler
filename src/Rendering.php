@@ -9,6 +9,7 @@ use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
 use Closure;
+use Stringable;
 use Throwable;
 
 /**
@@ -106,6 +107,38 @@ final class Rendering
 	public function capture(string $kind, string $name, Closure $close): void
 	{
 		$this->blocks->open($kind, $name, $this->location(), $close);
+	}
+
+	/**
+	 * Returns what a closure of the template prints. It must print rather
+	 * than return, like a block, so a returned string fails instead of
+	 * vanishing.
+	 *
+	 * @param Closure(): mixed $print
+	 */
+	public function output(Closure $print): string
+	{
+		$level = ob_get_level();
+
+		try {
+			ob_start();
+			/** @var mixed $result */
+			$result = $print();
+			$output = (string) ob_get_clean();
+		} finally {
+			while (ob_get_level() > $level) {
+				ob_end_clean();
+			}
+		}
+
+		if (is_string($result) || $result instanceof Stringable) {
+			throw new UnexpectedValueException(
+				'A closure passed to yield() must print its content, not return it',
+				location: $this->location(),
+			);
+		}
+
+		return $output;
 	}
 
 	private function with(string $path, ?string $slot): self

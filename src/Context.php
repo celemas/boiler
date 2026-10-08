@@ -8,6 +8,7 @@ use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
+use Closure;
 use Stringable;
 
 /**
@@ -207,9 +208,17 @@ final class Context
 	 *
 	 * Without a default the section is required and a missing section throws;
 	 * pass a default, even `''`, or guard with `hasSection()` when it is optional.
+	 * A closure default prints its content, such as an insert, and runs only
+	 * when no main content was captured.
+	 *
+	 * @param string|Closure(): mixed|null $default
 	 */
-	public function yield(string $name, ?string $default = null): string
+	public function yield(string $name, string|Closure|null $default = null): string
 	{
+		if ($default instanceof Closure) {
+			return $this->rendering->sections->getOr($name, fn(): string => $this->rendering->output($default));
+		}
+
 		if ($default !== null) {
 			return $this->rendering->sections->getOr($name, $default);
 		}

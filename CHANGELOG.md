@@ -24,6 +24,7 @@ A leftover `slot:` argument fails the render as an unknown named parameter, and 
 
 - `$this->component('partial', [...])` … `$this->end()` inserts a template with the block in between as its slot, which the template prints with `<?= $this->slot() ?>`. The block runs at the call site before the template renders, so it uses the caller's variables. Sections and components share one stack of open blocks closed by `end()`, and `end('partial')` checks the name. A block of only whitespace counts as no slot for `hasSlot()`. `component` is now a reserved template method name.
 - Section capture blocks can nest, so an inserted template that appends its script works inside a section. `$this->end()` closes the innermost open section; `$this->end('name')` also checks that it closes that section and fails the render at that line otherwise. A template can only close the sections it opened itself.
+- `$this->yield()` takes a closure as the default, for markup such as an insert: `<?= $this->yield('sidebar', fn() => $this->insert('sidebar-default')) ?>`. The closure runs only when no main content was captured, and what it prints stands in for that content between any additions. Returning a string from the closure instead of printing it fails the render.
 
 ### Changed
 

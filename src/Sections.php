@@ -106,8 +106,21 @@ final class Sections
 		return $this->sections[$name]->get();
 	}
 
-	public function getOr(string $name, string $default): string
+	/**
+	 * The default stands in for main content that was never captured. A
+	 * closure runs only then, and before the additions are collected, so
+	 * those it makes to this section count.
+	 *
+	 * @param string|Closure(): string $default
+	 */
+	public function getOr(string $name, string|Closure $default): string
 	{
+		if (isset($this->captured[$name])) {
+			return $this->sections[$name]->get();
+		}
+
+		$default = is_string($default) ? $default : $default();
+
 		return ($this->sections[$name] ?? null)?->get($default) ?? $default;
 	}
 

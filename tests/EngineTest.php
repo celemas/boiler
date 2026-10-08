@@ -547,6 +547,55 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testClosureDefaultPrintsInsteadOfMissingSection(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[<b>default</b>]', $this->fullTrim($engine->render('yieldclosure')));
+	}
+
+	public function testClosureDefaultDoesNotRunForCapturedSection(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[main]', $this->fullTrim($engine->render('yieldclosurecaptured')));
+	}
+
+	public function testClosureDefaultStandsBetweenAdditionsIncludingItsOwn(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'[prepend][default][append][default-append]',
+			$this->fullTrim($engine->render('yieldclosureadditions')),
+		);
+	}
+
+	public function testClosureDefaultReturningContentFails(): void
+	{
+		$path = self::DEFAULT_DIR . '/yieldclosurereturns.php';
+
+		try {
+			Engine::create($this->templates())->render('yieldclosurereturns');
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame($path, $e->location()?->path);
+			$this->assertSame(2, $e->location()?->line);
+			$this->assertInstanceOf(UnexpectedValueException::class, $e->getPrevious());
+			$this->assertStringEndsWith(
+				'A closure passed to yield() must print its content, not return it',
+				$e->getMessage(),
+			);
+		}
+	}
+
+	public function testFailingClosureDefaultLeavesNoOutput(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[caught]', $this->fullTrim($engine->render('yieldclosurefailing')));
+	}
+
 	public function testInsertRenderingInsideSection(): void
 	{
 		$engine = Engine::create($this->templates());

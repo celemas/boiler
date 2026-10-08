@@ -48,6 +48,14 @@ Pass a default when the section is optional:
 
 The default applies only while no template captured the section with `section()`. A section captured empty prints nothing, as an empty `@section` does in Blade, so skip the `section()` call when the default should show.
 
+For a default made of markup, such as an insert, pass a closure that prints it. The closure runs only when the default applies:
+
+```php
+<aside><?= $this->yield('sidebar', fn() => $this->insert('sidebar-default')) ?></aside>
+```
+
+The closure prints its content, like a section block; returning a string instead fails the render. Content appended or prepended to the section prints around the default, as for a string default.
+
 A render captures each section once. A second `section()` capture of the same section fails the render at its `section()` call, and the error names where the first capture happened. A layout renders after the page it wraps, so a layout that captured a section itself would replace the page's content instead of providing a fallback. Pass the fallback to `yield()`, and add content with `append()` or `prepend()`.
 
 Check for a section when you need conditional markup:
@@ -57,6 +65,8 @@ Check for a section when you need conditional markup:
     <aside><?= $this->yield('sidebar') ?></aside>
 <?php endif; ?>
 ```
+
+`hasSection()` is also true when templates only appended or prepended to the section. To fill in missing main content, pass a default to `yield()` instead of checking.
 
 ## Append and prepend
 

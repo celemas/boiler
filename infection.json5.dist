@@ -56,6 +56,7 @@
 		CastString: {
 			ignore: [
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
+				'Celema\\Boiler\\Rendering::output',
 				'Celema\\Boiler\\Rendering::run',
 			],
 		},
