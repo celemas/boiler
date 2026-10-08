@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Celema\Boiler\Tests;
 
 use ArrayIterator;
+use Celema\Boiler\Engine;
+use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Template;
@@ -242,6 +244,53 @@ final class TemplateTest extends TestCase
 		$template->render();
 	}
 
+	public function testDirectoryIsNotATemplate(): void
+	{
+		$this->expectException(LookupException::class);
+		$this->expectExceptionMessage('Template not found: ' . $this->templates . 'sub');
+
+		new Template($this->templates . 'sub');
+	}
+
+	public function testMissingTemplateFailsWithEngine(): void
+	{
+		$this->expectException(LookupException::class);
+		$this->expectExceptionMessage('Template not found: ' . $this->templates . 'nonexistent.php');
+
+		new Template($this->templates . 'nonexistent.php', engine: Engine::create($this->templates));
+	}
+
+	public function testSymlinkedPathResolvesToTemplateFile(): void
+	{
+		$this->withLinkedTemplates(function (string $linked): void {
+			$template = new Template($linked . 'rendererror.php');
+
+			$this->assertSame(realpath($this->templates . 'rendererror.php'), $template->path);
+
+			try {
+				$template->render();
+				$this->fail('RenderException was not thrown');
+			} catch (RenderException $e) {
+				$this->assertSame("{$template->path}:1", (string) $e->location());
+			}
+		});
+	}
+
+	public function testSymlinkedPathFindsLayoutCycleBackToItself(): void
+	{
+		$this->withLinkedTemplates(function (string $linked): void {
+			try {
+				new Template($linked . 'layoutcycleback.php')->render();
+				$this->fail('LogicException was not thrown');
+			} catch (LogicException $e) {
+				$this->assertSame(
+					realpath($this->templates . 'layoutcyclebacklayout.php') . ':1',
+					(string) $e->location(),
+				);
+			}
+		});
+	}
+
 	public function testDirectoryNotFound(): void
 	{
 		$this->throws(LookupException::class, 'Template directory does not exist');
@@ -290,5 +339,22 @@ final class TemplateTest extends TestCase
 		}
 
 		$this->assertSame('script', $this->fullTrim($template->render(['fail' => false])));
+	}
+
+	/** @param callable(string): void $test receives the linked directory with a trailing slash */
+	private function withLinkedTemplates(callable $test): void
+	{
+		$base = sys_get_temp_dir() . '/boiler-template-' . uniqid();
+		$linked = $base . '/templates';
+
+		mkdir($base);
+		symlink($this->templates, $linked);
+
+		try {
+			$test($linked . '/');
+		} finally {
+			unlink($linked);
+			rmdir($base);
+		}
 	}
 }

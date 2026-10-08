@@ -44,11 +44,7 @@
 			ignoreSourceCodeByRegex: ['return \\$this->wrapped\\(\\);'],
 		},
 		LogicalOr: {
-			ignore: [
-				'Celema\\Boiler\\Wrapper::isTrusted',
-				// dirname() only returns '' for an empty path.
-				'Celema\\Boiler\\Template::__construct',
-			],
+			ignore: ['Celema\\Boiler\\Wrapper::isTrusted'],
 		},
 
 		// Casts of values that are already strings: ob_get_clean() inside an

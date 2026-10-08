@@ -9,27 +9,31 @@ use Celema\Boiler\Exception\LookupException;
 /** @api */
 final class Template
 {
+	/** the resolved file path */
+	public readonly string $path;
 	public readonly Engine $engine;
 	private readonly Methods $methods;
 
-	public function __construct(
-		public readonly string $path,
-		?Engine $engine = null,
-	) {
+	public function __construct(string $path, ?Engine $engine = null)
+	{
 		if ($engine === null) {
-			$dir = dirname($path);
-
-			if ($dir === '' || $path === '') {
+			if ($path === '') {
 				throw new LookupException('No directory given or empty path');
 			}
 
-			$engine = new Engine(new Resolver($dir), new Environment(), true);
-
-			if (!is_file($path)) {
-				throw new LookupException('Template not found: ' . $path);
-			}
+			$engine = new Engine(new Resolver(dirname($path)), new Environment(), true);
 		}
 
+		$file = realpath($path);
+
+		// realpath() also resolves directories, which include() cannot load.
+		if ($file === false || !is_file($file)) {
+			throw new LookupException('Template not found: ' . $path);
+		}
+
+		// PHP reports an included file under its resolved path, so error
+		// locations only find the template's lines under that path.
+		$this->path = $file;
 		$this->engine = $engine;
 		// Layered over the engine's, so engine methods stay available, including
 		// ones registered later, unless this template registers the same name.

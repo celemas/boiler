@@ -12,6 +12,8 @@ $template = new \Celema\Boiler\Template('/path/to/templates/page.php');
 
 Boiler creates an internal `Engine` automatically and uses the directory that contains the file as the template root.
 
+The path may be relative or lead through a symlink. Boiler resolves it when the template is created, and `$template->path` holds the resolved file path.
+
 ## Render the template
 
 Use the same render methods as on `Engine`:
@@ -98,6 +100,6 @@ Boiler resets per-render state such as assigned layouts and captured sections be
 
 ## Error handling
 
-- Boiler raises `LookupException` when the template file or its directory does not exist.
+- Boiler raises `LookupException` when the template file or its directory does not exist, or when the path names a directory.
 - Boiler raises `LookupException` when the template's layout cannot be resolved relative to the template directory.
 - Boiler raises `RenderException` when anything throws while the template runs, for example a parse error, a runtime error, or an insert that cannot be resolved. `getPrevious()` returns the original exception. See [errors inside templates](rendering.md#errors-inside-templates).
