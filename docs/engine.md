@@ -411,4 +411,6 @@ assert($template instanceof \Celema\Boiler\Template);
 
 A `Template` instance can be rendered multiple times safely, even from within its own render.
 
+It renders with the engine's defaults and trusted classes, like `$engine->render()`. Trusted classes passed to its render call add to the engine's.
+
 Methods you register on the instance with `$template->method()` apply to that template, its inserts, and its layouts only. Engine methods stay available, including ones registered later, unless the template registers a method with the same name.

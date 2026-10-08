@@ -23,8 +23,8 @@ final class Engine
 		Contract\Resolver $resolver,
 		Contract\Environment $environment,
 		public readonly bool $autoescape,
-		private readonly array $defaults = [],
-		private readonly array $trusted = [],
+		public readonly array $defaults = [],
+		public readonly array $trusted = [],
 	) {
 		$this->resolver = $resolver;
 		$this->environment = $environment;
@@ -99,7 +99,7 @@ final class Engine
 		string $path,
 		array $context = [],
 	): string {
-		return $this->renderTemplate($path, $context, $this->autoescape);
+		return $this->template($path)->render($context);
 	}
 
 	/** @param non-empty-string $path */
@@ -107,7 +107,7 @@ final class Engine
 		string $path,
 		array $context = [],
 	): string {
-		return $this->renderTemplate($path, $context, true);
+		return $this->template($path)->renderEscaped($context);
 	}
 
 	/** @param non-empty-string $path */
@@ -115,23 +115,7 @@ final class Engine
 		string $path,
 		array $context = [],
 	): string {
-		return $this->renderTemplate($path, $context, false);
-	}
-
-	/** @param non-empty-string $path */
-	private function renderTemplate(
-		string $path,
-		array $context,
-		bool $autoescape,
-	): string {
-		$template = $this->template($path);
-		$context = $this->defaults === []
-			? $context
-			: array_merge($this->defaults, $context);
-
-		return $autoescape
-			? $template->renderEscaped($context, $this->trusted)
-			: $template->renderUnescaped($context, $this->trusted);
+		return $this->template($path)->renderUnescaped($context);
 	}
 
 	/**

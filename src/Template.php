@@ -65,6 +65,11 @@ final class Template
 	/** @param list<class-string> $trusted */
 	private function renderWith(array $context, array $trusted, bool $autoescape): string
 	{
+		// Applied here rather than in Engine::render(), so that a template from
+		// Engine::template() renders like Engine::render().
+		$defaults = $this->engine->defaults;
+		$context = $defaults === [] ? $context : array_merge($defaults, $context);
+		$trusted = [...$this->engine->trusted, ...$trusted];
 		$rendering = new Rendering($this->path, $this->engine, $this->methods, new Sections(), $trusted, $autoescape);
 
 		return $rendering->render($context);

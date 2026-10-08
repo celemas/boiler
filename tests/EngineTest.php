@@ -1258,6 +1258,24 @@ final class EngineTest extends TestCase
 		$this->assertSame('engine', trim($engine->render('who')));
 	}
 
+	public function testTemplateRendersWithEngineDefaultsAndTrustedClasses(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR, ['content' => 'default'], [TrustedValue::class]);
+		$template = $engine->template('trusted');
+		$context = ['wl' => new TrustedValue()];
+		$expected = '<h1>headline</h1><p>default</p>';
+
+		$this->assertSame($expected, $this->fullTrim($engine->render('trusted', $context)));
+		$this->assertSame($expected, $this->fullTrim($template->render($context)));
+		$this->assertSame($expected, $this->fullTrim($template->renderUnescaped($context)));
+		// Classes passed to the render call add to the engine's.
+		$this->assertSame($expected, $this->fullTrim($template->render($context, [\stdClass::class])));
+		$this->assertSame(
+			'<h1>headline</h1><p>given</p>',
+			$this->fullTrim($template->render(['content' => 'given', ...$context])),
+		);
+	}
+
 	/** @return iterable<string, array{string}> */
 	public static function reservedMethodNames(): iterable
 	{
