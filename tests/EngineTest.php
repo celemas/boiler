@@ -799,6 +799,71 @@ final class EngineTest extends TestCase
 		$this->assertSame('[card][after]', $this->fullTrim($engine->render('sectionmutefail')));
 	}
 
+	/** @return iterable<string, array{string, string}> */
+	public static function sectionRewrites(): iterable
+	{
+		yield 'around what the page and its partials wrote' => [
+			'rewrite',
+			'<title>About – Blog | Site</title><aside><div class="blog">[nav][widget]</div>[base-ad]</aside><main>page</main>',
+		];
+		yield 'of nothing, leaving defaults in place' => [
+			'rewritenothing',
+			'<title>Blog | Site</title><aside>[base-sidebar][base-ad]</aside><main>page</main>',
+		];
+		yield 'of appended content only, without repeating it' => [
+			'rewriteappendonly',
+			'<title>Blog | Site</title><aside><div class="blog">[widget]</div>[base-ad]</aside><main>page</main>',
+		];
+		yield 'of blank appended content, leaving defaults in place' => [
+			'rewriteblankappend',
+			'<title>Blog | Site</title><aside>[base-sidebar][base-ad] </aside><main>page</main>',
+		];
+		yield 'inside a discarded default' => ['rewritemuted', '<title>Site</title><note>[page-note]</note>'];
+	}
+
+	#[DataProvider('sectionRewrites')]
+	public function testRewriteReplacesSectionWithWhatItBuildsOnIt(string $page, string $expected): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame($expected, $this->fullTrim($engine->render($page)));
+	}
+
+	public function testFailedInsertDoesNotLeaveSectionBlocksOpen(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame('[][[after]]', $this->fullTrim($engine->render('rewritefail')));
+	}
+
+	/** @return iterable<string, array{string, string, string}> */
+	public static function sectionReadWriteConflicts(): iterable
+	{
+		$printed = 'cannot be printed inside a block that writes it; build on its content with rewrite()';
+		$rewritten = 'is being rewritten; add to it before the rewrite() block or print the content inside it';
+
+		yield 'yield() inside its own section()' => [
+			'yieldinsection',
+			'yieldinsectionlayout.php:1',
+			"`sidebar` {$printed}",
+		];
+		yield 'yield() inside its own append()' => ['yieldinappend', 'yieldinappend.php:1', "`js` {$printed}"];
+		yield 'append() inside its rewrite()' => ['appendinrewrite', 'appendinrewrite.php:1', "`js` {$rewritten}"];
+		yield 'rewrite() inside its rewrite()' => ['rewriteinrewrite', 'rewriteinrewrite.php:1', "`js` {$rewritten}"];
+	}
+
+	#[DataProvider('sectionReadWriteConflicts')]
+	public function testSectionReadWriteConflictFailsAtCall(string $page, string $location, string $message): void
+	{
+		try {
+			Engine::create($this->templates())->render($page);
+			$this->fail('RenderException was not thrown');
+		} catch (RenderException $e) {
+			$this->assertSame(self::DEFAULT_DIR . '/' . $location, (string) $e->location());
+			$this->assertStringEndsWith("Section {$message}", $e->getMessage());
+		}
+	}
+
 	/** @return iterable<string, array{string, string, string}> */
 	public static function sectionCapturedTwice(): iterable
 	{

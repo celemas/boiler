@@ -28,6 +28,7 @@ A template prints the page or block it wraps with `slot()`, and any template can
 | Pass a block into a partial | `$this->component('card')` … `$this->end()` | `<?= $this->slot() ?>` in the partial | `<x-card>` … `</x-card>`, `{{ $slot }}` |
 | Write a named region from any template | `$this->section('title')`, `append()`, or `prepend()` … `$this->end()` | `<?= $this->yield('title', 'default') ?>` | `@section`, `@push`, `@prepend`, `@yield`, `@stack` |
 | Give a named region a default | `$this->section('title')` … `$this->end()` in a layout | `<?= $this->yield('title', 'default') ?>` | `@section` in a layout, `@yield('title', 'default')` |
+| Build on a named region | `$this->rewrite('title')` … `$this->end()`, with `yield('title')` inside | — | `@section('title')` with `@yield('title')` inside and `@overwrite` |
 | Check a named region for content | — | `if ($title = $this->yield('title', ''))` | `@hasSection('title')` |
 
 ## Start here

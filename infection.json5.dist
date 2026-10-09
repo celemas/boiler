@@ -72,6 +72,7 @@
 				'Celema\\Boiler\\Context::end',
 				'Celema\\Boiler\\Context::section',
 				'Celema\\Boiler\\Context::yield',
+				'Celema\\Boiler\\Context::rewrite',
 			],
 		},
 

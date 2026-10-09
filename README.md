@@ -157,6 +157,7 @@ Template helpers available via `$this` inside templates:
 - `$this->component('partial', ['value' => '...'])` … `$this->end()` to pass the block in between, which the partial prints with `<?= $this->slot() ?>`
 - `$this->hasSlot()` to check whether there is a slot to print
 - `$this->section('name')`, `$this->append('name')`, or `$this->prepend('name')` … `$this->end()` to write a section
+- `$this->rewrite('name')` … `$this->end()` to replace a section with content built on it, which `yield()` returns inside the block
 - `<?= $this->yield('name', 'default') ?>` to print a section; for a default made of markup, pass a closure that prints it, such as `fn() => $this->insert('partial')`. With `''` as the default, the result is `''` when there is nothing to print
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
 - `$this->escape($value)` and `$this->wrap($value)` when you need proxy behavior such as string filters on a raw value

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler;
 
+use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ObjectProxy;
@@ -169,21 +170,28 @@ final class Context
 	 */
 	public function section(string $name): void
 	{
-		$this->rendering->capture('section', $name, $this->rendering->sections->open($name));
+		$this->rendering->capture('section', $name, $this->rendering->sections->capture($name));
 	}
 
 	public function append(string $name): void
 	{
-		$sections = $this->rendering->sections;
-
-		$this->rendering->capture('section', $name, static fn(string $content) => $sections->append($name, $content));
+		$this->rendering->capture('section', $name, $this->rendering->sections->append($name));
 	}
 
 	public function prepend(string $name): void
 	{
-		$sections = $this->rendering->sections;
+		$this->rendering->capture('section', $name, $this->rendering->sections->prepend($name));
+	}
 
-		$this->rendering->capture('section', $name, static fn(string $content) => $sections->prepend($name, $content));
+	/**
+	 * Captures the output up to the matching `end()` as the new content of a
+	 * section, replacing what it held so far, including appended and prepended
+	 * content. Inside, `yield()` returns that content, so a layout can build
+	 * on what the page wrote: `<?= $this->yield('title') ?> – Blog`.
+	 */
+	public function rewrite(string $name): void
+	{
+		$this->rendering->capture('section', $name, $this->rendering->sections->rewrite($name));
 	}
 
 	/**
@@ -211,6 +219,13 @@ final class Context
 	public function yield(string $name, string|Closure|null $default = null): string
 	{
 		$sections = $this->rendering->sections;
+
+		if ($sections->writing($name)) {
+			throw new LogicException(
+				"Section `{$name}` cannot be printed inside a block that writes it; build on its content with rewrite()",
+				location: $this->rendering->location(),
+			);
+		}
 
 		if ($default === null && !$sections->has($name)) {
 			throw new LookupException(

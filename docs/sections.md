@@ -108,6 +108,32 @@ Additions keep the order of their calls, also across inserts, so two partials th
 
 `section()` sets only the main content and keeps what was appended or prepended before.
 
+## Rewrite a section
+
+A layout can build on what the templates it wraps wrote to a section, for example to wrap the page's sidebar in its own markup or to add the blog name to the page's title. Write the new content between `rewrite()` and `end()`. Inside, `yield()` returns the section's content so far.
+
+Create `blog.php`, a layout between the page and `layout.php`:
+
+```php
+<?php $this->layout('layout') ?>
+
+<?php $this->rewrite('title') ?>
+<?= $this->yield('title', 'Untitled') ?> – Blog
+<?php $this->end() ?>
+
+<?php $this->rewrite('sidebar') ?>
+<?php if ($sidebar = $this->yield('sidebar', '')) : ?>
+    <div class="blog"><?= $sidebar ?></div>
+<?php endif ?>
+<?php $this->end() ?>
+
+<?= $this->slot() ?>
+```
+
+The output of the block replaces everything the section held so far, including what the page and its partials appended or prepended, so nothing prints twice. Layouts further out add to the result or rewrite it again. A rewrite counts as a capture, so a layout further out that provides a default with `section()` gives way to it. When both the content so far and the output of the block are blank, the section stays as it was, and a default passed to `yield()` still applies. In Blade, the same works with `@yield` inside `@section` … `@overwrite`.
+
+`yield()` of a section inside a `section()`, `append()`, or `prepend()` block of the same section fails the render, as the section is not complete yet; build on it with `rewrite()` instead. Inside `rewrite()`, writing to the same section fails, as the rewrite replaces what it read.
+
 ## Print markup only when there is content
 
 `yield()` returns `''` for a section that holds nothing but whitespace, like `slot()` does for a slot. With `''` as the default, the result tells whether there is anything to print, so markup around a section can depend on it:
@@ -139,3 +165,4 @@ Pass a name to check which block `end()` closes, like Twig's `{% endblock sideba
 - A section must be closed with `$this->end()` in the template that opened it. An unclosed section raises a render error that points to the line that opened it.
 - Calling `$this->end()` without an open section or component raises a render error, and so does `$this->end('name')` when the innermost open block has another name.
 - Calling `$this->yield()` without a default for a section that was never captured raises a render error. Pass a default, even `''`, when the section is optional.
+- Calling `$this->yield()` inside a `section()`, `append()`, or `prepend()` block of the same section raises a render error, and so does writing to a section inside its own `rewrite()` block.

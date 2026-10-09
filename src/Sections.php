@@ -51,6 +51,24 @@ final class Sections
 	private int $muted = 0;
 
 	/**
+	 * The sections that open `section()`, `append()`, and `prepend()` blocks
+	 * write, innermost last. Such a section cannot be printed before they
+	 * close, as its content is not complete yet.
+	 *
+	 * @var list<string>
+	 */
+	private array $writing = [];
+
+	/**
+	 * The sections that open `rewrite()` blocks rewrite, innermost last. Such
+	 * a section cannot be written before they close, as the rewrite replaces
+	 * what it read.
+	 *
+	 * @var list<string>
+	 */
+	private array $rewriting = [];
+
+	/**
 	 * Opens a capture of the main content and returns what closes it with the
 	 * captured output and where `section()` opened it.
 	 *
@@ -61,44 +79,82 @@ final class Sections
 	 *
 	 * @return Closure(string, Location): void
 	 */
-	public function open(string $name): Closure
+	public function capture(string $name): Closure
 	{
 		if ($this->muted > 0) {
-			return static function (): void {};
+			return $this->write($name);
 		}
 
 		$position = $this->position();
 		$captured = $this->captured[$name] ?? null;
 
 		if ($captured !== null && Section::wraps($position, $captured[1])) {
+			$close = $this->write($name, function (): void {
+				$this->muted--;
+			});
 			$this->muted++;
 
-			return function (): void {
-				$this->muted--;
-			};
+			return $close;
 		}
 
-		return function (string $content, Location $location) use ($name, $position): void {
+		return $this->write($name, function (string $content, Location $location) use ($name, $position): void {
 			$this->assign($name, $content, $location, $position);
+		});
+	}
+
+	/** @return Closure(string, Location): void */
+	public function append(string $name): Closure
+	{
+		return $this->write($name, function (string $content) use ($name): void {
+			if ($this->muted === 0) {
+				($this->sections[$name] ??= new Section())->append($content, $this->position());
+			}
+		});
+	}
+
+	/** @return Closure(string, Location): void */
+	public function prepend(string $name): Closure
+	{
+		return $this->write($name, function (string $content) use ($name): void {
+			if ($this->muted === 0) {
+				($this->sections[$name] ??= new Section())->prepend($content);
+			}
+		});
+	}
+
+	/**
+	 * Opens a rewrite, inside which `yield()` returns the section's content so
+	 * far, and returns what closes it. The output replaces that content,
+	 * appended and prepended content included, and counts as a capture at the
+	 * rewriting template. When both are blank, the section stays as it was,
+	 * so a default passed to `yield()` still applies.
+	 *
+	 * @return Closure(string, Location): void
+	 */
+	public function rewrite(string $name): Closure
+	{
+		$this->assertWritable($name);
+		$this->rewriting[] = $name;
+
+		return function (string $content, Location $location) use ($name): void {
+			array_pop($this->rewriting);
+			$current = isset($this->sections[$name]) ? $this->sections[$name]->get() : '';
+
+			if ($this->muted > 0 || trim($content) === '' && trim($current) === '') {
+				return;
+			}
+
+			$section = new Section();
+			$section->setValue($content);
+			$this->sections[$name] = $section;
+			$this->captured[$name] = [$location, $this->position()];
 		};
 	}
 
-	public function append(string $name, string $content): void
+	/** Whether an open `section()`, `append()`, or `prepend()` block writes the section. */
+	public function writing(string $name): bool
 	{
-		if ($this->muted > 0) {
-			return;
-		}
-
-		($this->sections[$name] ??= new Section())->append($content, $this->position());
-	}
-
-	public function prepend(string $name, string $content): void
-	{
-		if ($this->muted > 0) {
-			return;
-		}
-
-		($this->sections[$name] ??= new Section())->prepend($content);
+		return in_array($name, $this->writing, true);
 	}
 
 	/**
@@ -112,6 +168,8 @@ final class Sections
 		$insert = $this->insert;
 		$level = $this->level;
 		$muted = $this->muted;
+		$writing = $this->writing;
+		$rewriting = $this->rewriting;
 		$this->insert = [...$insert, $level, ++$this->calls];
 
 		try {
@@ -119,8 +177,10 @@ final class Sections
 		} finally {
 			$this->insert = $insert;
 			$this->level = $level;
-			// A failed insert that the caller catches may leave a default open.
+			// A failed insert that the caller catches may leave blocks open.
 			$this->muted = $muted;
+			$this->writing = $writing;
+			$this->rewriting = $rewriting;
 		}
 	}
 
@@ -170,6 +230,37 @@ final class Sections
 
 		$this->captured[$name] = [$location, $position];
 		($this->sections[$name] ??= new Section())->setValue($content);
+	}
+
+	/**
+	 * Registers an open block that writes the section and returns what closes
+	 * it, which runs $close once the block is no longer open.
+	 *
+	 * @param ?Closure(string, Location): void $close
+	 *
+	 * @return Closure(string, Location): void
+	 */
+	private function write(string $name, ?Closure $close = null): Closure
+	{
+		$this->assertWritable($name);
+		$this->writing[] = $name;
+
+		return function (string $content, Location $location) use ($close): void {
+			array_pop($this->writing);
+
+			if ($close !== null) {
+				$close($content, $location);
+			}
+		};
+	}
+
+	private function assertWritable(string $name): void
+	{
+		if (in_array($name, $this->rewriting, true)) {
+			throw new LogicException(
+				"Section `{$name}` is being rewritten; add to it before the rewrite() block or print the content inside it",
+			);
+		}
 	}
 
 	/** @return list<int> */
