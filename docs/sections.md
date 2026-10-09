@@ -56,6 +56,35 @@ For a default made of markup, such as an insert, pass a closure that prints it. 
 
 The closure prints its content, like a section block; returning a string instead fails the render. Content appended or prepended to the section prints around the default, as for a string default.
 
+### Nested defaults
+
+A closure default can print other sections, so a page can fill a section inside the default without replacing it, like a block nested in another in Twig. To write the markup inline, use a `function` closure; an arrow function holds only an expression.
+
+In `layout.php`:
+
+```php
+<head>
+<?= $this->yield('head', function () { ?>
+    <link rel="stylesheet" href="/style.css">
+    <title><?= $this->yield('title', '') ?> – My site</title>
+<?php }) ?>
+</head>
+```
+
+A page that captures the title and appends to `head` keeps the stylesheet:
+
+```php
+<?php $this->layout('layout') ?>
+
+<?php $this->section('title') ?>About<?php $this->end() ?>
+
+<?php $this->append('head') ?>
+<style>.intro { color: #369; }</style>
+<?php $this->end() ?>
+```
+
+The head then holds the stylesheet, `<title>About – My site</title>`, and the page's style. `append()` takes the place of `{{ parent() }}` followed by new content in Twig, and `prepend()` of new content followed by it. A page that captures `head` with `section()` replaces the whole default, so the title it holds does not print either. A longer default fits in a partial: `fn() => $this->insert('head')`.
+
 ### Defaults in a layout
 
 A layout between the page and the layout that prints a section provides a default with `section()`. A layout's capture is a default for the templates it wraps: the page, its inner layouts, and everything they insert. Those render first, so when one of them captured the section, the layout's capture is discarded, and so is everything it would add to sections, such as the scripts of a partial it inserts. Otherwise its capture becomes the main content, which the next layout out treats the same way, so the innermost capture wins.
