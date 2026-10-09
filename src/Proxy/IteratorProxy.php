@@ -11,6 +11,11 @@ use Override;
 use Traversable;
 
 /**
+ * Wraps a traversable value. A loop gets its wrapped items, and an object such
+ * as a collection or a menu item with children keeps its properties and
+ * methods, as with ObjectProxy. The proxy's own methods take precedence over
+ * same-named methods of the object.
+ *
  * @api
  *
  * @template-implements IteratorAggregate<mixed, mixed>
@@ -18,6 +23,8 @@ use Traversable;
  */
 final class IteratorProxy implements IteratorAggregate, Proxy
 {
+	use ObjectAccess;
+
 	/** @param Traversable<mixed, mixed> $value */
 	public function __construct(
 		private readonly Traversable $value,

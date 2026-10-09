@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use ArrayIterator;
 use ArrayObject;
+use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ArrayProxy;
 use Celema\Boiler\Proxy\IteratorProxy;
 use Celema\Boiler\Proxy\StringProxy;
+use IteratorAggregate;
+use Override;
 
 final class IteratorProxyTest extends TestCase
 {
@@ -133,6 +137,74 @@ final class IteratorProxyTest extends TestCase
 		$this->assertSame($aggregate, $iterval->unwrap());
 		$this->assertTrue($iterval->is($aggregate));
 		$this->assertSame([1, 2], $iterval->toArray()->unwrap());
+	}
+
+	public function testTraversableObjectKeepsItsObjectAccess(): void
+	{
+		$object = new class implements IteratorAggregate {
+			public string $label = '<b>label</b>';
+			public ?string $missing = null;
+
+			public function title(string $suffix): string
+			{
+				return 'Beer & Wine' . $suffix;
+			}
+
+			public function __toString(): string
+			{
+				return '<i>menu</i>';
+			}
+
+			public function __invoke(string $value): string
+			{
+				return "<{$value}>";
+			}
+
+			#[Override]
+			public function getIterator(): ArrayIterator
+			{
+				return new ArrayIterator(['<b>item</b>']);
+			}
+		};
+		$iterval = $this->iteratorProxy($object);
+
+		$this->assertInstanceOf(StringProxy::class, $iterval->title($this->stringProxy('!')));
+		$this->assertSame('Beer &amp; Wine!', (string) $iterval->title('!'));
+		$this->assertSame('&lt;b&gt;label&lt;/b&gt;', (string) $iterval->label);
+		$this->assertTrue(isset($iterval->label));
+		$this->assertFalse(isset($iterval->missing));
+		$iterval->label = $this->stringProxy('new');
+		$this->assertSame('new', $object->label);
+		$this->assertSame('&lt;i&gt;menu&lt;/i&gt;', (string) $iterval);
+		$this->assertSame('&lt;x&gt;', (string) $iterval('x'));
+
+		foreach ($iterval as $item) {
+			$this->assertSame('&lt;b&gt;item&lt;/b&gt;', (string) $item);
+		}
+	}
+
+	public function testTraversableWithoutTheAccessedMemberThrows(): void
+	{
+		$iterval = $this->iteratorProxy(new ArrayIterator([]));
+		$attempts = [
+			'No such method' => $iterval->title(...),
+			'No such property' => static fn() => $iterval->label,
+			'Wrapped object is not stringable' => static fn() => (string) $iterval,
+		];
+
+		foreach ($attempts as $message => $attempt) {
+			try {
+				$attempt();
+				$this->fail("Expected: {$message}");
+			} catch (RuntimeException $e) {
+				$this->assertSame($message, $e->getMessage());
+			}
+		}
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('No such method');
+
+		$iterval('x');
 	}
 
 	public function testIteratorProxyToArray(): void

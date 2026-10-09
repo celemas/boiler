@@ -374,6 +374,19 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testLoopOverTraversableObjectsKeepsTheirMethods(): void
+	{
+		$menu = new MenuItem('menu', [
+			new MenuItem('Beer & Wine', [new MenuItem('<b>Pils</b>')]),
+			new MenuItem('Contact'),
+		]);
+
+		$this->assertSame(
+			'[Beer &amp; Wine:&lt;b&gt;Pils&lt;/b&gt;,][Contact:]',
+			trim(Engine::create($this->templates())->render('itermethods', ['menu' => $menu])),
+		);
+	}
+
 	public function testNestedLoopsOverSharedValueDoNotEndOuterLoop(): void
 	{
 		$engine = Engine::create($this->templates());

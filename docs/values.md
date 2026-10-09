@@ -232,6 +232,22 @@ That means this stays escaped in a normal render:
 
 The same applies when values come from object properties, object methods, or iterator items.
 
+### Traversable objects
+
+An object you can loop over, such as a collection or a menu item with children, keeps its properties and methods. Loop over it and call its methods in the same template; both return wrapped values:
+
+```php
+<?php foreach ($menu as $item) : ?>
+    <li><?= $item->title() ?>
+    <?php foreach ($item as $child) : ?>
+        <?= $child->title() ?>
+    <?php endforeach; ?>
+    </li>
+<?php endforeach; ?>
+```
+
+The wrapped iterator's own methods take precedence over same-named methods of the object: `toArray()`, `getIterator()`, `unwrap()`, `is()`, and `in()`. Call such a method on `$this->unwrap($item)` when you need the object's own version.
+
 ### Loop keys
 
 Loops over wrapped arrays and iterators wrap keys like values, so a key is escaped when you output it. Integer array keys stay integers.
