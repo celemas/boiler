@@ -3,7 +3,7 @@
     <td><?= $product['sku']->trim()->upper() ?></td>
     <td><?= $product['name'] ?></td>
     <td><?= $product['vendor']->trim()->upper() ?></td>
-    <td><?php $this->insert('price-cell', ['product' => $product]) ?></td>
+    <td><?php $this->include('price-cell', ['product' => $product]) ?></td>
     <td>
         <?php if ($product['inStock'] && $product['stock'] > 5): ?>
             <span class="in-stock">In Stock</span>
@@ -15,7 +15,7 @@
             <span class="out-of-stock">Out of Stock</span>
         <?php endif ?>
     </td>
-    <td><?php $this->insert('rating-stars', ['product' => $product]) ?></td>
+    <td><?php $this->include('rating-stars', ['product' => $product]) ?></td>
     <td>
         <?php foreach ($product['tags'] as $tag): ?>
             <span class="tag"><?= $tag ?></span>

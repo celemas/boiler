@@ -15,7 +15,7 @@ use Throwable;
 
 /**
  * One run of a template file during a render: the rendered template, one of
- * its layouts, or an inserted template. It holds the state that the
+ * its layouts, or an included template. It holds the state that the
  * template's helpers act on and shares the rest with the other runs of the
  * render. A new render starts new runs, so a Template can render again, even
  * from within its own render.
@@ -75,7 +75,7 @@ final class Rendering
 			$rendering = $this->with($file, $content->content);
 			$this->sections->enterLayout();
 			// A layout builds on the context of the template it wraps, like an
-			// insert builds on the context of the template that calls it.
+			// included template builds on the context of the template that calls it.
 			$content = $rendering->run($content->templateContext->get($layout->context));
 		}
 
@@ -83,12 +83,12 @@ final class Rendering
 	}
 
 	/**
-	 * Renders another template file within this render, for an insert or a
+	 * Renders another template file within this render, for an include or a
 	 * component.
 	 *
 	 * @param non-empty-string $file
 	 */
-	public function insert(string $file, array $context, ?string $slot = null): string
+	public function include(string $file, array $context, ?string $slot = null): string
 	{
 		return $this->sections->nest(fn(): string => $this->with($file, $slot)->render($context));
 	}

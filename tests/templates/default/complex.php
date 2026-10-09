@@ -1,4 +1,4 @@
-<?php $this->insert('header'); ?>
+<?php $this->include('header'); ?>
 
 <body>
     <h1><?= $headline; ?></h1>

@@ -13,11 +13,11 @@ Boiler is a small template engine for PHP 8.5+, inspired by [Plates](https://pla
 Key differences from Plates:
 
 - Automatic escaping of strings and [Stringable](https://www.php.net/manual/en/class.stringable.php) values for enhanced security
-- Inherited render context across layouts, inserts, components, and section captures; custom insert or layout context merges on top and overrides duplicate keys
+- Inherited render context across layouts, includes, components, and section captures; custom include or layout context merges on top and overrides duplicate keys
 
 Other highlights:
 
-- Layouts, inserts, components, and sections, with concepts that map onto Blade's: `slot()` prints what a template wraps, and `yield()` prints a section that any template can write, append to, or prepend to
+- Layouts, includes, components, and sections, with concepts that map onto Blade's: `slot()` prints what a template wraps, and `yield()` prints a section that any template can write, append to, or prepend to
 - Wrapper-driven escaping and a pluggable filter system for value transformations
 - Custom template methods, including safe HTML helpers, and optional trusted classes
 
@@ -44,7 +44,7 @@ Start here: [docs/index.md](docs/index.md).
 - [Rendering templates](docs/rendering.md)
 - [Displaying values](docs/values.md)
 - [Layouts](docs/layouts.md)
-- [Inserts](docs/inserts.md)
+- [Includes](docs/includes.md)
 - [Sections](docs/sections.md)
 - [Slots](docs/slots.md)
 - [Template](docs/template.md)
@@ -125,7 +125,7 @@ $engine = Engine::create('/path/to/templates')
     ->method('icon', icon(...), safe: true);
 ```
 
-Methods are available as `$this->icon()` inside templates, inserts, and layouts.
+Methods are available as `$this->icon()` inside templates, includes, and layouts.
 
 Register custom filters with the fluent `filter()` method:
 
@@ -153,12 +153,12 @@ For filter safety rules and advanced wrapper, filter, and escaper customization,
 Template helpers available via `$this` inside templates:
 
 - `$this->layout('layout')`, and `<?= $this->slot() ?>` in the layout to print the page
-- `$this->insert('partial', ['value' => '...'])`
+- `$this->include('partial', ['value' => '...'])`
 - `$this->component('partial', ['value' => '...'])` … `$this->end()` to pass the block in between, which the partial prints with `<?= $this->slot() ?>`
 - `$this->hasSlot()` to check whether there is a slot to print
 - `$this->section('name')`, `$this->append('name')`, or `$this->prepend('name')` … `$this->end()` to write a section
 - `$this->rewrite('name')` … `$this->end()` to replace a section with content built on it, which `yield()` returns inside the block
-- `<?= $this->yield('name', 'default') ?>` to print a section; for a default made of markup, pass a closure that prints it, such as `fn() => $this->insert('partial')`. With `''` as the default, the result is `''` when there is nothing to print
+- `<?= $this->yield('name', 'default') ?>` to print a section; for a default made of markup, pass a closure that prints it, such as `fn() => $this->include('partial')`. With `''` as the default, the result is `''` when there is nothing to print
 - `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
 - `$this->escape($value)` and `$this->wrap($value)` when you need proxy behavior such as string filters on a raw value
 

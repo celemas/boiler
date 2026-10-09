@@ -114,7 +114,7 @@ $engine = \Celema\Boiler\Engine::create(
 );
 ```
 
-Per-render context overrides defaults with the same key. These values become part of the render context, so layouts, inserts, and section captures inherit them unless more specific context overrides a key.
+Per-render context overrides defaults with the same key. These values become part of the render context, so layouts, includes, and section captures inherit them unless more specific context overrides a key.
 
 ## Configure trusted classes
 
@@ -353,7 +353,7 @@ Read [rendering templates](rendering.md) for path syntax, subdirectories, overri
 
 ## Register custom template methods
 
-Custom methods are available as `$this->methodName()` inside templates, inserts, and layouts:
+Custom methods are available as `$this->methodName()` inside templates, includes, and layouts:
 
 ```php
 $engine->method('upper', function (string $value): string {
@@ -365,7 +365,7 @@ Boiler unwraps proxy arguments before it calls your method, so the callable rece
 
 In escaped renders, Boiler wraps the return value again before exposing it to the template. In unescaped renders, it returns the unwrapped value.
 
-The names of Boiler's own template helpers, such as `insert`, `section`, `yield`, `escape`, or `slot`, are reserved in any letter case. Registering one throws `UnexpectedValueException`, because the built-in helper would always take precedence.
+The names of Boiler's own template helpers, such as `include`, `section`, `yield`, `escape`, or `slot`, are reserved in any letter case. Registering one throws `UnexpectedValueException`, because the built-in helper would always take precedence.
 
 Pass `safe: true` when a helper returns safe HTML:
 
@@ -413,4 +413,4 @@ A `Template` instance can be rendered multiple times safely, even from within it
 
 It renders with the engine's defaults and trusted classes, like `$engine->render()`. Trusted classes passed to its render call add to the engine's.
 
-Methods you register on the instance with `$template->method()` apply to that template, its inserts, and its layouts only. Engine methods stay available, including ones registered later, unless the template registers a method with the same name.
+Methods you register on the instance with `$template->method()` apply to that template, its includes, and its layouts only. Engine methods stay available, including ones registered later, unless the template registers a method with the same name.

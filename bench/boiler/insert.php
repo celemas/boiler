@@ -27,7 +27,7 @@
 
     <div class="facets">
         <?php foreach ($facets as $facet): ?>
-            <?php $this->insert('facet-group', ['facet' => $facet]) ?>
+            <?php $this->include('facet-group', ['facet' => $facet]) ?>
         <?php endforeach ?>
     </div>
 </aside>

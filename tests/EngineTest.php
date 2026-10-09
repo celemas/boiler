@@ -645,26 +645,26 @@ final class EngineTest extends TestCase
 		$this->assertSame('[caught]', $this->fullTrim($engine->render('yieldclosurefailing')));
 	}
 
-	public function testInsertRenderingInsideSection(): void
+	public function testIncludeRenderingInsideSection(): void
 	{
 		$engine = Engine::create($this->templates());
 
 		$this->assertSame(
 			'<div><p>boiler</p>boiler</div><ul><li>boiler</li></ul>',
-			$this->fullTrim($engine->render('insertinsection', ['text' => 'boiler'])),
+			$this->fullTrim($engine->render('includeinsection', ['text' => 'boiler'])),
 		);
 	}
 
-	public function testInsertCannotCloseParentSection(): void
+	public function testIncludeCannotCloseParentSection(): void
 	{
 		$this->throws(RenderException::class, 'No open section or component to close');
 
 		$engine = Engine::create($this->templates());
 
-		$engine->render('closesectionfrominsert');
+		$engine->render('closesectionfrominclude');
 	}
 
-	public function testInsertCanCaptureSectionsInsideSection(): void
+	public function testIncludeCanCaptureSectionsInsideSection(): void
 	{
 		$engine = Engine::create($this->templates());
 
@@ -708,17 +708,17 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testInsertWithLayoutKeepsItsPlaceInCallOrder(): void
+	public function testIncludeWithLayoutKeepsItsPlaceInCallOrder(): void
 	{
 		$engine = Engine::create($this->templates());
 
 		$this->assertSame(
 			'[partial-layout-prepend][page-prepend][main][partial-layout-append][page-append]',
-			$this->fullTrim($engine->render('addorderinsertlayout')),
+			$this->fullTrim($engine->render('addorderincludelayout')),
 		);
 	}
 
-	public function testLayoutOfInsertStaysCloserToMainContentAtThePlaceOfTheInsert(): void
+	public function testLayoutOfIncludeStaysCloserToMainContentAtThePlaceOfTheInclude(): void
 	{
 		$engine = Engine::create($this->templates());
 
@@ -729,7 +729,7 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testInsertInsideInsertKeepsItsPlaceInCallOrder(): void
+	public function testIncludeInsideIncludeKeepsItsPlaceInCallOrder(): void
 	{
 		$engine = Engine::create($this->templates());
 
@@ -739,7 +739,7 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testFailedLayoutOfInsertedTemplateLeavesAdditionsOfCallerInPlace(): void
+	public function testFailedLayoutOfIncludedTemplateLeavesAdditionsOfCallerInPlace(): void
 	{
 		$engine = Engine::create($this->templates());
 
@@ -779,7 +779,7 @@ final class EngineTest extends TestCase
 			'<title>[mid-title]</title><main>[page]</main><aside></aside><js>[base-js][mid-js]</js><modal></modal>',
 		];
 		yield 'replaced by a partial in its own layout' => [
-			'sectiondefaultinsert',
+			'sectiondefaultinclude',
 			'[card]<badge>[card-badge]</badge>',
 		];
 	}
@@ -792,7 +792,7 @@ final class EngineTest extends TestCase
 		$this->assertSame($expected, $this->fullTrim($engine->render($page)));
 	}
 
-	public function testFailedInsertDoesNotLeaveSectionsMuted(): void
+	public function testFailedIncludeDoesNotLeaveSectionsMuted(): void
 	{
 		$engine = Engine::create($this->templates());
 
@@ -829,7 +829,7 @@ final class EngineTest extends TestCase
 		$this->assertSame($expected, $this->fullTrim($engine->render($page)));
 	}
 
-	public function testFailedInsertDoesNotLeaveSectionBlocksOpen(): void
+	public function testFailedIncludeDoesNotLeaveSectionBlocksOpen(): void
 	{
 		$engine = Engine::create($this->templates());
 
@@ -869,9 +869,9 @@ final class EngineTest extends TestCase
 	{
 		yield 'by a partial and the page' => ['sectiontwice', 'sectiontwice.php:2', 'sectiontwicepartial.php:1'];
 		yield "by the page and a partial's layout" => [
-			'sectiontwiceinsertlayout',
+			'sectiontwiceincludelayout',
 			'sectiontwicepanel.php:1',
-			'sectiontwiceinsertlayout.php:1',
+			'sectiontwiceincludelayout.php:1',
 		];
 	}
 
@@ -982,23 +982,23 @@ final class EngineTest extends TestCase
 		}
 	}
 
-	public function testInsertRendering(): void
+	public function testIncludeRendering(): void
 	{
 		$engine = Engine::create($this->templates());
 
 		$this->assertSame(
 			'<p>Boiler</p><p>73</p><p>Boiler</p><p>23</p><p>&lt;b&gt;Overwrite&lt;/b&gt;</p><p>13</p>',
-			$this->fullTrim($engine->render('insert', ['text' => 'Boiler', 'int' => 73])),
+			$this->fullTrim($engine->render('include', ['text' => 'Boiler', 'int' => 73])),
 		);
 	}
 
-	public function testInsertUnescapedRendering(): void
+	public function testIncludeUnescapedRendering(): void
 	{
 		$engine = Engine::unescaped($this->templates());
 
 		$this->assertSame(
 			'<p>Boiler</p><p>73</p><p>Boiler</p><p>23</p><p><b>Overwrite</b></p><p>13</p>',
-			$this->fullTrim($engine->render('insert', ['text' => 'Boiler', 'int' => 73])),
+			$this->fullTrim($engine->render('include', ['text' => 'Boiler', 'int' => 73])),
 		);
 	}
 
@@ -1248,10 +1248,10 @@ final class EngineTest extends TestCase
 		$engine->render('failing');
 	}
 
-	public function testRenderErrorInInsertedTemplateIsNotWrappedAgain(): void
+	public function testRenderErrorInIncludedTemplateIsNotWrappedAgain(): void
 	{
 		try {
-			Engine::create($this->templates())->render('insertfailing');
+			Engine::create($this->templates())->render('includefailing');
 			$this->fail('RenderException was not thrown');
 		} catch (RenderException $e) {
 			$this->assertSame(self::DEFAULT_DIR . '/failing.php', $e->location()?->path);
@@ -1293,14 +1293,14 @@ final class EngineTest extends TestCase
 		}
 	}
 
-	public function testMissingInsertRaisesRenderErrorWithLookupCause(): void
+	public function testMissingIncludeRaisesRenderErrorWithLookupCause(): void
 	{
 		try {
-			Engine::create($this->templates())->render('insertmissing');
+			Engine::create($this->templates())->render('includemissing');
 			$this->fail('RenderException was not thrown');
 		} catch (RenderException $e) {
 			$this->assertInstanceOf(LookupException::class, $e->getPrevious());
-			$this->assertSame(self::DEFAULT_DIR . '/insertmissing.php', $e->location()?->path);
+			$this->assertSame(self::DEFAULT_DIR . '/includemissing.php', $e->location()?->path);
 		}
 	}
 
@@ -1335,12 +1335,12 @@ final class EngineTest extends TestCase
 		}
 	}
 
-	public function testRenderExceptionReportsInsertedLocation(): void
+	public function testRenderExceptionReportsIncludedLocation(): void
 	{
 		$path = self::DEFAULT_DIR . '/closesection.php';
 
 		try {
-			Engine::create($this->templates())->render('closesectionfrominsert');
+			Engine::create($this->templates())->render('closesectionfrominclude');
 			$this->fail('RenderException was not thrown');
 		} catch (RenderException $e) {
 			$this->assertSame($path, $e->getFile());
@@ -1530,18 +1530,18 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testCustomTemplateMethodIsAvailableInInsertedTemplates(): void
+	public function testCustomTemplateMethodIsAvailableInIncludedTemplates(): void
 	{
 		$engine = Engine::create($this->templates())
 			->method('upper', static fn(string $value): string => strtoupper($value));
 
 		$this->assertSame(
 			'<p>BOILER</p><p>13</p>',
-			$this->fullTrim($engine->render('insertmethod', ['text' => 'Boiler'])),
+			$this->fullTrim($engine->render('includemethod', ['text' => 'Boiler'])),
 		);
 	}
 
-	public function testSafeCustomTemplateMethodIsAvailableInInsertedTemplates(): void
+	public function testSafeCustomTemplateMethodIsAvailableInIncludedTemplates(): void
 	{
 		$engine = Engine::create($this->templates())
 			->method(
@@ -1552,7 +1552,7 @@ final class EngineTest extends TestCase
 
 		$this->assertSame(
 			'<p><b>BOILER</b></p><p>13</p>',
-			$this->fullTrim($engine->render('insertmethod', ['text' => 'Boiler'])),
+			$this->fullTrim($engine->render('includemethod', ['text' => 'Boiler'])),
 		);
 	}
 

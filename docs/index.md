@@ -11,7 +11,7 @@ The main differences from Plates are:
 
 - Automatic escaping via PHP's `htmlspecialchars()`
 - A small API centered around the [Engine](engine.md)
-- Code reuse with [layouts](layouts.md), [inserts](inserts.md), [sections](sections.md), and [slots](slots.md), whose concepts map onto Blade's
+- Code reuse with [layouts](layouts.md), [includes](includes.md), [sections](sections.md), and [slots](slots.md), whose concepts map onto Blade's
 - Plain PHP templates with no custom syntax
 - Wrapper-driven escaping and a pluggable filter system for value transformations such as HTML sanitization, case conversion, tag stripping, and trimming
 - Custom template methods, including safe HTML helpers, and optional trusted classes
@@ -24,7 +24,7 @@ A template prints the page or block it wraps with `slot()`, and any template can
 | To | Write | Print | Blade |
 | --- | --- | --- | --- |
 | Wrap a page in a layout | `$this->layout('layout')` | `<?= $this->slot() ?>` in the layout | `@extends('layout')` with `@yield('content')`, or a component layout with `{{ $slot }}` |
-| Include a partial | `$this->insert('card', ['title' => 'News'])` | — | `@include('card', ['title' => 'News'])` |
+| Include a partial | `$this->include('card', ['title' => 'News'])` | — | `@include('card', ['title' => 'News'])` |
 | Pass a block into a partial | `$this->component('card')` … `$this->end()` | `<?= $this->slot() ?>` in the partial | `<x-card>` … `</x-card>`, `{{ $slot }}` |
 | Write a named region from any template | `$this->section('title')`, `append()`, or `prepend()` … `$this->end()` | `<?= $this->yield('title', 'default') ?>` | `@section`, `@push`, `@prepend`, `@yield`, `@stack` |
 | Give a named region a default | `$this->section('title')` … `$this->end()` in a layout | `<?= $this->yield('title', 'default') ?>` | `@section` in a layout, `@yield('title', 'default')` |
@@ -40,7 +40,7 @@ If you are new to Boiler, read the docs in this order:
 3. [Rendering templates](rendering.md)
 4. [Displaying values](values.md)
 5. [Layouts](layouts.md)
-6. [Inserts](inserts.md)
+6. [Includes](includes.md)
 7. [Sections](sections.md)
 8. [Slots](slots.md)
 9. [Template](template.md)

@@ -1,5 +1,5 @@
 <?php try {
-	$this->insert('sectionfailedcapturepartial');
+	$this->include('sectionfailedcapturepartial');
 } catch (\Celema\Boiler\Exception\RenderException) {
 } ?>
 <?php $this->section('s') ?>[page]<?php $this->end() ?>

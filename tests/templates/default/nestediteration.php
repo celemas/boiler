@@ -1,1 +1,1 @@
-<?php foreach ($items as $outer): ?><?php foreach ($items as $inner): ?><?= $outer ?><?= $inner ?>,<?php endforeach ?><?php endforeach ?>|<?php foreach ($items as $item): ?>[<?= $item ?>:<?php $this->insert('iteratedpartial') ?>]<?php endforeach ?>
+<?php foreach ($items as $outer): ?><?php foreach ($items as $inner): ?><?= $outer ?><?= $inner ?>,<?php endforeach ?><?php endforeach ?>|<?php foreach ($items as $item): ?>[<?= $item ?>:<?php $this->include('iteratedpartial') ?>]<?php endforeach ?>

@@ -24,7 +24,7 @@ path
 
 ## Pass a block to a component
 
-Use `component()` … `end()` to insert a template with the block in between as its slot.
+Use `component()` … `end()` to include a template with the block in between as its slot.
 
 Create `page.php`:
 
@@ -43,7 +43,7 @@ Create `card.php`:
 </div>
 ```
 
-The block runs once, at the call site, before `card.php` renders, so it uses the page's variables. The card receives the finished markup: it can print it anywhere, check it with `hasSlot()`, or place it in a section. Any template can serve as a component; there are no component classes or prop declarations. Like `insert()`, `component()` shares the calling template's context and merges the values you pass on top. Plain values such as the title go in as data.
+The block runs once, at the call site, before `card.php` renders, so it uses the page's variables. The card receives the finished markup: it can print it anywhere, check it with `hasSlot()`, or place it in a section. Any template can serve as a component; there are no component classes or prop declarations. Like `include()`, `component()` shares the calling template's context and merges the values you pass on top. Plain values such as the title go in as data.
 
 Sections and components share one stack of open blocks, and `end()` closes the innermost one. Pass the template name to check which block it closes: `$this->end('card')` fails the render at that line when another block is open.
 
@@ -69,12 +69,12 @@ Create `row.php`:
 <li class="row"><?= $this->slot() ?></li>
 ```
 
-When the partial should own the loop, for example to sort or group the items, pass it the name of a template that renders one item. The partial inserts that template once per item.
+When the partial should own the loop, for example to sort or group the items, pass it the name of a template that renders one item. The partial includes that template once per item.
 
 Change `page.php` to:
 
 ```php
-<?php $this->insert('rows', ['items' => $items, 'row' => 'input']) ?>
+<?php $this->include('rows', ['items' => $items, 'row' => 'input']) ?>
 ```
 
 Create `rows.php`:
@@ -82,7 +82,7 @@ Create `rows.php`:
 ```php
 <ul>
 <?php foreach ($items as $item): ?>
-    <li><?php $this->insert($row, ['item' => $item]) ?></li>
+    <li><?php $this->include($row, ['item' => $item]) ?></li>
 <?php endforeach ?>
 </ul>
 ```
@@ -111,6 +111,6 @@ Use `hasSlot()` when a template should work with or without a slot:
 
 ## Error handling
 
-- Calling `$this->slot()` in a template that has no slot, such as one inserted with `insert()`, raises a render error. Guard with `hasSlot()` whenever the slot is optional.
+- Calling `$this->slot()` in a template that has no slot, such as one included with `include()`, raises a render error. Guard with `hasSlot()` whenever the slot is optional.
 - A `component()` block must be closed with `$this->end()` in the template that opened it. An unclosed block raises a render error that points to the `component()` call.
 - `component()` resolves its template right away, so a missing template fails at that call, before the block runs.

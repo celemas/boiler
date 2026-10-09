@@ -1,1 +1,1 @@
-<?php $this->insert('slotbox'); ?>
+<?php $this->include('slotbox'); ?>

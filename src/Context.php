@@ -111,16 +111,16 @@ final class Context
 	 *
 	 * @param non-empty-string $path
 	 */
-	public function insert(string $path, array $context = []): void
+	public function include(string $path, array $context = []): void
 	{
-		echo $this->rendering->insert($this->rendering->engine->resolve($path), $this->get($context));
+		echo $this->rendering->include($this->rendering->engine->resolve($path), $this->get($context));
 	}
 
 	/**
 	 * Includes another template with the output up to the matching `end()`
 	 * as its slot, which it prints with `$this->slot()`.
 	 *
-	 * The block runs at the call site, before the inserted template renders.
+	 * The block runs at the call site, before the included template renders.
 	 * If no context is passed it shares the context of the calling template.
 	 *
 	 * @param non-empty-string $path
@@ -132,7 +132,7 @@ final class Context
 		$context = $this->get($context);
 
 		$this->rendering->capture('component', $path, function (string $content) use ($file, $context): void {
-			echo $this->rendering->insert($file, $context, slot: $content);
+			echo $this->rendering->include($file, $context, slot: $content);
 		});
 	}
 
@@ -140,7 +140,7 @@ final class Context
 	 * Returns what this template wraps: the page in a layout, or the block
 	 * passed with `component()`.
 	 *
-	 * Throws when the template has no slot, such as one inserted with `insert()`.
+	 * Throws when the template has no slot, such as one included with `include()`.
 	 */
 	public function slot(): string
 	{
@@ -211,7 +211,7 @@ final class Context
 	 *
 	 * Without a default the section is required and a missing section throws;
 	 * pass a default, even `''`, when it is optional. A closure default prints
-	 * its content, such as an insert, and runs only when no main content was
+	 * its content, such as an include, and runs only when no main content was
 	 * captured.
 	 *
 	 * @param string|Closure(): mixed|null $default

@@ -64,7 +64,7 @@
 				'Celema\\Boiler\\Context::unwrap',
 				'Celema\\Boiler\\Context::layout',
 				'Celema\\Boiler\\Context::component',
-				'Celema\\Boiler\\Context::insert',
+				'Celema\\Boiler\\Context::include',
 				'Celema\\Boiler\\Context::slot',
 				'Celema\\Boiler\\Context::hasSlot',
 				'Celema\\Boiler\\Context::append',

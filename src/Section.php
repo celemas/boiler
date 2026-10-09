@@ -32,8 +32,8 @@ final class Section
 	 * the template it wraps: page prepends, layout prepends, main content,
 	 * layout appends, page appends. Call order gives that for prepends, as a
 	 * layout renders after the template it wraps; appends are reordered. The
-	 * appends of an insert, including those of its own layouts, stay together
-	 * at the place of the insert. The default stands in for main content that
+	 * appends of an included template and of its own layouts stay together at
+	 * the place of the include. The default stands in for main content that
 	 * was never captured.
 	 */
 	public function get(string $default = ''): string
@@ -58,8 +58,8 @@ final class Section
 
 	/**
 	 * Whether the template at position $a wraps the one at $b: it is a
-	 * layout of that template or of a template it was inserted into, or a
-	 * template that such a layout inserted. That is the case when the
+	 * layout of that template or of a template that included it, or a
+	 * template that such a layout included. That is the case when the
 	 * positions first differ in a layout level, as $a must render later and
 	 * layout levels only grow while a template renders. Positions as
 	 * numbered by Sections.

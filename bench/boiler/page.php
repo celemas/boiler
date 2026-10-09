@@ -9,7 +9,7 @@
 
 <?= $announcement->unwrap() ?>
 
-<?php $this->insert('promo-banner', ['campaign' => $campaign]) ?>
+<?php $this->include('promo-banner', ['campaign' => $campaign]) ?>
 
 <section class="user-profile">
     <img src="<?= $user['profile']['avatar'] ?>" alt="<?= $user['name'] ?>">
@@ -39,13 +39,13 @@
         </thead>
         <tbody>
             <?php foreach ($products as $product): ?>
-                <?php $this->insert('product-row', ['product' => $product]) ?>
+                <?php $this->include('product-row', ['product' => $product]) ?>
             <?php endforeach ?>
         </tbody>
     </table>
 </section>
 
-<?php $this->insert('insert', [
+<?php $this->include('insert', [
     'title' => $title,
     'user' => $user,
     'stats' => $stats,

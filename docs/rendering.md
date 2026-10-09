@@ -116,7 +116,7 @@ Boiler validates template names before lookup:
 - invalid namespace formats such as `foo:bar:baz` are rejected
 - path traversal outside the configured template root is rejected
 
-This applies to normal renders and to helper methods such as `$this->layout()` and `$this->insert()`.
+This applies to normal renders and to helper methods such as `$this->layout()` and `$this->include()`.
 
 ## Common lookup errors
 
@@ -130,11 +130,11 @@ You can expect `LookupException` for invalid lookup-related input, including:
 
 You can expect `UnexpectedValueException` when the template path itself is empty or contains invalid characters.
 
-These exceptions reach you directly for the template you render and for its layouts. A lookup that fails while a template runs, such as `$this->insert()` with a missing template, arrives wrapped in `RenderException` like every other error raised there.
+These exceptions reach you directly for the template you render and for its layouts. A lookup that fails while a template runs, such as `$this->include()` with a missing template, arrives wrapped in `RenderException` like every other error raised there.
 
 ## Errors inside templates
 
-Any exception thrown while a template runs reaches the caller as `RenderException`. That includes lookup errors from `$this->insert()`, errors from template methods, and exceptions thrown by your own objects. The message and `location()` name the template file and line, `getPrevious()` returns the original exception, and `getCode()` returns the original code when it is an integer.
+Any exception thrown while a template runs reaches the caller as `RenderException`. That includes lookup errors from `$this->include()`, errors from template methods, and exceptions thrown by your own objects. The message and `location()` name the template file and line, `getPrevious()` returns the original exception, and `getCode()` returns the original code when it is an integer.
 
 ```php
 use Celema\Boiler\Exception\RenderException;
@@ -146,7 +146,7 @@ try {
 }
 ```
 
-An error in a nested insert is wrapped once, by the innermost template, and passes through the outer templates unchanged.
+An error in a nested include is wrapped once, by the innermost template, and passes through the outer templates unchanged.
 
 ## Custom resolvers
 
@@ -170,7 +170,7 @@ $engine = new Engine(
 );
 ```
 
-Boiler still calls your templates the same way (`render()`, `layout()`, `insert()`), but path lookup is delegated to the configured resolver.
+Boiler still calls your templates the same way (`render()`, `layout()`, `include()`), but path lookup is delegated to the configured resolver.
 
 ## Escape mode per render
 

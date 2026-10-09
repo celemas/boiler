@@ -1,6 +1,6 @@
 # Sections
 
-Sections are named content that any template can write and a layout prints, such as the page title, scripts, styles, or a sidebar. The page, its inserts, and its layouts all write to the same sections.
+Sections are named content that any template can write and a layout prints, such as the page title, scripts, styles, or a sidebar. The page, its includes, and its layouts all write to the same sections.
 
 Assume the following directory structure:
 
@@ -48,10 +48,10 @@ Pass a default when the section is optional:
 
 The default applies only while no template captured the section with `section()`. A section captured empty prints nothing, as an empty `@section` does in Blade, so skip the `section()` call when the default should show.
 
-For a default made of markup, such as an insert, pass a closure that prints it. The closure runs only when the default applies:
+For a default made of markup, such as an include, pass a closure that prints it. The closure runs only when the default applies:
 
 ```php
-<aside><?= $this->yield('sidebar', fn() => $this->insert('sidebar-default')) ?></aside>
+<aside><?= $this->yield('sidebar', fn() => $this->include('sidebar-default')) ?></aside>
 ```
 
 The closure prints its content, like a section block; returning a string instead fails the render. Content appended or prepended to the section prints around the default, as for a string default.
@@ -83,11 +83,11 @@ A page that captures the title and appends to `head` keeps the stylesheet:
 <?php $this->end() ?>
 ```
 
-The head then holds the stylesheet, `<title>About – My site</title>`, and the page's style. `append()` takes the place of `{{ parent() }}` followed by new content in Twig, and `prepend()` of new content followed by it. A page that captures `head` with `section()` replaces the whole default, so the title it holds does not print either. A longer default fits in a partial: `fn() => $this->insert('head')`.
+The head then holds the stylesheet, `<title>About – My site</title>`, and the page's style. `append()` takes the place of `{{ parent() }}` followed by new content in Twig, and `prepend()` of new content followed by it. A page that captures `head` with `section()` replaces the whole default, so the title it holds does not print either. A longer default fits in a partial: `fn() => $this->include('head')`.
 
 ### Defaults in a layout
 
-A layout between the page and the layout that prints a section provides a default with `section()`. A layout's capture is a default for the templates it wraps: the page, its inner layouts, and everything they insert. Those render first, so when one of them captured the section, the layout's capture is discarded, and so is everything it would add to sections, such as the scripts of a partial it inserts. Otherwise its capture becomes the main content, which the next layout out treats the same way, so the innermost capture wins.
+A layout between the page and the layout that prints a section provides a default with `section()`. A layout's capture is a default for the templates it wraps: the page, its inner layouts, and everything they include. Those render first, so when one of them captured the section, the layout's capture is discarded, and so is everything it would add to sections, such as the scripts of a partial it includes. Otherwise its capture becomes the main content, which the next layout out treats the same way, so the innermost capture wins.
 
 Create `mid.php`, a layout between the page and `layout.php`:
 
@@ -95,7 +95,7 @@ Create `mid.php`, a layout between the page and `layout.php`:
 <?php $this->layout('layout') ?>
 
 <?php $this->section('sidebar') ?>
-<?php $this->insert('widget') ?>
+<?php $this->include('widget') ?>
 <?php $this->end() ?>
 
 <?= $this->slot() ?>
@@ -105,7 +105,7 @@ A page that uses `mid` as its layout shows the widget in the sidebar. A page tha
 
 The code of a discarded default still runs; only its output and its additions to sections are dropped. In the layout that prints a section, pass the default to `yield()` instead: a `section()` call after the `yield()` of the same section comes too late to print.
 
-Any other second capture of a section fails the render at its `section()` call, and the error names where the first capture happened. That covers a template that captures a section twice, a page and one of its partials, and a page and the layout of a partial it inserts, which wraps only that partial.
+Any other second capture of a section fails the render at its `section()` call, and the error names where the first capture happened. That covers a template that captures a section twice, a page and one of its partials, and a page and the layout of a partial it includes, which wraps only that partial.
 
 ## Append and prepend
 
@@ -133,7 +133,7 @@ Boiler combines the parts in this order:
 2. the main content: what `section()` captured, or else the default passed to `yield()`
 3. appended content
 
-Additions keep the order of their calls, also across inserts, so two partials that append their scripts print them in the order they were inserted. A layout's additions stay closer to the main content than those of the page it wraps: page prepends, layout prepends, main content, layout appends, page appends. A script that the layout appends therefore comes before the scripts of the page. An inserted template with a layout of its own follows the same rule, and its additions and those of its layout stay together at the place of the `insert()` call.
+Additions keep the order of their calls, also across includes, so two partials that append their scripts print them in the order they were included. A layout's additions stay closer to the main content than those of the page it wraps: page prepends, layout prepends, main content, layout appends, page appends. A script that the layout appends therefore comes before the scripts of the page. An included template with a layout of its own follows the same rule, and its additions and those of its layout stay together at the place of the `include()` call.
 
 `section()` sets only the main content and keeps what was appended or prepended before.
 
@@ -178,11 +178,11 @@ This counts everything the section prints: the main content or a default, and wh
 
 ## Nested blocks
 
-Sections and [components](slots.md#pass-a-block-to-a-component) share one stack of open blocks, and `end()` closes the innermost one. Blocks can nest: a section can contain a component, another section, or an insert whose template captures sections of its own, such as the widget above.
+Sections and [components](slots.md#pass-a-block-to-a-component) share one stack of open blocks, and `end()` closes the innermost one. Blocks can nest: a section can contain a component, another section, or an include whose template captures sections of its own, such as the widget above.
 
 ```php
 <?php $this->section('sidebar') ?>
-<?php $this->insert('widget') ?>
+<?php $this->include('widget') ?>
 <?php $this->end('sidebar') ?>
 ```
 

@@ -1,5 +1,5 @@
 <?php try {
-	$this->insert('sectionmutefailcard');
+	$this->include('sectionmutefailcard');
 } catch (\Celema\Boiler\Exception\RenderException) {
 } ?>
 <?php $this->append('s') ?>[after]<?php $this->end() ?>

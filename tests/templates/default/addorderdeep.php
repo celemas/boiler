@@ -1,2 +1,2 @@
-<?php $this->insert('addorderdeeppartial') ?>
+<?php $this->include('addorderdeeppartial') ?>
 <?= $this->yield('s', '[main]') ?>

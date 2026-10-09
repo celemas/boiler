@@ -1,5 +1,5 @@
 <?php try {
-	$this->insert('addorderfailingpartial');
+	$this->include('addorderfailingpartial');
 } catch (\Celema\Boiler\Exception\RenderException) {
 	echo 'fallback';
 } ?>

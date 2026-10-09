@@ -1,1 +1,1 @@
-[<?= $this->yield('sidebar', fn() => $this->insert('yieldclosurepartial', ['text' => 'default'])) ?>]
+[<?= $this->yield('sidebar', fn() => $this->include('yieldclosurepartial', ['text' => 'default'])) ?>]

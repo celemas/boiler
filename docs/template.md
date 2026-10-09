@@ -26,7 +26,7 @@ $html = $template->renderUnescaped(['id' => 13]);
 
 ## Register custom template methods
 
-Register helpers on a standalone template with `method()`. They are available as `$this->methodName()` inside the template, its inserts, and its layouts.
+Register helpers on a standalone template with `method()`. They are available as `$this->methodName()` inside the template, its includes, and its layouts.
 
 ```php
 $template = new \Celema\Boiler\Template('/path/to/templates/page.php');
@@ -63,13 +63,13 @@ In escaped renders, safe methods must return `string` or `Stringable`. Boiler ex
 
 Use `safe: true` only when the helper itself guarantees safe HTML for the values it accepts.
 
-## Layouts, inserts, sections, and slots
+## Layouts, includes, sections, and slots
 
 Standalone templates can use the same composition helpers as engine-backed renders:
 
 - `$this->layout('layout')`
-- `$this->insert('partial')` and `$this->component('partial')`
-- `$this->slot()` and `$this->hasSlot()` inside layouts and templates inserted with `component()`
+- `$this->include('partial')` and `$this->component('partial')`
+- `$this->slot()` and `$this->hasSlot()` inside layouts and templates included with `component()`
 - sections via `$this->section()`, `$this->append()`, or `$this->prepend()` … `$this->end()`, and `$this->yield()`
 
 Those template references are resolved relative to the directory that contains the original template file.
@@ -102,4 +102,4 @@ Boiler resets per-render state such as assigned layouts and captured sections be
 
 - Boiler raises `LookupException` when the template file or its directory does not exist, or when the path names a directory.
 - Boiler raises `LookupException` when the template's layout cannot be resolved relative to the template directory.
-- Boiler raises `RenderException` when anything throws while the template runs, for example a parse error, a runtime error, or an insert that cannot be resolved. `getPrevious()` returns the original exception. See [errors inside templates](rendering.md#errors-inside-templates).
+- Boiler raises `RenderException` when anything throws while the template runs, for example a parse error, a runtime error, or an include that cannot be resolved. `getPrevious()` returns the original exception. See [errors inside templates](rendering.md#errors-inside-templates).

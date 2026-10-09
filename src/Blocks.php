@@ -13,7 +13,7 @@ use Closure;
  *
  * Every template render has its own stack, so a template can only close the
  * blocks it opened itself. Blocks may nest: a section can contain a component,
- * another section, or an insert whose template opens and closes its own blocks.
+ * another section, or an include whose template opens and closes its own blocks.
  *
  * @internal
  */

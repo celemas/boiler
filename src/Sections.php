@@ -9,7 +9,7 @@ use Closure;
 
 /**
  * The sections captured during a render, shared by the rendered template,
- * its inserts, and its layouts.
+ * its includes, and its layouts.
  *
  * @internal
  */
@@ -19,20 +19,20 @@ final class Sections
 	private array $sections = [];
 
 	/**
-	 * The position of the insert that is rendering, as the layout level and
-	 * call number of each enclosing insert; empty for the rendered template.
+	 * The position of the include that is rendering, as the layout level and
+	 * call number of each enclosing include; empty for the rendered template.
 	 *
 	 * @var list<int>
 	 */
-	private array $insert = [];
+	private array $include = [];
 
 	/**
 	 * How many layouts deep the rendering template is, counted on from the
-	 * level of the template that inserted it.
+	 * level of the template that included it.
 	 */
 	private int $level = 0;
 
-	/** Numbers appends and inserts in call order. */
+	/** Numbers appends and includes in call order. */
 	private int $calls = 0;
 
 	/**
@@ -46,7 +46,7 @@ final class Sections
 	/**
 	 * How many discarded defaults are open. While one is, nothing reaches the
 	 * sections, so a default that is not used adds nothing, not even through
-	 * the templates it inserts.
+	 * the templates it includes.
 	 */
 	private int $muted = 0;
 
@@ -158,26 +158,26 @@ final class Sections
 	}
 
 	/**
-	 * Renders an inserted template. Its appends, including those of its own
-	 * layouts, stay together at the place of the insert among the caller's.
+	 * Renders an included template. Its appends and those of its own layouts
+	 * stay together at the place of the include among the caller's.
 	 *
 	 * @param Closure(): string $render
 	 */
 	public function nest(Closure $render): string
 	{
-		$insert = $this->insert;
+		$include = $this->include;
 		$level = $this->level;
 		$muted = $this->muted;
 		$writing = $this->writing;
 		$rewriting = $this->rewriting;
-		$this->insert = [...$insert, $level, ++$this->calls];
+		$this->include = [...$include, $level, ++$this->calls];
 
 		try {
 			return $render();
 		} finally {
-			$this->insert = $insert;
+			$this->include = $include;
 			$this->level = $level;
-			// A failed insert that the caller catches may leave blocks open.
+			// A failed include that the caller catches may leave blocks open.
 			$this->muted = $muted;
 			$this->writing = $writing;
 			$this->rewriting = $rewriting;
@@ -266,6 +266,6 @@ final class Sections
 	/** @return list<int> */
 	private function position(): array
 	{
-		return [...$this->insert, $this->level, ++$this->calls];
+		return [...$this->include, $this->level, ++$this->calls];
 	}
 }
