@@ -1,6 +1,12 @@
 # Boiler benchmark
 
-This benchmark renders three pages of a shop site with Boiler, Twig, Laravel Blade, and Plates: in PHP-FPM requests, in a FrankenPHP worker, and in a plain loop. It is meant to approximate realistic page renders and is used mainly internally to catch regressions, not to benchmark every feature in isolation.
+This benchmark renders three pages of a shop site with Boiler, Twig, Laravel Blade, and Plates, by default in PHP-FPM requests. It is meant to approximate realistic page renders and is used mainly internally to catch regressions, not to benchmark every feature in isolation.
+
+```bash
+composer benchmark
+```
+
+The command needs Docker. On first use it builds an image with PHP, PHP-FPM, FrankenPHP, and the engines, and it runs the benchmark in a container of that image. See [run the benchmark](#run-the-benchmark) for the options and for running it [without the container](#without-the-container).
 
 ## What it renders
 
