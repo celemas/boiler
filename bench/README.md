@@ -63,6 +63,7 @@ Keep these limits in mind:
 
 - results depend on PHP version, OPcache settings, hardware, and workload shape
 - three pages cannot represent every template structure or application architecture
+- the pages leave out some of Boiler's features: template namespaces and multiple directories, custom filters and escapers, the `sanitize` filter, and array helpers such as `map()` and `sorted()`
 - the numbers are useful for internal regression checks and local comparisons, not as universal rankings or proofs that one engine always wins
 - `worker` results are usually the more representative steady-state numbers
 - Blade's `request` results leave out the framework bootstrap that a Laravel request pays for
