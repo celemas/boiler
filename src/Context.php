@@ -203,7 +203,7 @@ final class Context
 	 */
 	public function end(?string $name = null): void
 	{
-		$this->rendering->blocks->close($name);
+		$this->rendering->close($name);
 	}
 
 	/**

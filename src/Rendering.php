@@ -24,8 +24,8 @@ use Throwable;
  */
 final class Rendering
 {
-	/** the blocks open in this run */
-	public readonly Blocks $blocks;
+	/** the blocks open in this run, once it opened one */
+	private ?Blocks $blocks = null;
 	private ?LayoutSpec $layout = null;
 
 	/**
@@ -44,9 +44,7 @@ final class Rendering
 		public readonly Contract\Wrapper $wrapper,
 		public readonly bool $autoescape,
 		public readonly ?string $slot = null,
-	) {
-		$this->blocks = new Blocks();
-	}
+	) {}
 
 	/**
 	 * Runs the template and wraps its output in its layouts, innermost first.
@@ -124,7 +122,13 @@ final class Rendering
 	 */
 	public function capture(string $kind, string $name, Closure $close): void
 	{
-		$this->blocks->open($kind, $name, $this->location(), $close);
+		($this->blocks ??= new Blocks())->open($kind, $name, $this->location(), $close);
+	}
+
+	/** Closes the innermost block that this run has open, which must have that name if one is given. */
+	public function close(?string $name): void
+	{
+		($this->blocks ?? new Blocks())->close($name);
 	}
 
 	/**
@@ -200,7 +204,7 @@ final class Rendering
 					? $templateContext->get()
 					: $context,
 			);
-			$this->blocks->assertClosed();
+			$this->blocks?->assertClosed();
 
 			$content = (string) ob_get_clean();
 
