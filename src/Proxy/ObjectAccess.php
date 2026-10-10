@@ -121,7 +121,8 @@ trait ObjectAccess
 	 */
 	private function unwrapArgs(array $args): array
 	{
-		$unwrapped = $this->wrapper->unwrap($args);
+		// Spares the common call without arguments the pass through the wrapper.
+		$unwrapped = $args === [] ? $args : $this->wrapper->unwrap($args);
 		assert(is_array($unwrapped), 'Wrapper::unwrap must return an array for array input');
 
 		return $unwrapped;

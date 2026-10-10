@@ -103,7 +103,15 @@ final class Wrapper implements Contract\Wrapper
 			return $value;
 		}
 
-		return array_map($this->unwrap(...), $value);
+		$unwrapped = [];
+
+		/** @var mixed $item */
+		foreach ($value as $key => $item) {
+			/** @psalm-suppress MixedAssignment unwrapping returns mixed by design */
+			$unwrapped[$key] = $this->unwrap($item);
+		}
+
+		return $unwrapped;
 	}
 
 	#[Override]
