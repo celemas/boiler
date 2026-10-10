@@ -174,7 +174,7 @@ Exceptions thrown while a template runs, including those from your own helpers a
 
 Boiler includes a benchmark in [`bench/`](bench/) that renders three pages of a shop site with Boiler, Twig, Blade, and Plates. It is used mainly to catch performance regressions during development.
 
-Run it with `composer benchmark`. For benchmark scope, caveats, and detailed usage, see [`bench/README.md`](bench/README.md).
+Run it with `composer benchmark`, which needs Docker, or on the machine itself with `composer benchmark:native`. For benchmark scope, caveats, and detailed usage, see [`bench/README.md`](bench/README.md).
 
 ## Run the tests
 

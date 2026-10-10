@@ -37,7 +37,7 @@ final class FrankenPhp implements Runtime
 
 		$line = implode(' ', Process::output($found, 'version'));
 
-		if (!preg_match('/FrankenPHP v?(\S+) PHP (\d\S*)/', $line, $match)) {
+		if (!preg_match('/FrankenPHP v*(\S+) PHP (\d\S*)/', $line, $match)) {
 			return "{$found} does not report its versions";
 		}
 

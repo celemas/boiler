@@ -88,7 +88,7 @@ function benchmarkConfig(): array
 		'lifecycle' => stringOption(
 			$options,
 			'lifecycle',
-			LIFECYCLE_ALL,
+			LIFECYCLE_REQUEST,
 			[LIFECYCLE_REQUEST, LIFECYCLE_WORKER, LIFECYCLE_LOOP, LIFECYCLE_ALL],
 		),
 		'php-fpm' => is_string($fpm) ? $fpm : null,
@@ -410,13 +410,17 @@ function runScenario(string $lifecycle, Runtime $runtime): array
 	return $results;
 }
 
-function printLegend(): void
+/** @param list<Result> $results */
+function printLegend(array $results): void
 {
 	echo 'Times are milliseconds per render in the fastest of ' . iterations() . " iterations; total is one\n";
 	echo "round of the pages, and spread is how much slower the slowest iteration was.\n";
 	echo "memory is the peak that the timed part adds: in a request the engine with its\n";
-	echo "classes and the render, otherwise the render alone. held is what the engine\n";
-	echo "keeps between the requests of a worker.\n";
+	echo "classes and the render, otherwise the render alone.\n";
+
+	if (array_any($results, static fn(Result $result): bool => $result->held !== null)) {
+		echo "held is what the engine keeps between the requests of a worker.\n";
+	}
 }
 
 /** @param list<Result> $results */
@@ -502,7 +506,7 @@ function main(): int
 		return 1;
 	}
 
-	printLegend();
+	printLegend($results);
 	echo "\n";
 
 	return verifyOutputs($results) ? 0 : 1;

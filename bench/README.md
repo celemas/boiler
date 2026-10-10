@@ -49,7 +49,9 @@ What a render costs depends on what PHP has to do around it, so the benchmark me
 | `worker` | FrankenPHP in worker mode | a request to a worker that booted once and keeps its engine |
 | `loop` | the benchmark process | a pass of a loop that keeps its engine, without a server |
 
-The script starts `php-fpm` and `frankenphp` itself, on a free local port and with one worker each, sends the requests one after another, and stops the servers again. Their configuration and logs are written to `cache/`. A lifecycle whose server is not installed is skipped with a note. Both servers must run PHP 8.5.
+Only `request` runs by default, since that is how most PHP applications are served; `--lifecycle` selects another one or `all`.
+
+The script starts `php-fpm` and `frankenphp` itself, on a free local port and with one worker each, sends the requests one after another, and stops the servers again. Their configuration and logs are written to `cache/`.
 
 The data of a page is created outside the timed part in every lifecycle. In a request, the timed part covers what a request needs the engine for: loading its classes from OPcache, setting it up, and rendering. In `worker` and `loop` it covers the render.
 
@@ -76,36 +78,38 @@ Keep these limits in mind:
 
 ## Run the benchmark
 
-Install the benchmark's own dependencies once, then run it from the repository root:
-
 ```bash
-composer install --working-dir=bench
 composer benchmark
-composer benchmark -- --lifecycle=loop
+composer benchmark -- --lifecycle=all
 composer benchmark -- --scale=4 --runs=200 --iterations=5
 ```
 
-The `request` lifecycle needs `php-fpm` and the `worker` lifecycle needs `frankenphp`. The script looks for `php-fpm` next to the PHP that runs it and on the `PATH`, also under the versioned name Debian uses, such as `php-fpm8.5`, and for `frankenphp` on the `PATH`.
+`composer benchmark` needs Docker. It builds an image from the [`Dockerfile`](Dockerfile) with PHP 8.5, PHP-FPM, FrankenPHP's Linux build, and the engines, copies the sources into it, and runs the benchmark there. Every machine then measures on Linux and with the same runtimes. That matters for comparing the engines: on macOS, file access costs more and FrankenPHP's build is much slower, and both shift the results between the engines.
+
+The first build takes about half a minute; later ones only copy the sources that changed. A build after a change leaves the previous image behind, which `docker image prune` removes.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--lifecycle` | `all` | `request`, `worker`, `loop`, or `all` |
+| `--lifecycle` | `request` | `request`, `worker`, `loop`, or `all` |
 | `--runs` | `100` | rounds per iteration; a round renders each page once |
 | `--iterations` | `3` | measured iterations per engine and lifecycle |
 | `--scale` | `1` | multiplies the number of products, reviews, and content blocks |
-| `--php-fpm` | detected | path to the `php-fpm` binary |
-| `--frankenphp` | detected | path to the `frankenphp` binary |
+| `--php-fpm` | detected | path to the `php-fpm` binary, for a run without the container |
+| `--frankenphp` | detected | path to the `frankenphp` binary, for a run without the container |
 
-### PHP settings
+### Without the container
 
-Results are not useful for fair engine comparisons unless Xdebug and PCOV are disabled and OPcache is enabled. The script starts the servers that way. The `loop` lifecycle runs in the benchmark process itself, which `composer benchmark` starts with the same settings; the script warns when one is off:
+```bash
+composer install --working-dir=bench
+composer benchmark:native -- --lifecycle=loop
+```
+
+`composer benchmark:native` runs the same script on the machine itself. That fits a quick check of Boiler before and after a change, for which the platform does not matter.
+
+There, the `request` lifecycle needs `php-fpm` and the `worker` lifecycle needs `frankenphp`, both with PHP 8.5; a lifecycle whose server is not installed is skipped with a note. The script looks for `php-fpm` next to the PHP that runs it and on the `PATH`, also under the versioned name Debian uses, such as `php-fpm8.5`, and for `frankenphp` on the `PATH`.
+
+Results are not useful for fair engine comparisons unless Xdebug and PCOV are disabled and OPcache is enabled. The script starts the servers that way. The `loop` lifecycle runs in the benchmark process itself, which `composer benchmark:native` starts with the same settings; the script warns when one is off:
 
 - `xdebug.mode=off` and `pcov.enabled=0`: both extensions add substantial runtime overhead, especially for Boiler's proxy-based auto escaping.
 - `opcache.enable_cli=1`: without OPcache, PHP compiles a template file again every time it is included. That outweighs the engine's own work for Boiler, Plates, and Blade, while Twig loads each compiled template once per process as a class.
-- `opcache.file_update_protection=0`: by default, OPcache does not cache files changed within the last two seconds, and the script compiles the Blade templates right before it measures.
-
-To run the script without Composer, pass the settings yourself:
-
-```bash
-php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 bench/run.php
-```
+- `opcache.file_update_protection=0`: by default, OPcache does not cache files changed within the last two seconds, and the script compiles the templates right before it measures.
