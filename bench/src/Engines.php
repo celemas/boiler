@@ -15,6 +15,7 @@ use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory as Blade;
 use Illuminate\View\FileViewFinder;
+use InvalidArgumentException;
 use League\Plates\Engine as Plates;
 use Twig\Environment as Twig;
 use Twig\Loader\FilesystemLoader;
@@ -77,6 +78,22 @@ final class Engines
 				static fn(Boiler $engine, string $page, array $context): string => $engine->render($page, $context),
 			),
 		];
+	}
+
+	/**
+	 * @param array<string, mixed> $shared
+	 *
+	 * @return Candidate<object>
+	 */
+	public static function find(string $dir, array $shared, string $id): Candidate
+	{
+		foreach (self::all($dir, $shared) as $candidate) {
+			if ($candidate->id === $id) {
+				return $candidate;
+			}
+		}
+
+		throw new InvalidArgumentException("Unknown candidate {$id}");
 	}
 
 	/** @return list<string> the directories that hold compiled templates */

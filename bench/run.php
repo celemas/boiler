@@ -5,7 +5,11 @@ declare(strict_types=1);
 use Celema\Boiler\Bench\Candidate;
 use Celema\Boiler\Bench\Data;
 use Celema\Boiler\Bench\Engines;
+use Celema\Boiler\Bench\Fpm;
+use Celema\Boiler\Bench\FrankenPhp;
+use Celema\Boiler\Bench\Loop;
 use Celema\Boiler\Bench\Result;
+use Celema\Boiler\Bench\Runtime;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -13,22 +17,15 @@ require __DIR__ . '/vendor/autoload.php';
 // print the dates of the data as they are.
 date_default_timezone_set('UTC');
 
-const DEFAULT_RUNS = 300;
+const DEFAULT_RUNS = 100;
 const DEFAULT_ITERATIONS = 3;
 const DEFAULT_SCALE = 1;
-const DEFAULT_LIFECYCLE = 'both';
-const LIFECYCLE_WORKER = 'worker';
+const WARMUP_ROUNDS = 3;
 const LIFECYCLE_REQUEST = 'request';
-const LIFECYCLE_BOTH = 'both';
-const LINE_LEN = 69;
-
-// What a meaningful run needs; benchmarkWarning() reports deviations.
-const PHP_SETTINGS = [
-	'xdebug.mode' => 'off',
-	'pcov.enabled' => '0',
-	'opcache.enable_cli' => '1',
-	'opcache.file_update_protection' => '0',
-];
+const LIFECYCLE_WORKER = 'worker';
+const LIFECYCLE_LOOP = 'loop';
+const LIFECYCLE_ALL = 'all';
+const LINE_LEN = 80;
 
 function resetCacheDir(string $path): void
 {
@@ -61,7 +58,16 @@ function resetBenchmarkCaches(): void
 	}
 }
 
-/** @return array{runs: int, iterations: int, scale: int, lifecycle: string, probe: ?string} */
+/**
+ * @return array{
+ *     runs: int,
+ *     iterations: int,
+ *     scale: int,
+ *     lifecycle: string,
+ *     php-fpm: ?string,
+ *     frankenphp: ?string,
+ * }
+ */
 function benchmarkConfig(): array
 {
 	static $config;
@@ -70,9 +76,10 @@ function benchmarkConfig(): array
 		return $config;
 	}
 
-	$options = getopt('', ['runs:', 'iterations:', 'scale:', 'lifecycle:', 'probe:']);
+	$options = getopt('', ['runs:', 'iterations:', 'scale:', 'lifecycle:', 'php-fpm:', 'frankenphp:']);
 	assert(is_array($options), 'getopt() must return an array of CLI options');
-	$probe = $options['probe'] ?? null;
+	$fpm = $options['php-fpm'] ?? null;
+	$frankenphp = $options['frankenphp'] ?? null;
 
 	return $config = [
 		'runs' => intOption($options, 'runs', DEFAULT_RUNS),
@@ -81,10 +88,11 @@ function benchmarkConfig(): array
 		'lifecycle' => stringOption(
 			$options,
 			'lifecycle',
-			DEFAULT_LIFECYCLE,
-			[LIFECYCLE_WORKER, LIFECYCLE_REQUEST, LIFECYCLE_BOTH],
+			LIFECYCLE_ALL,
+			[LIFECYCLE_REQUEST, LIFECYCLE_WORKER, LIFECYCLE_LOOP, LIFECYCLE_ALL],
 		),
-		'probe' => is_string($probe) ? $probe : null,
+		'php-fpm' => is_string($fpm) ? $fpm : null,
+		'frankenphp' => is_string($frankenphp) ? $frankenphp : null,
 	];
 }
 
@@ -135,6 +143,7 @@ function stringOption(array $options, string $name, string $default, array $allo
 	return $value;
 }
 
+/** The settings of this process count for the loop only; the servers get their own. */
 function benchmarkWarning(): void
 {
 	$detected = [...benchmarkProfilers(), ...opcacheSettings()];
@@ -144,12 +153,12 @@ function benchmarkWarning(): void
 	}
 
 	echo str_repeat('!', LINE_LEN) . "\n";
-	echo "WARNING: these PHP settings skew the benchmark results.\n";
+	echo "WARNING: these PHP settings skew the results of the loop lifecycle.\n";
 	echo 'Detected: ' . implode(', ', $detected) . "\n";
 	echo "Run with: php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1\n";
 	echo '          -d opcache.file_update_protection=0 ' . benchmarkScript() . "\n";
 	echo "          [--runs=N] [--iterations=N] [--scale=N]\n";
-	echo "          [--lifecycle=(request|worker|both)]\n";
+	echo "          [--lifecycle=(request|worker|loop|all)]\n";
 	echo "Tip: use composer benchmark -- [options]\n";
 	echo str_repeat('!', LINE_LEN) . "\n\n";
 }
@@ -253,19 +262,22 @@ function scale(): int
 	return benchmarkConfig()['scale'];
 }
 
-function lifecycle(): string
-{
-	return benchmarkConfig()['lifecycle'];
-}
-
 /** @return list<string> */
 function lifecycles(): array
 {
-	return (
-		lifecycle() === LIFECYCLE_BOTH
-			? [LIFECYCLE_REQUEST, LIFECYCLE_WORKER]
-			: [lifecycle()]
-	);
+	$lifecycle = benchmarkConfig()['lifecycle'];
+
+	return $lifecycle === LIFECYCLE_ALL ? [LIFECYCLE_REQUEST, LIFECYCLE_WORKER, LIFECYCLE_LOOP] : [$lifecycle];
+}
+
+/** @return Runtime|string the runtime of the lifecycle, or the reason why it cannot run */
+function runtime(string $lifecycle): Runtime|string
+{
+	return match ($lifecycle) {
+		LIFECYCLE_REQUEST => Fpm::detect(__DIR__, scale(), benchmarkConfig()['php-fpm']),
+		LIFECYCLE_WORKER => FrankenPhp::detect(__DIR__, scale(), benchmarkConfig()['frankenphp']),
+		default => new Loop(scale()),
+	};
 }
 
 function formatBytes(int $bytes): string
@@ -281,53 +293,36 @@ function formatBytes(int $bytes): string
 	return $bytes . 'B';
 }
 
-function lifecycleLabel(string $lifecycle): string
-{
-	return match ($lifecycle) {
-		LIFECYCLE_WORKER => 'worker (engine reused)',
-		LIFECYCLE_REQUEST => 'request (engine recreated per render)',
-		default => $lifecycle,
-	};
-}
-
-/** @return list<Candidate<object>> */
-function candidates(): array
-{
-	return Engines::all(__DIR__, Data::shared());
-}
-
 /**
  * Renders the pages in turn, as a site serves them, and times each page on
  * its own.
  *
  * @param Candidate<object> $candidate
- * @param array<string, array<string, mixed>> $pages
+ * @param list<string> $pages
  */
-function measure(Candidate $candidate, array $pages, string $lifecycle): Result
+function measure(Runtime $runtime, Candidate $candidate, array $pages): Result
 {
 	$result = new Result($candidate);
 	$runs = runs();
-	$engine = $candidate->engine();
+	$runtime->serve($candidate);
 
-	// Warmup: compiles the templates and triggers autoloading.
-	foreach ($pages as $page => $context) {
-		$result->output[$page] = $candidate->render($engine, $page, $context);
+	// Compiles the templates and fills the caches of the runtime.
+	for ($round = 0; $round < WARMUP_ROUNDS; $round++) {
+		foreach ($pages as $page) {
+			$result->output[$page] = (string) $runtime->sample($page, html: true)->html;
+		}
 	}
 
 	for ($iteration = 0; $iteration < iterations(); $iteration++) {
 		gc_collect_cycles();
-		$times = array_fill_keys(array_keys($pages), 0);
+		$times = array_fill_keys($pages, 0);
 
 		for ($run = 0; $run < $runs; $run++) {
-			foreach ($pages as $page => $context) {
-				$start = hrtime(true);
-
-				if ($lifecycle === LIFECYCLE_REQUEST) {
-					$engine = $candidate->engine();
-				}
-
-				$candidate->render($engine, $page, $context);
-				$times[$page] += hrtime(true) - $start;
+			foreach ($pages as $page) {
+				$sample = $runtime->sample($page);
+				$times[$page] += $sample->nanoseconds;
+				$result->memory = max($result->memory, $sample->memory);
+				$result->held = $sample->held;
 			}
 		}
 
@@ -338,159 +333,73 @@ function measure(Candidate $candidate, array $pages, string $lifecycle): Result
 }
 
 /**
- * @param list<Candidate<object>> $candidates
- * @param callable(Candidate<object>): string $row
+ * @param list<Result> $results
+ * @param list<string> $pages
  */
-function printGroups(array $candidates, callable $row): void
+function printResults(array $results, array $pages): void
 {
+	$held = array_any($results, static fn(Result $result): bool => $result->held !== null);
+	$columns = array_map(static fn(string $column): string => sprintf('%9s', $column), [...$pages, 'total']);
+
+	printf("%19s%s  spread   memory%s\n", '', implode('', $columns), $held ? '    held' : '');
+	echo str_repeat('-', LINE_LEN) . "\n";
+
 	foreach ([['Automatic escaping', true], ['Manual escaping', false]] as [$title, $escapes]) {
 		echo $title . "\n";
 
-		foreach ($candidates as $candidate) {
-			if ($candidate->escapes === $escapes) {
-				printf("  %-19s%s\n", $candidate->name, $row($candidate));
+		foreach ($results as $result) {
+			if ($result->candidate->escapes !== $escapes) {
+				continue;
 			}
-		}
-	}
-}
 
-/**
- * @param array<string, Result> $results keyed by candidate id
- * @param list<string> $pages
- */
-function printTimes(array $results, array $pages): void
-{
-	$columns = array_map(static fn(string $column): string => sprintf('%10s', $column), [...$pages, 'total']);
-
-	printf("%21s%s  spread\n", '', implode('', $columns));
-	echo str_repeat('-', LINE_LEN) . "\n";
-
-	printGroups(
-		array_map(static fn(Result $result): Candidate => $result->candidate, array_values($results)),
-		static function (Candidate $candidate) use ($results): string {
-			$result = $results[$candidate->id];
 			$times = $result->best();
 			$times[] = array_sum($times);
 
-			return sprintf(
-				'%s%7.0f%%',
-				implode('', array_map(static fn(float $time): string => sprintf('%10.3f', $time), $times)),
+			printf(
+				"  %-17s%s%7.0f%%%9s%s\n",
+				$result->candidate->name,
+				implode('', array_map(static fn(float $time): string => sprintf('%9.3f', $time), $times)),
 				$result->spread() * 100,
+				formatBytes($result->memory),
+				$result->held === null ? '' : sprintf('%8s', formatBytes($result->held)),
 			);
-		},
-	);
+		}
+	}
 
 	echo str_repeat('-', LINE_LEN) . "\n";
-	echo 'Milliseconds per render in the fastest of ' . iterations() . " iterations. total is one\n";
-	echo "round, which renders each page once. spread is how much slower the\n";
-	echo "slowest iteration was.\n";
 }
 
-/** @return array<string, Result> keyed by candidate id */
-function runScenario(string $lifecycle): array
+/** @return list<Result> */
+function runScenario(string $lifecycle, Runtime $runtime): array
 {
-	echo 'LIFECYCLE: ' . lifecycleLabel($lifecycle) . "\n";
-	if (count(lifecycles()) === 1) {
-		echo "           use --lifecycle=(request|worker) to change mode\n";
-	}
+	echo "LIFECYCLE: {$lifecycle} ({$runtime->label()})\n";
 	echo str_repeat('-', LINE_LEN) . "\n";
 
-	$pages = Data::pages(scale());
+	$pages = array_keys(Data::pages(scale()));
 	$results = [];
+	// A fatal error skips the finally block below.
+	register_shutdown_function($runtime->stop(...));
 
-	foreach (candidates() as $candidate) {
-		$results[$candidate->id] = measure($candidate, $pages, $lifecycle);
+	try {
+		foreach (Engines::all(__DIR__, Data::shared()) as $candidate) {
+			$results[] = measure($runtime, $candidate, $pages);
+		}
+	} finally {
+		$runtime->stop();
 	}
 
-	printTimes($results, array_keys($pages));
+	printResults($results, $pages);
 
 	return $results;
 }
 
-/**
- * Measures one candidate in this process, which the benchmark started for it
- * alone, so that nothing another engine loaded counts.
- */
-function probe(string $id): int
+function printLegend(): void
 {
-	$pages = Data::pages(scale());
-
-	foreach (candidates() as $candidate) {
-		if ($candidate->id !== $id) {
-			continue;
-		}
-
-		$render = static function (object $engine) use ($candidate, $pages): void {
-			foreach ($pages as $page => $context) {
-				$candidate->render($engine, $page, $context);
-			}
-		};
-
-		$before = memory_get_usage();
-		$engine = $candidate->engine();
-		$render($engine);
-		gc_collect_cycles();
-		$loaded = memory_get_usage() - $before;
-
-		memory_reset_peak_usage();
-		$before = memory_get_usage();
-		$render($engine);
-		$peak = memory_get_peak_usage() - $before;
-
-		echo json_encode(['loaded' => $loaded, 'render' => $peak]);
-
-		return 0;
-	}
-
-	fwrite(STDERR, "Unknown candidate {$id}" . PHP_EOL);
-
-	return 1;
-}
-
-/**
- * @param Candidate<object> $candidate
- *
- * @return array{loaded: int, render: int}|null
- */
-function probeInFreshProcess(Candidate $candidate): ?array
-{
-	$command = [PHP_BINARY];
-
-	foreach (PHP_SETTINGS as $name => $value) {
-		array_push($command, '-d', "{$name}={$value}");
-	}
-
-	array_push($command, __FILE__, '--probe=' . $candidate->id, '--scale=' . scale());
-	$process = proc_open($command, [1 => ['pipe', 'w']], $pipes);
-
-	if (!is_resource($process)) {
-		return null;
-	}
-
-	$memory = json_decode((string) stream_get_contents($pipes[1]), true);
-	fclose($pipes[1]);
-
-	return proc_close($process) === 0 && is_array($memory) ? $memory : null;
-}
-
-function printMemory(): void
-{
-	echo "MEMORY: one fresh process per engine\n";
-	echo str_repeat('-', LINE_LEN) . "\n";
-	printf("%31s%10s\n", 'loaded', 'render');
-	echo str_repeat('-', LINE_LEN) . "\n";
-
-	printGroups(candidates(), static function (Candidate $candidate): string {
-		$memory = probeInFreshProcess($candidate);
-
-		return $memory === null
-			? sprintf('%10s%10s', 'failed', '')
-			: sprintf('%10s%10s', formatBytes($memory['loaded']), formatBytes($memory['render']));
-	});
-
-	echo str_repeat('-', LINE_LEN) . "\n";
-	echo "loaded is the memory still in use after each page was rendered once.\n";
-	echo "render is the additional peak while the pages render again.\n";
+	echo 'Times are milliseconds per render in the fastest of ' . iterations() . " iterations; total is one\n";
+	echo "round of the pages, and spread is how much slower the slowest iteration was.\n";
+	echo "memory is the peak that the timed part adds: in a request the engine with its\n";
+	echo "classes and the render, otherwise the render alone. held is what the engine\n";
+	echo "keeps between the requests of a worker.\n";
 }
 
 /** @param list<Result> $results */
@@ -517,7 +426,7 @@ function verifyOutputs(array $results): bool
 
 	echo 'Pages: ' . implode(', ', $sizes) . "\n";
 	echo 'Output verification: ';
-	echo $mismatches === [] ? "all engines render the same pages ✓\n" : "MISMATCH\n";
+	echo $mismatches === [] ? "all engines render the same pages in every lifecycle ✓\n" : "MISMATCH\n";
 
 	foreach (array_unique($mismatches) as $mismatch) {
 		echo "  differs from {$results[0]->candidate->name}: {$mismatch}\n";
@@ -529,18 +438,16 @@ function verifyOutputs(array $results): bool
 function main(): int
 {
 	try {
-		$config = benchmarkConfig();
+		benchmarkConfig();
 	} catch (InvalidArgumentException $e) {
 		fwrite(STDERR, $e->getMessage() . PHP_EOL);
 
 		return 1;
 	}
 
-	if ($config['probe'] !== null) {
-		return probe($config['probe']);
+	if (in_array(LIFECYCLE_LOOP, lifecycles(), true)) {
+		benchmarkWarning();
 	}
-
-	benchmarkWarning();
 
 	echo "\n" . str_repeat('=', LINE_LEN);
 	echo "\nBenchmark: " . number_format(runs()) . ' rounds × ' . iterations() . ' iterations, scale ' . scale();
@@ -549,17 +456,38 @@ function main(): int
 	echo str_repeat('=', LINE_LEN) . "\n\n\n";
 
 	// Once for the whole run: Twig writes a compiled template only when it
-	// first loads the class, and the memory probes need the files.
+	// first loads the class, and the servers need the files as well.
 	resetBenchmarkCaches();
 	$results = [];
 
 	foreach (lifecycles() as $lifecycle) {
-		array_push($results, ...array_values(runScenario($lifecycle)));
+		$runtime = runtime($lifecycle);
+
+		if (is_string($runtime)) {
+			echo "LIFECYCLE: {$lifecycle} skipped, {$runtime}\n\n\n";
+
+			continue;
+		}
+
+		try {
+			array_push($results, ...runScenario($lifecycle, $runtime));
+		} catch (RuntimeException $e) {
+			fwrite(STDERR, "The {$lifecycle} lifecycle failed: {$e->getMessage()}" . PHP_EOL);
+
+			return 1;
+		}
+
 		echo "\n\n";
 	}
 
-	printMemory();
-	echo "\n\n";
+	if ($results === []) {
+		fwrite(STDERR, 'No lifecycle could run.' . PHP_EOL);
+
+		return 1;
+	}
+
+	printLegend();
+	echo "\n";
 
 	return verifyOutputs($results) ? 0 : 1;
 }

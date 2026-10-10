@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Bench;
 
-/** The measured render times of one candidate in one lifecycle. */
+/** What was measured for one candidate in one lifecycle. */
 final class Result
 {
 	/** @var array<string, string> the rendered pages, for the output check */
 	public array $output = [];
+
+	/** The largest peak a timed render added. */
+	public int $memory = 0;
+
+	/** What the engine kept between requests, where the runtime can tell. */
+	public ?int $held = null;
 
 	/** @var list<array<string, float>> milliseconds per render of each page, one entry per iteration */
 	private array $iterations = [];

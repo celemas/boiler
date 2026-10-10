@@ -1,6 +1,6 @@
 # Boiler benchmark
 
-This benchmark renders three pages of a shop site with Boiler, Twig, Laravel Blade, and Plates. It is meant to approximate realistic page renders and is used mainly internally to catch regressions, not to benchmark every feature in isolation.
+This benchmark renders three pages of a shop site with Boiler, Twig, Laravel Blade, and Plates: in PHP-FPM requests, in a FrankenPHP worker, and in a plain loop. It is meant to approximate realistic page renders and is used mainly internally to catch regressions, not to benchmark every feature in isolation.
 
 ## What it renders
 
@@ -41,97 +41,71 @@ Blade runs on `illuminate/view` without a Laravel application. Laravel finds ano
 
 ## Lifecycles
 
-The script resets the compiled template caches, warms them up, and can run in two lifecycle modes:
+What a render costs depends on what PHP has to do around it, so the benchmark measures three lifecycles:
 
-- `worker` reuses the same engine instance across measured renders
-- `request` creates a fresh engine instance for every measured render
+| Lifecycle | Runs in | Each render is |
+| --- | --- | --- |
+| `request` | PHP-FPM | a request of its own: PHP starts without loaded classes, creates the engine, renders one page, and discards everything |
+| `worker` | FrankenPHP in worker mode | a request to a worker that booted once and keeps its engine |
+| `loop` | the benchmark process | a pass of a loop that keeps its engine, without a server |
 
-Use `request` when you want to reduce the impact of persistent userland engine caches. Use `worker` when you want to approximate a long-running worker process. Neither mode is a full deployment simulation. `worker` is closer to a steady-state long-running process, while `request` mainly isolates the cost of fresh engine construction inside one benchmark process.
+The script starts `php-fpm` and `frankenphp` itself, on a free local port and with one worker each, sends the requests one after another, and stops the servers again. Their configuration and logs are written to `cache/`. A lifecycle whose server is not installed is skipped with a note. Both servers must run PHP 8.5.
+
+The data of a page is created outside the timed part in every lifecycle. In a request, the timed part covers what a request needs the engine for: loading its classes from OPcache, setting it up, and rendering. In `worker` and `loop` it covers the render.
+
+`loop` is the quick check that needs no server. On the same PHP build it stays within a few percent of a real worker, so it serves to compare Boiler before and after a change. A request cannot be reproduced that way: a loop that creates a fresh engine for every render still keeps the classes and static caches that a real request has to load again, so `request` always runs on PHP-FPM.
 
 ## How to read the results
 
 Use the benchmark to answer a narrow question: did Boiler get slower on these pages?
 
-The time table shows milliseconds per render for each page, and `total` for one round of all three. The values come from the fastest iteration, which is the one least disturbed by other load on the machine. `spread` shows how much slower the slowest iteration was; when it is large, run more iterations or close other programs.
+Each lifecycle prints a table with the milliseconds per render for each page, and `total` for one round of all three. The values come from the fastest iteration, which is the one least disturbed by other load on the machine. `spread` shows how much slower the slowest iteration was; when it is large, run more iterations or close other programs.
 
-The memory table comes from one fresh PHP process per engine, so that nothing another engine loaded counts:
+`memory` is the peak that the timed part adds: in a request the engine with its classes and the render, in `worker` and `loop` the render alone. `held`, in the `worker` table, is what the engine keeps in memory between requests.
 
-- `loaded` is the memory still in use after each page was rendered once: the engine, its loaded templates, and what rendering left behind
-- `render` is the additional peak while the pages render again
+Compare the engines within a table. `request` and `loop` run on the same PHP when `php-fpm` belongs to the PHP that runs the script, so the difference between them is what a request costs on top of a render. FrankenPHP embeds a PHP build of its own, which can be much slower or faster than the other one, so the `worker` numbers do not compare with those of the other tables.
 
 Keep these limits in mind:
 
-- results depend on PHP version, OPcache settings, hardware, and workload shape
+- results depend on PHP version and build, OPcache settings, hardware, and workload shape
 - three pages cannot represent every template structure or application architecture
 - the pages leave out some of Boiler's features: template namespaces and multiple directories, custom filters and escapers, the `sanitize` filter, and array helpers such as `map()` and `sorted()`
 - the numbers are useful for internal regression checks and local comparisons, not as universal rankings or proofs that one engine always wins
-- `worker` results are usually the more representative steady-state numbers
-- Blade's `request` results leave out the framework bootstrap that a Laravel request pays for
-- in `request` mode, Twig keeps the classes of its compiled templates loaded for the whole process, while a PHP-FPM request loads them from OPcache again
+- the servers handle one request at a time in one worker, so nothing here measures concurrency
+- Blade runs without Laravel, so its `request` results leave out the framework bootstrap that a Laravel request pays for
 
 ## Run the benchmark
 
-You can run the benchmark from the repository root or from inside `bench/`.
+Install the benchmark's own dependencies once, then run it from the repository root:
 
-Run the benchmark with Xdebug and PCOV disabled and with OPcache enabled for the CLI. Results without these settings are not useful for fair engine comparisons. `composer benchmark` already sets all of them, and the benchmark script warns when one is off:
+```bash
+composer install --working-dir=bench
+composer benchmark
+composer benchmark -- --lifecycle=loop
+composer benchmark -- --scale=4 --runs=200 --iterations=5
+```
+
+The `request` lifecycle needs `php-fpm` and the `worker` lifecycle needs `frankenphp`. The script looks for `php-fpm` next to the PHP that runs it and on the `PATH`, and for `frankenphp` on the `PATH`.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--lifecycle` | `all` | `request`, `worker`, `loop`, or `all` |
+| `--runs` | `100` | rounds per iteration; a round renders each page once |
+| `--iterations` | `3` | measured iterations per engine and lifecycle |
+| `--scale` | `1` | multiplies the number of products, reviews, and content blocks |
+| `--php-fpm` | detected | path to the `php-fpm` binary |
+| `--frankenphp` | detected | path to the `frankenphp` binary |
+
+### PHP settings
+
+Results are not useful for fair engine comparisons unless Xdebug and PCOV are disabled and OPcache is enabled. The script starts the servers that way. The `loop` lifecycle runs in the benchmark process itself, which `composer benchmark` starts with the same settings; the script warns when one is off:
 
 - `xdebug.mode=off` and `pcov.enabled=0`: both extensions add substantial runtime overhead, especially for Boiler's proxy-based auto escaping.
 - `opcache.enable_cli=1`: without OPcache, PHP compiles a template file again every time it is included. That outweighs the engine's own work for Boiler, Plates, and Blade, while Twig loads each compiled template once per process as a class.
 - `opcache.file_update_protection=0`: by default, OPcache does not cache files changed within the last two seconds, and the script compiles the Blade templates right before it measures.
 
-### From the repository root
+To run the script without Composer, pass the settings yourself:
 
 ```bash
-composer benchmark
-composer benchmark -- --lifecycle=request --runs=1000 --iterations=5
-composer benchmark -- --scale=4
+php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 bench/run.php
 ```
-
-### From inside `bench/`
-
-1. Change into the benchmark directory:
-
-   ```bash
-   cd bench
-   ```
-
-2. Install benchmark dependencies:
-
-   ```bash
-   composer install
-   ```
-
-3. Run the benchmark with the default settings:
-
-   ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php
-   ```
-
-4. Override the default round count and iteration count when you want a slower or deeper run:
-
-   ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --runs=1000 --iterations=5
-   ```
-
-5. Raise the scale to see how the engines cope with more data:
-
-   ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --scale=4
-   ```
-
-6. Choose a lifecycle mode when you want to compare a reused engine with a freshly created engine per render:
-
-   ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --lifecycle=worker
-   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --lifecycle=request
-   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --lifecycle=both
-   ```
-
-## Defaults
-
-By default, the script runs:
-
-- `300` rounds per engine, each rendering the three pages
-- `3` measured iterations
-- scale `1`
-- `both` lifecycle modes
