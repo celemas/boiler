@@ -29,13 +29,12 @@ final class Fpm implements Runtime
 	/** @return self|string the runtime, or the reason why it cannot run */
 	public static function detect(string $dir, int $scale, ?string $binary): self|string
 	{
+		// Debian installs it as /usr/sbin/php-fpm8.5, outside the PATH of a user.
+		$versioned = 'php-fpm' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+		$sbin = dirname(PHP_BINARY) . '/../sbin/';
 		$found = $binary !== null
 			? Process::find($binary)
-			: Process::find(
-				dirname(PHP_BINARY) . '/../sbin/php-fpm',
-				'php-fpm',
-				'php-fpm' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
-			);
+			: Process::find($sbin . 'php-fpm', $sbin . $versioned, 'php-fpm', $versioned);
 
 		if ($found === null) {
 			return $binary === null

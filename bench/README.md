@@ -85,7 +85,7 @@ composer benchmark -- --lifecycle=loop
 composer benchmark -- --scale=4 --runs=200 --iterations=5
 ```
 
-The `request` lifecycle needs `php-fpm` and the `worker` lifecycle needs `frankenphp`. The script looks for `php-fpm` next to the PHP that runs it and on the `PATH`, and for `frankenphp` on the `PATH`.
+The `request` lifecycle needs `php-fpm` and the `worker` lifecycle needs `frankenphp`. The script looks for `php-fpm` next to the PHP that runs it and on the `PATH`, also under the versioned name Debian uses, such as `php-fpm8.5`, and for `frankenphp` on the `PATH`.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
