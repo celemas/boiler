@@ -40,7 +40,11 @@ Keep these limits in mind:
 
 You can run the benchmark from the repository root or from inside `bench/`.
 
-Run the benchmark with Xdebug and PCOV disabled. Both add substantial runtime overhead, especially for Boiler's proxy-based auto escaping, so results with either extension enabled are not useful for fair engine comparisons. The benchmark script warns when it detects either of them. `composer benchmark` already runs it with `xdebug.mode=off` and `pcov.enabled=0`.
+Run the benchmark with Xdebug and PCOV disabled and with OPcache enabled for the CLI. Results without these settings are not useful for fair engine comparisons. `composer benchmark` already sets all of them, and the benchmark script warns when one is off:
+
+- `xdebug.mode=off` and `pcov.enabled=0`: both extensions add substantial runtime overhead, especially for Boiler's proxy-based auto escaping.
+- `opcache.enable_cli=1`: without OPcache, PHP compiles a template file again every time it is included. That outweighs the engine's own work for Boiler, Plates, and Blade, while Twig loads each compiled template once per process as a class.
+- `opcache.file_update_protection=0`: by default, OPcache does not cache files changed within the last two seconds, and the script compiles the Blade templates right before it measures.
 
 ### From the repository root
 
@@ -66,21 +70,21 @@ composer benchmark -- --lifecycle=request --runs=2000 --iterations=5
 3. Run the benchmark with the default settings:
 
    ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 run.php
+   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php
    ```
 
 4. Override the default run count and iteration count when you want a slower or deeper run:
 
    ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 run.php --runs=10000 --iterations=5
+   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --runs=10000 --iterations=5
    ```
 
 5. Choose a lifecycle mode when you want to compare a reused engine with a freshly created engine per render:
 
    ```bash
-   php -d xdebug.mode=off -d pcov.enabled=0 run.php --lifecycle=worker
-   php -d xdebug.mode=off -d pcov.enabled=0 run.php --lifecycle=request
-   php -d xdebug.mode=off -d pcov.enabled=0 run.php --lifecycle=both
+   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --lifecycle=worker
+   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --lifecycle=request
+   php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 run.php --lifecycle=both
    ```
 
 ## Defaults

@@ -71,7 +71,7 @@
 			"@putenv XDEBUG_MODE=coverage",
 			"./vendor/bin/infection --threads=max"
 		],
-		"benchmark": "@php -d xdebug.mode=off -d pcov.enabled=0 bench/run.php"
+		"benchmark": "@php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 bench/run.php"
 	},
 	"config": {
 		"allow-plugins": {

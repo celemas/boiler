@@ -457,16 +457,17 @@ function stringOption(array $options, string $name, string $default, array $allo
 
 function benchmarkWarning(): void
 {
-	$detected = benchmarkProfilers();
+	$detected = [...benchmarkProfilers(), ...opcacheSettings()];
 
 	if ($detected === []) {
 		return;
 	}
 
 	echo str_repeat('!', LINE_LEN) . "\n";
-	echo "WARNING: benchmarking with Xdebug or PCOV enabled skews results.\n";
+	echo "WARNING: these PHP settings skew the benchmark results.\n";
 	echo 'Detected: ' . implode(', ', $detected) . "\n";
-	echo 'Run with: php -d xdebug.mode=off -d pcov.enabled=0 ' . benchmarkScript() . "\n";
+	echo "Run with: php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1\n";
+	echo '          -d opcache.file_update_protection=0 ' . benchmarkScript() . "\n";
 	echo "          [--runs=N] [--iterations=N] [--lifecycle=(request|worker|both)]\n";
 	echo "Tip: use composer benchmark -- [options]\n";
 	echo str_repeat('!', LINE_LEN) . "\n\n";
@@ -487,6 +488,32 @@ function benchmarkProfilers(): array
 	}
 
 	return $profilers;
+}
+
+/**
+ * Without OPcache, PHP compiles a template file again on every include, which
+ * outweighs the engine's own work. Its file update protection keeps it from
+ * caching the templates that Blade compiles right before the measurement.
+ *
+ * @return list<string>
+ */
+function opcacheSettings(): array
+{
+	$settings = [];
+
+	foreach (['opcache.enable', 'opcache.enable_cli'] as $name) {
+		if (!iniEnabled($name)) {
+			$settings[] = "{$name}=0";
+		}
+	}
+
+	$protection = (int) ini_get('opcache.file_update_protection');
+
+	if ($protection > 0) {
+		$settings[] = "opcache.file_update_protection={$protection}";
+	}
+
+	return $settings;
 }
 
 function xdebugMode(): ?string
@@ -661,6 +688,10 @@ function createBlade(): \Illuminate\View\Factory
 		new \Illuminate\View\FileViewFinder($files, [__DIR__ . '/blade']),
 		new \Illuminate\Events\Dispatcher($container),
 	);
+	$factory->setContainer($container);
+	$factory->share('app', $container);
+
+	return $factory;
 }
 
 function benchBladeAutoEscaping(string $lifecycle): BenchResult
@@ -690,10 +721,6 @@ function benchBoilerAutoEscaping(string $lifecycle): BenchResult
 		$lifecycle,
 	);
 }
-	$factory->setContainer($container);
-	$factory->share('app', $container);
-
-	return $factory;
 
 function benchPlatesManualEscaping(string $lifecycle): BenchResult
 {
