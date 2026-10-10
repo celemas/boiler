@@ -112,7 +112,9 @@ final class Engines
 	/** @param array<string, mixed> $shared */
 	private static function twig(string $dir, array $shared): Twig
 	{
-		$twig = new Twig(new FilesystemLoader($dir . '/twig'), ['cache' => $dir . '/cache/twig']);
+		// Without a root path, the cache keys depend on the working directory,
+		// and every runtime would compile the templates for itself.
+		$twig = new Twig(new FilesystemLoader($dir . '/twig', $dir), ['cache' => $dir . '/cache/twig']);
 		$twig->addFilter(new TwigFilter('money', money(...)));
 		$twig->addFunction(new TwigFunction('icon', icon(...), ['is_safe' => ['html']]));
 

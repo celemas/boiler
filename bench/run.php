@@ -294,6 +294,23 @@ function formatBytes(int $bytes): string
 }
 
 /**
+ * Compiles the templates before any runtime starts. A worker that had to
+ * compile them itself would keep the compiler in memory and report it as held.
+ */
+function compileTemplates(): void
+{
+	$pages = Data::pages(scale());
+
+	foreach (Engines::all(__DIR__, Data::shared()) as $candidate) {
+		$engine = $candidate->engine();
+
+		foreach ($pages as $page => $context) {
+			$candidate->render($engine, $page, $context);
+		}
+	}
+}
+
+/**
  * Renders the pages in turn, as a site serves them, and times each page on
  * its own.
  *
@@ -455,9 +472,8 @@ function main(): int
 	echo ' --scale=' . scale() . "\n";
 	echo str_repeat('=', LINE_LEN) . "\n\n\n";
 
-	// Once for the whole run: Twig writes a compiled template only when it
-	// first loads the class, and the servers need the files as well.
 	resetBenchmarkCaches();
+	compileTemplates();
 	$results = [];
 
 	foreach (lifecycles() as $lifecycle) {
