@@ -8,6 +8,7 @@ use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
 use Celema\Boiler\Proxy\StringProxy;
 use PHPUnit\Framework\Attributes\TestDox;
+use ReflectionClass;
 use ValueError;
 
 final class ObjectProxyTest extends TestCase
@@ -214,6 +215,115 @@ final class ObjectProxyTest extends TestCase
 
 		$this->assertTrue(isset($value->virtual));
 		$this->assertFalse(isset($value->other));
+	}
+
+	public function testPropertyAccessLeavesTheHooksOfOtherPropertiesAlone(): void
+	{
+		$object = new class {
+			public string $title = 'Boiler';
+			public string $name = 'boiler';
+			public int $runs = 0;
+			public string $slow {
+				get {
+					$this->runs++;
+
+					return 'slow';
+				}
+			}
+		};
+		$value = $this->objectProxy($object);
+
+		$this->assertSame('boiler', (string) $value->name);
+		$value->name = 'rocks';
+		$this->assertSame('rocks', $object->name);
+		$this->assertSame(0, $object->runs);
+		$this->assertSame('slow', (string) $value->slow);
+		$this->assertSame(1, $object->runs);
+	}
+
+	public function testDynamicPropertyIsAccessible(): void
+	{
+		$object = new \stdClass();
+		$object->name = '<b>boiler</b>';
+		$value = $this->objectProxy($object);
+
+		$this->assertSame('&lt;b&gt;boiler&lt;/b&gt;', (string) $value->name);
+		$value->name = 'rocks';
+		$this->assertSame('rocks', $object->name);
+	}
+
+	public function testPropertiesOfLazyObjectsAreAccessible(): void
+	{
+		$real = new class {
+			public string $name = 'boiler';
+		};
+		$class = new ReflectionClass($real);
+		$objects = [
+			$class->newLazyGhost(static function (): void {}),
+			$class->newLazyProxy(static fn(): object => $real),
+		];
+
+		foreach ($objects as $object) {
+			$this->assertSame('boiler', (string) $this->objectProxy($object)->name);
+		}
+	}
+
+	public function testWriteOnlyPropertyCanBeSet(): void
+	{
+		$object = new class {
+			public string $stored = '';
+			public string $input {
+				set {
+					$this->stored = strtoupper($value);
+				}
+			}
+		};
+
+		$this->objectProxy($object)->input = 'boiler';
+
+		$this->assertSame('BOILER', $object->stored);
+	}
+
+	public function testPropertyWithoutAValueCountsAsMissing(): void
+	{
+		$object = new class {
+			public string $pending;
+			public string $removed = 'removed';
+		};
+		unset($object->removed);
+		$value = $this->objectProxy($object);
+
+		foreach (['pending', 'removed'] as $name) {
+			try {
+				$value->{$name};
+				$this->fail("Expected no such property: {$name}");
+			} catch (RuntimeException $e) {
+				$this->assertSame('No such property', $e->getMessage());
+			}
+		}
+	}
+
+	public function testPropertyThatIsNotPublicOrStaticCountsAsMissing(): void
+	{
+		$value = $this->objectProxy(new class {
+			public static string $shared = 'shared';
+			protected string $guarded = 'guarded';
+			private string $hidden = 'hidden';
+
+			public function all(): string
+			{
+				return self::$shared . $this->guarded . $this->hidden;
+			}
+		});
+
+		foreach (['shared', 'guarded', 'hidden'] as $name) {
+			try {
+				$value->{$name};
+				$this->fail("Expected no such property: {$name}");
+			} catch (RuntimeException $e) {
+				$this->assertSame('No such property', $e->getMessage());
+			}
+		}
 	}
 
 	#[TestDox('Getter throws I')]

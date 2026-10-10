@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Celema\Boiler\Proxy;
 
 use Celema\Boiler\Exception\RuntimeException;
+use ReflectionClass;
+use ReflectionProperty;
 use Stringable;
 
 /**
@@ -20,6 +22,13 @@ use Stringable;
  */
 trait ObjectAccess
 {
+	/**
+	 * The public instance properties each wrapped class declares.
+	 *
+	 * @var array<class-string, array<string, ReflectionProperty>>
+	 */
+	private static array $declared = [];
+
 	public function __toString(): string
 	{
 		if (!$this->value instanceof Stringable) {
@@ -87,9 +96,38 @@ trait ObjectAccess
 		return $this->value;
 	}
 
+	/**
+	 * Whether code outside the object can read the property: it is public and
+	 * initialized, or dynamic.
+	 *
+	 * get_object_vars() answers that for every case, but it copies all
+	 * properties of the object and runs the get hook of each hooked one. A
+	 * template reads many properties, so declared ones are answered from
+	 * reflection, and only dynamic properties, lazy proxies, and misses take
+	 * the full lookup.
+	 */
 	private function hasPublicProperty(string $name): bool
 	{
+		$declared = $this->declaredProperties();
+
+		if (isset($declared[$name]) && $declared[$name]->isInitialized($this->value)) {
+			return true;
+		}
+
 		return array_key_exists($name, get_object_vars($this->value));
+	}
+
+	/** @return array<string, ReflectionProperty> */
+	private function declaredProperties(): array
+	{
+		return self::$declared[$this->value::class] ??= array_column(
+			array_filter(
+				new ReflectionClass($this->value)->getProperties(ReflectionProperty::IS_PUBLIC),
+				static fn(ReflectionProperty $property): bool => !$property->isStatic(),
+			),
+			null,
+			'name',
+		);
 	}
 
 	/**
