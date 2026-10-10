@@ -41,12 +41,7 @@ final class Context
 	) {
 		$this->trusted = $rendering->trusted;
 		$this->autoescape = $rendering->autoescape;
-		$this->values = new Values(
-			$context,
-			$rendering->engine->wrapper()->withTrusted($rendering->trusted),
-			$rendering->autoescape,
-			$wrapped,
-		);
+		$this->values = new Values($context, $rendering->wrapper, $rendering->autoescape, $wrapped);
 	}
 
 	public function __call(string $name, array $args): mixed

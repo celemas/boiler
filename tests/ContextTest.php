@@ -159,12 +159,14 @@ final class ContextTest extends TestCase
 		bool $autoescape = true,
 		?Engine $engine = null,
 	): Context {
+		$engine ??= Engine::create($this->templates);
 		$rendering = new Rendering(
 			$this->templates . 'simple.php',
-			$engine ?? Engine::create($this->templates),
+			$engine,
 			new Methods(),
 			new Sections(),
 			$trusted,
+			$engine->wrapper()->withTrusted($trusted),
 			$autoescape,
 		);
 

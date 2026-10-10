@@ -47,6 +47,7 @@ A leftover `insert()` call fails the render as an unknown template method, and a
 - Opening a section or component and setting a layout cost less inside nested includes. To report the template line in errors, Boiler took a full backtrace for each of these calls, which grows with every include level; it now searches the nearest frames first. The reported locations are unchanged.
 - An escaped render wraps each context value once. Every layout and include used to pass the whole context through the wrapper again, which returned the values unchanged but took time on every template run. Pages built from many includes render faster, the benchmark's by about 16%. A custom `Contract\Wrapper` now gets a context value in `wrap()` once per render.
 - Template methods and methods of wrapped objects unwrap their arguments without creating a closure per call, and a method of a wrapped object that is called without arguments skips the step.
+- The wrapper that trusts a render's trusted classes is derived once per render. Every template run used to derive it, which copied the wrapper for each layout and include of a render with trusted classes. A custom `Contract\Wrapper` now gets `withTrusted()` once per render.
 
 ### Removed
 

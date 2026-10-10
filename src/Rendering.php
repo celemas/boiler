@@ -32,6 +32,7 @@ final class Rendering
 	 * @mago-expect lint:excessive-parameter-list The runs of a render share all but the path and slot, which with() copies.
 	 *
 	 * @param list<class-string> $trusted
+	 * @param Contract\Wrapper $wrapper the engine's wrapper, set to trust those classes
 	 * @param ?string $slot what the template prints with `$this->slot()`: a layout's page or a component's block
 	 */
 	public function __construct(
@@ -40,6 +41,7 @@ final class Rendering
 		public readonly Methods $methods,
 		public readonly Sections $sections,
 		public readonly array $trusted,
+		public readonly Contract\Wrapper $wrapper,
 		public readonly bool $autoescape,
 		public readonly ?string $slot = null,
 	) {
@@ -165,6 +167,7 @@ final class Rendering
 			$this->methods,
 			$this->sections,
 			$this->trusted,
+			$this->wrapper,
 			$this->autoescape,
 			$slot,
 		);

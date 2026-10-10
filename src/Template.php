@@ -74,7 +74,15 @@ final class Template
 		$defaults = $this->engine->defaults;
 		$context = $defaults === [] ? $context : array_merge($defaults, $context);
 		$trusted = [...$this->engine->trusted, ...$trusted];
-		$rendering = new Rendering($this->path, $this->engine, $this->methods, new Sections(), $trusted, $autoescape);
+		$rendering = new Rendering(
+			$this->path,
+			$this->engine,
+			$this->methods,
+			new Sections(),
+			$trusted,
+			$this->engine->wrapper()->withTrusted($trusted),
+			$autoescape,
+		);
 
 		return $rendering->render($context, wrapped: false);
 	}

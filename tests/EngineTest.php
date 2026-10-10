@@ -100,10 +100,11 @@ final class EngineTest extends TestCase
 		);
 	}
 
-	public function testContextValueIsWrappedOnceForLayoutsAndIncludes(): void
+	public function testWrapperIsAskedOncePerRenderForLayoutsAndIncludes(): void
 	{
 		$wrapper = new class implements ContractWrapper {
 			public int $wraps = 0;
+			public int $trusts = 0;
 			private readonly Wrapper $wrapper;
 
 			public function __construct()
@@ -113,6 +114,8 @@ final class EngineTest extends TestCase
 
 			public function withTrusted(array $trusted): static
 			{
+				$this->trusts++;
+
 				return $this;
 			}
 
@@ -147,6 +150,7 @@ final class EngineTest extends TestCase
 			$this->fullTrim($engine->render('layoutandinclude', ['text' => 'marker', 'int' => 1])),
 		);
 		$this->assertSame(1, $wrapper->wraps);
+		$this->assertSame(1, $wrapper->trusts);
 	}
 
 	public function testContextKeysMayUseAnyVariableName(): void
@@ -1738,6 +1742,7 @@ final class EngineTest extends TestCase
 			new Methods(),
 			new Sections(),
 			[],
+			$engine->wrapper(),
 			true,
 		);
 		$context = new Context($rendering, ['text' => '<tag>'], wrapped: false);
