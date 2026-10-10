@@ -92,6 +92,8 @@ composer benchmark -- --scale=4 --runs=200 --iterations=5
 
 `composer benchmark` needs Docker. It builds an image from the [`Dockerfile`](Dockerfile) with PHP 8.5, PHP-FPM, FrankenPHP's Linux build, and the engines, copies the sources into it, and runs the benchmark there. Every machine then measures on Linux and with the same runtimes. That matters for comparing the engines: on macOS, file access costs more and FrankenPHP's build is much slower, and both shift the results between the engines.
 
+The image optimizes Composer's autoloader, as a production install does. Without the class map, Composer checks the file system for every class a request loads, which costs the engines with many classes the most.
+
 The first build takes about half a minute; later ones only copy the sources that changed, and the command removes the image that a rebuild replaced.
 
 | Option | Default | Meaning |
@@ -124,11 +126,13 @@ A `~` marks a change that may be noise: one below 2%, which is about how much ru
 ### Without the container
 
 ```bash
-composer install --working-dir=bench
+composer install --working-dir=bench --optimize-autoloader
 composer benchmark:native -- --lifecycle=loop
 ```
 
 `composer benchmark:native` runs the same script on the machine itself. That fits a quick check of Boiler before and after a change, for which the platform does not matter.
+
+`--optimize-autoloader` writes the class map that the image has, which the `request` lifecycle needs for comparable numbers. Composer writes it once; after adding or moving a class, write it again with `composer dump-autoload --working-dir=bench --optimize`.
 
 There, the `request` lifecycle needs `php-fpm` and the `worker` lifecycle needs `frankenphp`, both with PHP 8.5; a lifecycle whose server is not installed is skipped with a note. The script looks for `php-fpm` next to the PHP that runs it and on the `PATH`, also under the versioned name Debian uses, such as `php-fpm8.5`, and for `frankenphp` on the `PATH`.
 

@@ -30,6 +30,9 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --working-dir=bench --no-interac
 # engines differ in how much of it a request needs.
 COPY src src
 COPY bench bench
+# A production install optimizes the autoloader. Dumped here, as the class
+# map needs the sources of Boiler and of the benchmark.
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --working-dir=bench --optimize --no-interaction
 # Writable for any user: the benchmark command runs the container as its caller.
 RUN mkdir -p bench/cache && chmod 1777 bench/cache
 
