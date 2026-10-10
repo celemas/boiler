@@ -86,7 +86,7 @@ composer benchmark -- --scale=4 --runs=200 --iterations=5
 
 `composer benchmark` needs Docker. It builds an image from the [`Dockerfile`](Dockerfile) with PHP 8.5, PHP-FPM, FrankenPHP's Linux build, and the engines, copies the sources into it, and runs the benchmark there. Every machine then measures on Linux and with the same runtimes. That matters for comparing the engines: on macOS, file access costs more and FrankenPHP's build is much slower, and both shift the results between the engines.
 
-The first build takes about half a minute; later ones only copy the sources that changed. A build after a change leaves the previous image behind, which `docker image prune` removes.
+The first build takes about half a minute; later ones only copy the sources that changed, and the command removes the image that a rebuild replaced.
 
 | Option | Default | Meaning |
 | --- | --- | --- |

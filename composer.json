@@ -73,7 +73,7 @@
 		],
 		"benchmark": [
 			"Composer\\Config::disableProcessTimeout",
-			"docker build --quiet --file bench/Dockerfile --tag celema-boiler-bench . > /dev/null && docker run --rm --init celema-boiler-bench"
+			"docker build --quiet --file bench/Dockerfile --tag celema-boiler-bench . > /dev/null && docker image prune --force --filter label=dev.celema.boiler.bench > /dev/null && docker run --rm --init celema-boiler-bench"
 		],
 		"benchmark:native": "@php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1 -d opcache.file_update_protection=0 bench/run.php"
 	},

@@ -3,6 +3,9 @@ ARG PHP_VERSION=8.5
 
 FROM php:${PHP_VERSION}-fpm
 
+# Lets the benchmark command find and remove the images that a rebuild replaced.
+LABEL dev.celema.boiler.bench=1
+
 ARG FRANKENPHP_VERSION=1.13.0
 
 RUN apt-get update \
