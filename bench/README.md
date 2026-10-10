@@ -24,7 +24,7 @@ All pages share the site header with a two-level menu, breadcrumbs, and the foot
 
 ## How the templates are written
 
-All engines receive the same data and must produce the same HTML; only whitespace may differ, and the script verifies it. Within that rule, each set of templates is written the way the engine's documentation suggests, with the engine's own means, and not tuned for speed. Where an engine lacks a mechanism, its templates solve the task the way its users would, instead of imitating another engine.
+All engines receive the same data and must produce the same HTML; only the whitespace around tags may differ, and the script verifies it. Within that rule, each set of templates is written the way the engine's documentation suggests, with the engine's own means, and not tuned for speed. Where an engine lacks a mechanism, its templates solve the task the way its users would, instead of imitating another engine.
 
 | Task | Boiler | Twig | Blade | Plates |
 | --- | --- | --- | --- | --- |

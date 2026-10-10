@@ -426,13 +426,18 @@ function printLegend(array $results): void
 /** @param list<Result> $results */
 function verifyOutputs(array $results): bool
 {
-	$normalize = static fn(string $html): string => (string) preg_replace('/\s+/', '', $html);
+	// Engines differ in indentation and line breaks, so whitespace next to a
+	// tag does not count. A space inside text or an attribute value does.
+	$normalize = static fn(string $html): string => trim((string) preg_replace(
+		['/\s+/', '/ ?([<>]) ?/'],
+		[' ', '$1'],
+		$html,
+	));
 	$expected = array_map($normalize, $results[0]->output);
 	$mismatches = [];
 
 	foreach ($results as $result) {
 		foreach ($result->output as $page => $html) {
-			// Engines differ in indentation, so whitespace does not count.
 			if ($normalize($html) !== $expected[$page]) {
 				$mismatches[] = "{$result->candidate->name} ({$result->candidate->id}), page {$page}";
 			}
