@@ -50,11 +50,13 @@ final class Rendering
 	 * Runs the template and wraps its output in its layouts, innermost first.
 	 * A template can appear only once in the chain, as a layout that wraps a
 	 * template of its own chain would wrap forever.
+	 *
+	 * @param bool $wrapped whether the context comes from a template of this render, as that of an include does
 	 */
-	public function render(array $context): string
+	public function render(array $context, bool $wrapped): string
 	{
 		$rendering = $this;
-		$content = $this->run($context);
+		$content = $this->run($context, $wrapped);
 		$chain = [$this->path];
 
 		while (($layout = $rendering->layout) !== null) {
@@ -76,7 +78,7 @@ final class Rendering
 			$this->sections->enterLayout();
 			// A layout builds on the context of the template it wraps, like an
 			// included template builds on the context of the template that calls it.
-			$content = $rendering->run($content->templateContext->get($layout->context));
+			$content = $rendering->run($content->templateContext->get($layout->context), wrapped: true);
 		}
 
 		return $content->content;
@@ -90,7 +92,7 @@ final class Rendering
 	 */
 	public function include(string $file, array $context, ?string $slot = null): string
 	{
-		return $this->sections->nest(fn(): string => $this->with($file, $slot)->render($context));
+		return $this->sections->nest(fn(): string => $this->with($file, $slot)->render($context, wrapped: true));
 	}
 
 	/**
@@ -168,9 +170,9 @@ final class Rendering
 		);
 	}
 
-	private function run(array $context): Content
+	private function run(array $context, bool $wrapped): Content
 	{
-		$templateContext = new Context($this, $context);
+		$templateContext = new Context($this, $context, $wrapped);
 
 		/** @mago-expect lint:prefer-static-closure Closure::call() binds $this to the template context at runtime. */
 		$load = function (string $____template_path____, array $____template_context____): void {

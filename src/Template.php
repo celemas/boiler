@@ -76,6 +76,6 @@ final class Template
 		$trusted = [...$this->engine->trusted, ...$trusted];
 		$rendering = new Rendering($this->path, $this->engine, $this->methods, new Sections(), $trusted, $autoescape);
 
-		return $rendering->render($context);
+		return $rendering->render($context, wrapped: false);
 	}
 }

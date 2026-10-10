@@ -168,6 +168,6 @@ final class ContextTest extends TestCase
 			$autoescape,
 		);
 
-		return new Context($rendering, $values);
+		return new Context($rendering, $values, wrapped: false);
 	}
 }

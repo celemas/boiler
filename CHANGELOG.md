@@ -45,6 +45,7 @@ A leftover `insert()` call fails the render as an unknown template method, and a
 - `Engine::method()` and `Template::method()` reject the names of built-in template helpers, such as `include`, `section`, `yield`, `escape`, or `slot`, in any letter case, with `UnexpectedValueException`. A method registered under one of them was never reachable, because the helper took precedence.
 - `isset($items['key'])` and `$items['key'] ?? $default` on a wrapped array treat a `null` value as missing, like a plain array. `exists()` still tests for the key alone.
 - Opening a section or component and setting a layout cost less inside nested includes. To report the template line in errors, Boiler took a full backtrace for each of these calls, which grows with every include level; it now searches the nearest frames first. The reported locations are unchanged.
+- An escaped render wraps each context value once. Every layout and include used to pass the whole context through the wrapper again, which returned the values unchanged but took time on every template run. Pages built from many includes render faster, the benchmark's by about 16%. A custom `Contract\Wrapper` now gets a context value in `wrap()` once per render.
 
 ### Removed
 

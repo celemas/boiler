@@ -8,6 +8,7 @@ use ArrayObject;
 use Celema\Boiler\Context;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Contract\Filter;
+use Celema\Boiler\Contract\Wrapper as ContractWrapper;
 use Celema\Boiler\Engine;
 use Celema\Boiler\Environment;
 use Celema\Boiler\Escapers;
@@ -97,6 +98,55 @@ final class EngineTest extends TestCase
 			'<h1>BOILER</h1><p>&LT;B&GT;ROCKS&LT;/B&GT;</p>',
 			$this->fullTrim($engine->render('simple', ['text' => '<b>rocks</b>'])),
 		);
+	}
+
+	public function testContextValueIsWrappedOnceForLayoutsAndIncludes(): void
+	{
+		$wrapper = new class implements ContractWrapper {
+			public int $wraps = 0;
+			private readonly Wrapper $wrapper;
+
+			public function __construct()
+			{
+				$this->wrapper = new Wrapper();
+			}
+
+			public function withTrusted(array $trusted): static
+			{
+				return $this;
+			}
+
+			public function wrap(mixed $value): mixed
+			{
+				$this->wraps += (int) ($this->wrapper->unwrap($value) === 'marker');
+
+				return $this->wrapper->wrap($value);
+			}
+
+			public function unwrap(mixed $value): mixed
+			{
+				return $this->wrapper->unwrap($value);
+			}
+
+			public function escape(string $value, ?string $escaper = null): string
+			{
+				return $this->wrapper->escape($value, $escaper);
+			}
+
+			public function filter(string $name): Filter
+			{
+				return $this->wrapper->filter($name);
+			}
+		};
+		$environment = new Environment();
+		$environment->setWrapper($wrapper);
+		$engine = new Engine(new Resolver(TestCase::DEFAULT_DIR), $environment, true);
+
+		$this->assertSame(
+			'<body><p>marker</p><p>1</p><p>marker</p></body>',
+			$this->fullTrim($engine->render('layoutandinclude', ['text' => 'marker', 'int' => 1])),
+		);
+		$this->assertSame(1, $wrapper->wraps);
 	}
 
 	public function testContextKeysMayUseAnyVariableName(): void
@@ -1690,7 +1740,7 @@ final class EngineTest extends TestCase
 			[],
 			true,
 		);
-		$context = new Context($rendering, ['text' => '<tag>']);
+		$context = new Context($rendering, ['text' => '<tag>'], wrapped: false);
 
 		$this->assertSame('&LT;TAG&GT;', $context->escape('<tag>', 'caps'));
 	}

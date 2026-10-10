@@ -29,10 +29,15 @@ final class Context
 	public readonly bool $autoescape;
 	private readonly Values $values;
 
-	/** @internal Templates receive their context; they never create one. */
+	/**
+	 * @internal Templates receive their context; they never create one.
+	 *
+	 * @param bool $wrapped whether the context comes from a template of the render, with the values as that template got them
+	 */
 	public function __construct(
 		private readonly Rendering $rendering,
 		array $context,
+		bool $wrapped,
 	) {
 		$this->trusted = $rendering->trusted;
 		$this->autoescape = $rendering->autoescape;
@@ -40,6 +45,7 @@ final class Context
 			$context,
 			$rendering->engine->wrapper()->withTrusted($rendering->trusted),
 			$rendering->autoescape,
+			$wrapped,
 		);
 	}
 

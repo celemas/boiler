@@ -22,13 +22,17 @@ use Stringable;
 final class Values
 {
 	/** @var array<array-key, mixed>|null */
-	private ?array $wrapped = null;
+	private ?array $wrapped;
 
+	/** @param bool $wrapped whether the context holds its values as a template gets them, like that of a layout or include */
 	public function __construct(
 		private array $context,
 		public readonly Wrapper $wrapper,
 		private readonly bool $autoescape,
-	) {}
+		bool $wrapped,
+	) {
+		$this->wrapped = $wrapped ? $context : null;
+	}
 
 	public function get(array $values = []): array
 	{
