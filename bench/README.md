@@ -106,20 +106,32 @@ The first build takes about half a minute; later ones only copy the sources that
 | `--php-fpm` | detected | path to the `php-fpm` binary, for a run without the container |
 | `--frankenphp` | detected | path to the `frankenphp` binary, for a run without the container |
 
+Options go behind the `--` and take their value after a `=`. Composer drops an option in front of the `--` without a word; the script notices that and stops, as it does for an option it does not know. The head of the report repeats the command and the settings it runs with.
+
 ### Compare runs
 
 Every run that passes the output check is saved as a JSON file in `.bench/` at the repository root, which Git ignores. The file is named after the time and the commit, such as `2026-10-10-183349-6268ba9.json`, with `-dirty` for uncommitted changes. It holds the numbers of the tables, the settings, and the versions of PHP and the engines.
 
-`--compare` adds a `change` column that shows how `total` differs from an earlier run:
+`--compare` adds a `change` column that shows how `total` differs from an earlier run. To see what a change to Boiler does, record a run before it and compare after it:
 
 ```bash
-composer benchmark
-composer benchmark -- --compare
+composer benchmark -- --lifecycle=all
+# change Boiler, then:
+composer benchmark -- --lifecycle=all --compare
+```
+
+The head of the report names the run it compares to, or says that it compares to nothing.
+
+Without a value, `--compare` takes the newest comparable run. A value names a run by its path, its file name, or a part of the name such as the commit, for which the newest comparable run with that name counts:
+
+```bash
 composer benchmark -- --compare=6268ba9
 composer benchmark -- --compare=.bench/2026-10-10-183349-6268ba9.json
 ```
 
-Without a value, it takes the newest earlier run with the same lifecycle, scale, and environment, which is the container or the machine itself. A value names a run by its path, its file name, or a part of the name such as the commit. A run at another scale or from the other environment is rejected.
+A run is comparable when it has the lifecycles of the current one and was measured at the same scale, in the same environment, which is the container or the machine itself, and with the same benchmark. A named run that is not comparable is rejected. Only one that merely lacks a lifecycle is used, and the table of that lifecycle shows `n/a`.
+
+A change to the benchmark that shifts its numbers, such as other templates, data, or server settings, must raise `SETUP` in [`run.php`](run.php). Runs from before it then no longer count as comparable.
 
 A `~` marks a change that may be noise: one below 2%, which is about how much runs of the same code differ, or within the spread of either run. To see a smaller effect, raise `--runs` and `--iterations` for both runs.
 

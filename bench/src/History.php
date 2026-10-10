@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Bench;
 
-use Closure;
 use RuntimeException;
 
 /** The saved runs of a directory: one JSON file each, named so that they sort by time. */
@@ -45,29 +44,25 @@ final readonly class History
 		return $run;
 	}
 
-	/** Finds a saved run by its path, its file name, or a part of the name such as the commit. */
-	public function find(string $reference): ?string
+	/**
+	 * The saved runs that a reference names, newest first: the one at that
+	 * path or with that file name, or else all whose name contains it, such as
+	 * a commit. An empty reference names every run.
+	 *
+	 * @return list<string>
+	 */
+	public function matching(string $reference): array
 	{
 		foreach ([$reference, $this->dir . '/' . basename($reference)] as $file) {
 			if (is_file($file)) {
-				return $file;
+				return [$file];
 			}
 		}
 
-		return array_find(
+		return array_values(array_filter(
 			$this->newestFirst(),
 			static fn(string $file): bool => str_contains(basename($file), $reference),
-		);
-	}
-
-	/**
-	 * The newest saved run that the callback accepts.
-	 *
-	 * @param Closure(array<string, mixed>): bool $accept
-	 */
-	public function newest(Closure $accept): ?string
-	{
-		return array_find($this->newestFirst(), fn(string $file): bool => $accept($this->load($file)));
+		));
 	}
 
 	/** @return list<string> */

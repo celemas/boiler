@@ -28,6 +28,15 @@ const LIFECYCLE_WORKER = 'worker';
 const LIFECYCLE_LOOP = 'loop';
 const LIFECYCLE_ALL = 'all';
 const LINE_LEN = 80;
+const OPTIONS = ['runs', 'iterations', 'scale', 'lifecycle', 'compare', 'php-fpm', 'frankenphp'];
+const USAGE = <<<'USAGE'
+	--runs=N --iterations=N --scale=N --lifecycle=(request|worker|loop|all)
+	--compare[=RUN] --php-fpm=PATH --frankenphp=PATH
+	USAGE;
+
+// Raise with every change to the benchmark that shifts its numbers, so that
+// runs from before the change are not compared with later ones.
+const SETUP = 2;
 
 // Runs of the same code differ by about this much in total.
 const NOISE = 0.02;
@@ -82,12 +91,8 @@ function benchmarkConfig(): array
 		return $config;
 	}
 
-	$options = getopt('', ['runs:', 'iterations:', 'scale:', 'lifecycle:', 'compare::', 'php-fpm:', 'frankenphp:']);
-	assert(is_array($options), 'getopt() must return an array of CLI options');
-	// getopt() reports an option that takes an optional value and got none as false.
+	$options = arguments();
 	$compare = $options['compare'] ?? null;
-	$fpm = $options['php-fpm'] ?? null;
-	$frankenphp = $options['frankenphp'] ?? null;
 
 	return $config = [
 		'runs' => intOption($options, 'runs', DEFAULT_RUNS),
@@ -104,9 +109,82 @@ function benchmarkConfig(): array
 			is_string($compare) => $compare,
 			default => null,
 		},
-		'php-fpm' => is_string($fpm) ? $fpm : null,
-		'frankenphp' => is_string($frankenphp) ? $frankenphp : null,
+		'php-fpm' => pathOption($options, 'php-fpm'),
+		'frankenphp' => pathOption($options, 'frankenphp'),
 	];
+}
+
+/**
+ * @return array<string, string|false> the value of each option, false for one without a value
+ *
+ * @throws InvalidArgumentException for anything but a known option, which getopt() would skip
+ */
+function arguments(): array
+{
+	$options = [];
+
+	foreach (array_slice(commandLine(), 1) as $argument) {
+		if (!preg_match('/^--([a-z-]+)(?:=(.*))?$/s', $argument, $match) || !in_array($match[1], OPTIONS, true)) {
+			throw new InvalidArgumentException("Unknown argument {$argument}. The options are:\n" . USAGE);
+		}
+
+		$options[$match[1]] = $match[2] ?? false;
+	}
+
+	return $options;
+}
+
+/** @return list<string> */
+function commandLine(): array
+{
+	$argv = $_SERVER['argv'] ?? [];
+
+	return is_array($argv) ? array_values(array_map(strval(...), $argv)) : [];
+}
+
+/**
+ * Composer passes on only the options behind a "--" and drops the others
+ * without a word, so its own command line is checked for them.
+ *
+ * @throws InvalidArgumentException when an option did not arrive
+ */
+function assertNoDroppedOptions(): void
+{
+	$caller = getenv('BENCH_CALLER');
+
+	if ($caller === false && function_exists('posix_getppid')) {
+		$caller = (string) shell_exec('ps -o args= -p ' . posix_getppid() . ' 2>/dev/null');
+	}
+
+	if (!preg_match('/\s(benchmark(?::native)?)\s(.*)$/s', (string) $caller, $match)) {
+		return;
+	}
+
+	preg_match_all('/(?<!\S)--(?:' . implode('|', OPTIONS) . ')(?:=\S*)?(?!\S)/', $match[2], $asked);
+	$dropped = array_diff($asked[0], commandLine());
+
+	if ($dropped === []) {
+		return;
+	}
+
+	throw new InvalidArgumentException(sprintf(
+		"Composer dropped %s: it passes on only the options behind a \"--\".\nRun: composer %s -- %s",
+		implode(' ', $dropped),
+		$match[1],
+		implode(' ', $asked[0]),
+	));
+}
+
+/** @param array<string, string|false> $options */
+function pathOption(array $options, string $name): ?string
+{
+	$value = $options[$name] ?? null;
+
+	if ($value === false || $value === '') {
+		throw new InvalidArgumentException("Option --{$name} needs a path");
+	}
+
+	return $value;
 }
 
 /** @param array<string, mixed> $options */
@@ -242,15 +320,9 @@ function xdebugMode(): ?string
 
 function benchmarkScript(): string
 {
-	$argv = $_SERVER['argv'] ?? null;
+	$script = commandLine()[0] ?? '';
 
-	if (!is_array($argv)) {
-		return 'bench/run.php';
-	}
-
-	$script = $argv[0] ?? null;
-
-	return is_string($script) && $script !== '' ? $script : 'bench/run.php';
+	return $script !== '' ? $script : 'bench/run.php';
 }
 
 function iniEnabled(string $name): bool
@@ -343,10 +415,43 @@ function incomparable(array $run): ?string
 	$scale = (int) ($run['scale'] ?? 0);
 
 	return match (true) {
+		(int) ($run['setup'] ?? 1) !== SETUP => 'it was measured before a change to the benchmark itself',
 		$environment !== environment() => "it ran in another environment ({$environment})",
 		$scale !== scale() => "it ran at scale {$scale}",
 		default => null,
 	};
+}
+
+/**
+ * Whether the run is the right one for a comparison of every lifecycle of this one.
+ *
+ * @param array<string, mixed> $run
+ */
+function fits(array $run): bool
+{
+	return incomparable($run) === null && array_diff(lifecycles(), array_keys((array) $run['lifecycles'])) === [];
+}
+
+/**
+ * What the run was measured with, where it differs from this one.
+ *
+ * @param array<string, mixed> $run
+ *
+ * @return list<string>
+ */
+function differences(array $run): array
+{
+	$differences = ($run['php'] ?? null) === PHP_VERSION ? [] : ['PHP ' . (string) ($run['php'] ?? 'unknown')];
+
+	foreach (engineVersions() as $package => $version) {
+		$before = ((array) ($run['engines'] ?? []))[$package] ?? 'unknown';
+
+		if ($before !== $version) {
+			$differences[] = "{$package} {$before}";
+		}
+	}
+
+	return $differences;
 }
 
 /**
@@ -363,24 +468,15 @@ function baseline(): ?array
 	}
 
 	$history = history();
-	$file = $reference === ''
-		? $history->newest(
-			static fn(array $run): bool => (
-				incomparable($run) === null
-				&& array_diff(lifecycles(), array_keys((array) $run['lifecycles'])) === []
-			),
-		)
-		: $history->find($reference);
+	$files = $history->matching($reference);
+	$file = array_find($files, static fn(string $file): bool => fits($history->load($file)));
 
-	if ($file === null && $reference === '') {
-		echo "No earlier run with this lifecycle, scale, and environment to compare with.\n\n\n";
-
+	if ($reference === '' && $file === null) {
 		return null;
 	}
 
-	if ($file === null) {
-		throw new InvalidArgumentException("No saved run matches {$reference}");
-	}
+	// A named run that does not fit still gets its reason reported below.
+	$file ??= $files[0] ?? throw new InvalidArgumentException("No saved run matches {$reference}");
 
 	$run = $history->load($file);
 	$reason = incomparable($run);
@@ -471,7 +567,7 @@ function measure(Runtime $runtime, Candidate $candidate, array $pages): Result
 function change(float $total, float $spread, ?array $before): string
 {
 	if ($before === null) {
-		return '';
+		return 'n/a';
 	}
 
 	$change = ($total - $before['total']) / $before['total'];
@@ -559,6 +655,18 @@ function runScenario(string $lifecycle, Runtime $runtime, ?array $before): array
 	return $results;
 }
 
+/** @return array<string, ?string> the installed version of each engine but Boiler */
+function engineVersions(): array
+{
+	$versions = [];
+
+	foreach (['twig/twig', 'illuminate/view', 'league/plates'] as $package) {
+		$versions[$package] = InstalledVersions::getPrettyVersion($package);
+	}
+
+	return $versions;
+}
+
 /**
  * What a run is saved as.
  *
@@ -589,22 +697,17 @@ function record(array $scenarios): array
 		$lifecycles[$lifecycle] = ['runtime' => $scenario['runtime'], 'results' => $rows];
 	}
 
-	$engines = [];
-
-	foreach (['twig/twig', 'illuminate/view', 'league/plates'] as $package) {
-		$engines[$package] = InstalledVersions::getPrettyVersion($package);
-	}
-
 	return [
 		'time' => date(DATE_ATOM),
 		'revision' => revision(),
+		'setup' => SETUP,
 		'environment' => environment(),
 		'system' => php_uname('s') . ' ' . php_uname('m'),
 		'php' => PHP_VERSION,
 		'runs' => runs(),
 		'iterations' => iterations(),
 		'scale' => scale(),
-		'engines' => $engines,
+		'engines' => engineVersions(),
 		'lifecycles' => $lifecycles,
 	];
 }
@@ -676,20 +779,64 @@ function main(): int
 	}
 }
 
+/** @param array{file: string, run: array<string, mixed>}|null $baseline */
+function printHeader(?array $baseline): void
+{
+	$config = benchmarkConfig();
+	$command = implode(' ', [
+		'composer',
+		environment() === 'native' ? 'benchmark:native' : 'benchmark',
+		...(count(commandLine()) > 1 ? ['--'] : []),
+		...array_slice(commandLine(), 1),
+	]);
+	$compared = match (true) {
+		$baseline !== null => '.bench/' . basename($baseline['file']),
+		$config['compare'] === null => 'nothing; --compare adds the change against an earlier run',
+		default => 'nothing; no saved run is comparable with this one',
+	};
+	$notes = [];
+
+	if ($baseline !== null) {
+		$differences = differences($baseline['run']);
+		$missing = array_diff(lifecycles(), array_keys((array) $baseline['run']['lifecycles']));
+		$notes = [
+			...($differences === [] ? [] : ['which ran with ' . implode(', ', $differences)]),
+			...($missing === [] ? [] : ['which has no results for ' . implode(' and ', $missing)]),
+		];
+	}
+
+	$label = static fn(string $name, string $text): string => sprintf("%-13s%s\n", $name, $text);
+	$settings = sprintf(
+		'%s rounds × %d iterations, scale %d, lifecycle %s',
+		number_format(runs()),
+		iterations(),
+		scale(),
+		$config['lifecycle'],
+	);
+
+	echo "\n" . str_repeat('=', LINE_LEN) . "\n";
+	echo $label('Benchmark:', $settings);
+	echo $label('Command:', wordwrap($command, LINE_LEN - 15, " \\\n" . str_repeat(' ', 15)));
+	echo $label('Compared to:', $compared);
+
+	foreach ($notes as $note) {
+		echo $label('', $note);
+	}
+
+	echo str_repeat('=', LINE_LEN) . "\n\n\n";
+}
+
 function benchmark(): int
 {
+	assertNoDroppedOptions();
+
 	if (in_array(LIFECYCLE_LOOP, lifecycles(), true)) {
 		benchmarkWarning();
 	}
 
-	echo "\n" . str_repeat('=', LINE_LEN);
-	echo "\nBenchmark: " . number_format(runs()) . ' rounds × ' . iterations() . ' iterations, scale ' . scale();
-	echo "\n           $ composer benchmark -- --runs=" . runs() . ' --iterations=' . iterations();
-	echo ' --scale=' . scale() . "\n";
-	echo str_repeat('=', LINE_LEN) . "\n\n\n";
-
 	$time = startTime();
 	$baseline = baseline();
+	printHeader($baseline);
 	resetBenchmarkCaches();
 	compileTemplates();
 	$scenarios = [];

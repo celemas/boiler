@@ -22,4 +22,5 @@ exec docker run --rm --init \
 	--volume "$PWD/.bench:/boiler/.bench" \
 	--env BENCH_REVISION="${revision:-unknown}" \
 	--env BENCH_TIME="$(date +%Y-%m-%d-%H%M%S)" \
+	--env BENCH_CALLER="$(ps -o args= -p "$PPID" 2>/dev/null || true)" \
 	celema-boiler-bench "$@"
