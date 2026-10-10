@@ -100,8 +100,26 @@ The first build takes about half a minute; later ones only copy the sources that
 | `--runs` | `100` | rounds per iteration; a round renders each page once |
 | `--iterations` | `3` | measured iterations per engine and lifecycle |
 | `--scale` | `1` | multiplies the number of products, reviews, and content blocks |
+| `--compare` | off | adds the change against an earlier run; see [compare runs](#compare-runs) |
 | `--php-fpm` | detected | path to the `php-fpm` binary, for a run without the container |
 | `--frankenphp` | detected | path to the `frankenphp` binary, for a run without the container |
+
+### Compare runs
+
+Every run that passes the output check is saved as a JSON file in `.bench/` at the repository root, which Git ignores. The file is named after the time and the commit, such as `2026-10-10-183349-6268ba9.json`, with `-dirty` for uncommitted changes. It holds the numbers of the tables, the settings, and the versions of PHP and the engines.
+
+`--compare` adds a `change` column that shows how `total` differs from an earlier run:
+
+```bash
+composer benchmark
+composer benchmark -- --compare
+composer benchmark -- --compare=6268ba9
+composer benchmark -- --compare=.bench/2026-10-10-183349-6268ba9.json
+```
+
+Without a value, it takes the newest earlier run with the same lifecycle, scale, and environment, which is the container or the machine itself. A value names a run by its path, its file name, or a part of the name such as the commit. A run at another scale or from the other environment is rejected.
+
+A `~` marks a change that may be noise: one below 2%, which is about how much runs of the same code differ, or within the spread of either run. To see a smaller effect, raise `--runs` and `--iterations` for both runs.
 
 ### Without the container
 

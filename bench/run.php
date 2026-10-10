@@ -7,9 +7,11 @@ use Celema\Boiler\Bench\Data;
 use Celema\Boiler\Bench\Engines;
 use Celema\Boiler\Bench\Fpm;
 use Celema\Boiler\Bench\FrankenPhp;
+use Celema\Boiler\Bench\History;
 use Celema\Boiler\Bench\Loop;
 use Celema\Boiler\Bench\Result;
 use Celema\Boiler\Bench\Runtime;
+use Composer\InstalledVersions;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -26,6 +28,9 @@ const LIFECYCLE_WORKER = 'worker';
 const LIFECYCLE_LOOP = 'loop';
 const LIFECYCLE_ALL = 'all';
 const LINE_LEN = 80;
+
+// Runs of the same code differ by about this much in total.
+const NOISE = 0.02;
 
 function resetCacheDir(string $path): void
 {
@@ -64,6 +69,7 @@ function resetBenchmarkCaches(): void
  *     iterations: int,
  *     scale: int,
  *     lifecycle: string,
+ *     compare: ?string,
  *     php-fpm: ?string,
  *     frankenphp: ?string,
  * }
@@ -76,8 +82,10 @@ function benchmarkConfig(): array
 		return $config;
 	}
 
-	$options = getopt('', ['runs:', 'iterations:', 'scale:', 'lifecycle:', 'php-fpm:', 'frankenphp:']);
+	$options = getopt('', ['runs:', 'iterations:', 'scale:', 'lifecycle:', 'compare::', 'php-fpm:', 'frankenphp:']);
 	assert(is_array($options), 'getopt() must return an array of CLI options');
+	// getopt() reports an option that takes an optional value and got none as false.
+	$compare = $options['compare'] ?? null;
 	$fpm = $options['php-fpm'] ?? null;
 	$frankenphp = $options['frankenphp'] ?? null;
 
@@ -91,6 +99,11 @@ function benchmarkConfig(): array
 			LIFECYCLE_REQUEST,
 			[LIFECYCLE_REQUEST, LIFECYCLE_WORKER, LIFECYCLE_LOOP, LIFECYCLE_ALL],
 		),
+		'compare' => match (true) {
+			$compare === false => '',
+			is_string($compare) => $compare,
+			default => null,
+		},
 		'php-fpm' => is_string($fpm) ? $fpm : null,
 		'frankenphp' => is_string($frankenphp) ? $frankenphp : null,
 	];
@@ -157,7 +170,7 @@ function benchmarkWarning(): void
 	echo 'Detected: ' . implode(', ', $detected) . "\n";
 	echo "Run with: php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1\n";
 	echo '          -d opcache.file_update_protection=0 ' . benchmarkScript() . "\n";
-	echo "          [--runs=N] [--iterations=N] [--scale=N]\n";
+	echo "          [--runs=N] [--iterations=N] [--scale=N] [--compare[=RUN]]\n";
 	echo "          [--lifecycle=(request|worker|loop|all)]\n";
 	echo "Tip: use composer benchmark -- [options]\n";
 	echo str_repeat('!', LINE_LEN) . "\n\n";
@@ -280,6 +293,105 @@ function runtime(string $lifecycle): Runtime|string
 	};
 }
 
+function environment(): string
+{
+	return getenv('BENCH_ENVIRONMENT') ?: 'native';
+}
+
+/** The commit the sources are at, which a container cannot see and gets passed in. */
+function revision(): string
+{
+	$revision = getenv('BENCH_REVISION');
+
+	if (is_string($revision) && $revision !== '') {
+		return $revision;
+	}
+
+	$git = 'git -C ' . escapeshellarg(dirname(__DIR__));
+	$commit = trim((string) shell_exec($git . ' rev-parse --short HEAD 2>/dev/null'));
+
+	if ($commit === '') {
+		return 'unknown';
+	}
+
+	exec($git . ' diff --quiet HEAD 2>/dev/null', $output, $changed);
+
+	return $changed === 0 ? $commit : $commit . '-dirty';
+}
+
+/** The local time of the machine for the name of the saved run; this script and a container run in UTC. */
+function startTime(): string
+{
+	$time = getenv('BENCH_TIME') ?: trim((string) shell_exec('date +%Y-%m-%d-%H%M%S 2>/dev/null'));
+
+	return $time !== '' ? $time : gmdate('Y-m-d-His');
+}
+
+function history(): History
+{
+	return new History(dirname(__DIR__) . '/.bench');
+}
+
+/**
+ * Why the numbers of a saved run say nothing about this one.
+ *
+ * @param array<string, mixed> $run
+ */
+function incomparable(array $run): ?string
+{
+	$environment = (string) ($run['environment'] ?? 'unknown');
+	$scale = (int) ($run['scale'] ?? 0);
+
+	return match (true) {
+		$environment !== environment() => "it ran in another environment ({$environment})",
+		$scale !== scale() => "it ran at scale {$scale}",
+		default => null,
+	};
+}
+
+/**
+ * @return array{file: string, run: array<string, mixed>}|null the run that --compare asks for
+ *
+ * @throws InvalidArgumentException when the run it names is missing or does not compare
+ */
+function baseline(): ?array
+{
+	$reference = benchmarkConfig()['compare'];
+
+	if ($reference === null) {
+		return null;
+	}
+
+	$history = history();
+	$file = $reference === ''
+		? $history->newest(
+			static fn(array $run): bool => (
+				incomparable($run) === null
+				&& array_diff(lifecycles(), array_keys((array) $run['lifecycles'])) === []
+			),
+		)
+		: $history->find($reference);
+
+	if ($file === null && $reference === '') {
+		echo "No earlier run with this lifecycle, scale, and environment to compare with.\n\n\n";
+
+		return null;
+	}
+
+	if ($file === null) {
+		throw new InvalidArgumentException("No saved run matches {$reference}");
+	}
+
+	$run = $history->load($file);
+	$reason = incomparable($run);
+
+	if ($reason !== null) {
+		throw new InvalidArgumentException('.bench/' . basename($file) . " does not compare: {$reason}");
+	}
+
+	return ['file' => $file, 'run' => $run];
+}
+
 function formatBytes(int $bytes): string
 {
 	if ($bytes >= (1024 * 1024)) {
@@ -350,16 +462,45 @@ function measure(Runtime $runtime, Candidate $candidate, array $pages): Result
 }
 
 /**
+ * How the total changed against a saved result. A change that may be noise is
+ * marked: one below the usual difference between runs or within the spread
+ * of either run.
+ *
+ * @param array{total: float, spread: float}|null $before
+ */
+function change(float $total, float $spread, ?array $before): string
+{
+	if ($before === null) {
+		return '';
+	}
+
+	$change = ($total - $before['total']) / $before['total'];
+	$clear = abs($change) > max($spread, $before['spread'], NOISE);
+
+	return sprintf('%s%+.1f%%', $clear ? '' : '~', $change * 100);
+}
+
+/**
  * @param list<Result> $results
  * @param list<string> $pages
+ * @param array<string, array{total: float, spread: float}>|null $before the saved results by candidate
  */
-function printResults(array $results, array $pages): void
+function printResults(array $results, array $pages, ?array $before): void
 {
 	$held = array_any($results, static fn(Result $result): bool => $result->held !== null);
-	$columns = array_map(static fn(string $column): string => sprintf('%9s', $column), ['total', ...$pages]);
+	$column = static fn(string $name): string => sprintf('%9s', $name);
 
-	printf("%19s%s  spread   memory%s\n", '', implode('', $columns), $held ? '    held' : '');
-	echo str_repeat('-', LINE_LEN) . "\n";
+	$header = sprintf(
+		'%19s%s%s%s  spread   memory%s',
+		'',
+		$column('total'),
+		$before === null ? '' : '  change',
+		implode('', array_map($column, $pages)),
+		$held ? '    held' : '',
+	);
+	$rule = str_repeat('-', max(LINE_LEN, strlen($header))) . "\n";
+
+	echo $rule . $header . "\n" . $rule;
 
 	foreach ([['Automatic escaping', true], ['Manual escaping', false]] as [$title, $escapes]) {
 		echo $title . "\n";
@@ -370,12 +511,17 @@ function printResults(array $results, array $pages): void
 			}
 
 			$best = $result->best();
-			$times = [array_sum($best), ...array_values($best)];
+			$total = array_sum($best);
+			$time = static fn(float $milliseconds): string => sprintf('%9.3f', $milliseconds);
 
 			printf(
-				"  %-17s%s%7.0f%%%9s%s\n",
+				"  %-17s%s%s%s%7.0f%%%9s%s\n",
 				$result->candidate->name,
-				implode('', array_map(static fn(float $time): string => sprintf('%9.3f', $time), $times)),
+				$time($total),
+				$before === null
+					? ''
+					: sprintf('%8s', change($total, $result->spread(), $before[$result->candidate->id] ?? null)),
+				implode('', array_map($time, array_values($best))),
 				$result->spread() * 100,
 				formatBytes($result->memory),
 				$result->held === null ? '' : sprintf('%8s', formatBytes($result->held)),
@@ -383,14 +529,17 @@ function printResults(array $results, array $pages): void
 		}
 	}
 
-	echo str_repeat('-', LINE_LEN) . "\n";
+	echo $rule;
 }
 
-/** @return list<Result> */
-function runScenario(string $lifecycle, Runtime $runtime): array
+/**
+ * @param array<string, array{total: float, spread: float}>|null $before the saved results by candidate
+ *
+ * @return list<Result>
+ */
+function runScenario(string $lifecycle, Runtime $runtime, ?array $before): array
 {
 	echo "LIFECYCLE: {$lifecycle} ({$runtime->label()})\n";
-	echo str_repeat('-', LINE_LEN) . "\n";
 
 	$pages = array_keys(Data::pages(scale()));
 	$results = [];
@@ -405,13 +554,63 @@ function runScenario(string $lifecycle, Runtime $runtime): array
 		$runtime->stop();
 	}
 
-	printResults($results, $pages);
+	printResults($results, $pages, $before);
 
 	return $results;
 }
 
+/**
+ * What a run is saved as.
+ *
+ * @param array<string, array{runtime: string, results: list<Result>}> $scenarios by lifecycle
+ *
+ * @return array<string, mixed>
+ */
+function record(array $scenarios): array
+{
+	$lifecycles = [];
+	$round = static fn(float $value): float => round($value, 4);
+
+	foreach ($scenarios as $lifecycle => $scenario) {
+		$rows = [];
+
+		foreach ($scenario['results'] as $result) {
+			$pages = $result->best();
+			$rows[$result->candidate->id] = [
+				'name' => $result->candidate->name,
+				'total' => $round(array_sum($pages)),
+				'pages' => array_map($round, $pages),
+				'spread' => $round($result->spread()),
+				'memory' => $result->memory,
+				'held' => $result->held,
+			];
+		}
+
+		$lifecycles[$lifecycle] = ['runtime' => $scenario['runtime'], 'results' => $rows];
+	}
+
+	$engines = [];
+
+	foreach (['twig/twig', 'illuminate/view', 'league/plates'] as $package) {
+		$engines[$package] = InstalledVersions::getPrettyVersion($package);
+	}
+
+	return [
+		'time' => date(DATE_ATOM),
+		'revision' => revision(),
+		'environment' => environment(),
+		'system' => php_uname('s') . ' ' . php_uname('m'),
+		'php' => PHP_VERSION,
+		'runs' => runs(),
+		'iterations' => iterations(),
+		'scale' => scale(),
+		'engines' => $engines,
+		'lifecycles' => $lifecycles,
+	];
+}
+
 /** @param list<Result> $results */
-function printLegend(array $results): void
+function printLegend(array $results, bool $compared): void
 {
 	echo 'Times are milliseconds per render in the fastest of ' . iterations() . " iterations; total is one\n";
 	echo "round of the pages, and spread is how much slower the slowest iteration was.\n";
@@ -420,6 +619,11 @@ function printLegend(array $results): void
 
 	if (array_any($results, static fn(Result $result): bool => $result->held !== null)) {
 		echo "held is what the engine keeps between the requests of a worker.\n";
+	}
+
+	if ($compared) {
+		echo "change is how total differs from the compared run; ~ marks a difference that\n";
+		echo 'may be noise: below ' . (NOISE * 100) . "% or within the spread of either run.\n";
 	}
 }
 
@@ -464,13 +668,16 @@ function verifyOutputs(array $results): bool
 function main(): int
 {
 	try {
-		benchmarkConfig();
+		return benchmark();
 	} catch (InvalidArgumentException $e) {
 		fwrite(STDERR, $e->getMessage() . PHP_EOL);
 
 		return 1;
 	}
+}
 
+function benchmark(): int
+{
 	if (in_array(LIFECYCLE_LOOP, lifecycles(), true)) {
 		benchmarkWarning();
 	}
@@ -481,9 +688,11 @@ function main(): int
 	echo ' --scale=' . scale() . "\n";
 	echo str_repeat('=', LINE_LEN) . "\n\n\n";
 
+	$time = startTime();
+	$baseline = baseline();
 	resetBenchmarkCaches();
 	compileTemplates();
-	$results = [];
+	$scenarios = [];
 
 	foreach (lifecycles() as $lifecycle) {
 		$runtime = runtime($lifecycle);
@@ -494,8 +703,14 @@ function main(): int
 			continue;
 		}
 
+		/** @var array<string, array{total: float, spread: float}>|null $before */
+		$before = $baseline === null ? null : $baseline['run']['lifecycles'][$lifecycle]['results'] ?? [];
+
 		try {
-			array_push($results, ...runScenario($lifecycle, $runtime));
+			$scenarios[$lifecycle] = [
+				'runtime' => $runtime->label(),
+				'results' => runScenario($lifecycle, $runtime, $before),
+			];
 		} catch (RuntimeException $e) {
 			fwrite(STDERR, "The {$lifecycle} lifecycle failed: {$e->getMessage()}" . PHP_EOL);
 
@@ -505,16 +720,28 @@ function main(): int
 		echo "\n\n";
 	}
 
+	$results = array_merge(...array_values(array_column($scenarios, 'results')));
+
 	if ($results === []) {
 		fwrite(STDERR, 'No lifecycle could run.' . PHP_EOL);
 
 		return 1;
 	}
 
-	printLegend($results);
+	printLegend($results, $baseline !== null);
 	echo "\n";
 
-	return verifyOutputs($results) ? 0 : 1;
+	if (!verifyOutputs($results)) {
+		return 1;
+	}
+
+	echo 'Saved as .bench/' . basename(history()->save(record($scenarios), $time, revision())) . "\n";
+
+	if ($baseline !== null) {
+		echo 'Compared with .bench/' . basename($baseline['file']) . "\n";
+	}
+
+	return 0;
 }
 
 exit(main());

@@ -30,7 +30,10 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --working-dir=bench --no-interac
 # engines differ in how much of it a request needs.
 COPY src src
 COPY bench bench
-RUN mkdir -p bench/cache && chown www-data bench/cache
+# Writable for any user: the benchmark command runs the container as its caller.
+RUN mkdir -p bench/cache && chmod 1777 bench/cache
+
+ENV BENCH_ENVIRONMENT=container
 
 # PHP-FPM refuses to serve as root.
 USER www-data

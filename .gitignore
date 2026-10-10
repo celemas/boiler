@@ -13,4 +13,5 @@ composer.lock
 phpunit.xml
 psalm.xml
 .infection/
+.bench/
 infection.json5
