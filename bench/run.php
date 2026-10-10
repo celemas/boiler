@@ -356,7 +356,7 @@ function measure(Runtime $runtime, Candidate $candidate, array $pages): Result
 function printResults(array $results, array $pages): void
 {
 	$held = array_any($results, static fn(Result $result): bool => $result->held !== null);
-	$columns = array_map(static fn(string $column): string => sprintf('%9s', $column), [...$pages, 'total']);
+	$columns = array_map(static fn(string $column): string => sprintf('%9s', $column), ['total', ...$pages]);
 
 	printf("%19s%s  spread   memory%s\n", '', implode('', $columns), $held ? '    held' : '');
 	echo str_repeat('-', LINE_LEN) . "\n";
@@ -369,8 +369,8 @@ function printResults(array $results, array $pages): void
 				continue;
 			}
 
-			$times = $result->best();
-			$times[] = array_sum($times);
+			$best = $result->best();
+			$times = [array_sum($best), ...array_values($best)];
 
 			printf(
 				"  %-17s%s%7.0f%%%9s%s\n",

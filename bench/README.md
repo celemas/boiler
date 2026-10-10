@@ -67,7 +67,7 @@ The data of a page is created outside the timed part in every lifecycle. In a re
 
 Use the benchmark to answer a narrow question: did Boiler get slower on these pages?
 
-Each lifecycle prints a table with the milliseconds per render for each page, and `total` for one round of all three. The values come from the fastest iteration, which is the one least disturbed by other load on the machine. `spread` shows how much slower the slowest iteration was; when it is large, run more iterations or close other programs.
+Each lifecycle prints a table with `total`, the milliseconds for one round of all three pages, followed by the milliseconds per render of each page. The values come from the fastest iteration, which is the one least disturbed by other load on the machine. `spread` shows how much slower the slowest iteration was; when it is large, run more iterations or close other programs.
 
 `memory` is the peak that the timed part adds: in a request the engine with its classes and the render, in `worker` and `loop` the render alone. `held`, in the `worker` table, is what the engine keeps in memory between requests.
 
