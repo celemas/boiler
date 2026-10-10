@@ -1,0 +1,22 @@
+<form class="facets" action="{{ category.url }}">
+    {% for facet in facets %}
+        <fieldset class="facet facet-{{ facet.key }}">
+            <legend>{{ facet.title }}</legend>
+            {% if facet.expanded %}
+                <ul>
+                    {% for option in facet.options %}
+                        <li>
+                            <label>
+                                <input type="checkbox" name="{{ facet.key }}[]" value="{{ option.value }}"{% if option.selected %} checked{% endif %}>
+                                {{ option.label }}
+                                <small>({{ option.count }})</small>
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="facet-summary">{{ facet.options|length }} options</p>
+            {% endif %}
+        </fieldset>
+    {% endfor %}
+</form>

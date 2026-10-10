@@ -1,0 +1,8 @@
+<p class="rating" aria-label="{{ rating }} out of 5 stars">
+    {% for star in 1..5 %}
+        {{ star <= rating ? '★' : '☆' }}
+    {% endfor %}
+    {% if count is defined %}
+        <span class="rating-count">({{ count }})</span>
+    {% endif %}
+</p>

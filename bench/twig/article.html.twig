@@ -1,0 +1,69 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block head %}
+    {{ parent() }}
+    <meta name="description" content="{{ article.lead }}">
+    <meta name="author" content="{{ article.author.name }}">
+    <link rel="stylesheet" href="/css/article.css">
+{% endblock %}
+
+{% block body_class %}page-article{% endblock %}
+
+{% block hero %}
+    <header class="article-hero">
+        <h1>{{ article.title }}</h1>
+        <p class="lead">{{ article.lead }}</p>
+        <p class="meta">
+            By <a href="{{ article.author.url }}">{{ article.author.name }}</a>, {{ article.author.role }} ·
+            <time datetime="{{ article.published|date('Y-m-d') }}">{{ article.published|date('F j, Y') }}</time> ·
+            {{ article.readingMinutes }} min read
+        </p>
+    </header>
+{% endblock %}
+
+{% block content %}
+    <div class="article">
+        <nav class="toc" aria-label="Contents">
+            <h2>Contents</h2>
+            <ol>
+                {% for block in blocks %}
+                    {% if block.type == 'heading' %}
+                        <li class="toc-level-{{ block.level }}"><a href="#{{ block.id }}">{{ block.text }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+
+        <div class="article-body">
+            {% for block in blocks %}
+                {{ include('blocks/' ~ block.type ~ '.html.twig') }}
+            {% endfor %}
+        </div>
+
+        <footer class="article-footer">
+            <ul class="tags">
+                {% for tag in article.tags %}
+                    <li><a href="/magazine/tags/{{ tag|lower }}">#{{ tag }}</a></li>
+                {% endfor %}
+            </ul>
+
+            {% embed 'components/card.html.twig' with {title: 'About the author', tone: 'author'} %}
+                {% block body %}
+                    <p><strong>{{ article.author.name }}</strong> – {{ article.author.role }}</p>
+                    <p>{{ article.author.bio }}</p>
+                {% endblock %}
+            {% endembed %}
+        </footer>
+    </div>
+{% endblock %}
+
+{# An included template cannot add to a block, so the page lists the scripts of its video blocks. #}
+{% block scripts %}
+    {% for block in blocks %}
+        {% if block.type == 'video' %}
+            <script src="/js/video.js" data-target="video-{{ block.id }}" data-provider="{{ block.provider }}"></script>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

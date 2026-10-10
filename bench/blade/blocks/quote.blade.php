@@ -1,0 +1,4 @@
+<blockquote class="block-quote">
+    <p>{{ $block['text'] }}</p>
+    <footer>— <cite>{{ $block['cite'] }}</cite></footer>
+</blockquote>

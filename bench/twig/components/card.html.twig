@@ -1,0 +1,12 @@
+<article class="card card-{{ tone }}">
+    <h3 class="card-title">
+        {% if href is defined %}
+            <a href="{{ href }}">{{ title }}</a>
+        {% else %}
+            {{ title }}
+        {% endif %}
+    </h3>
+    <div class="card-body">
+        {% block body %}{% endblock %}
+    </div>
+</article>

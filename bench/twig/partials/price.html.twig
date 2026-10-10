@@ -1,0 +1,21 @@
+<p class="price">
+    <span class="price-now">{{ product.price|money }}</span>
+    {% if product.onSale %}
+        <s class="price-was">{{ product.compareAt|money }}</s>
+        <span class="price-save">Save {{ product.discount }}%</span>
+    {% endif %}
+</p>
+<p class="stock stock-{{ product.stock.value }}">
+    {% if product.stock.value == 'in-stock' %}
+        In stock
+    {% elseif product.stock.value == 'low' %}
+        Only {{ product.stockCount }} left
+    {% elseif product.stock.value == 'preorder' %}
+        Preorder
+    {% else %}
+        Sold out
+    {% endif %}
+    {% if product.freeShipping %}
+        · Free shipping
+    {% endif %}
+</p>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{ site.locale }}">
+
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Welcome{% endblock %} – {{ site.name }}</title>
+    {% block head %}
+        <link rel="stylesheet" href="/css/site.css">
+    {% endblock %}
+</head>
+
+<body class="{% block body_class %}page{% endblock %}">
+    <div class="announcement">{{ announcement|raw }}</div>
+
+    <header class="site-header">
+        <a class="logo" href="/">{{ site.name }}</a>
+        <p class="tagline">{{ site.tagline }}</p>
+
+        {{ include('partials/nav.html.twig') }}
+
+        <div class="account">
+            {% if user %}
+                <img src="{{ user.avatar }}" alt="" width="32" height="32">
+                <span class="user">Hello, {{ user.name }}</span>
+                <span class="tier tier-{{ user.tier }}">{{ user.tier|upper }}</span>
+            {% else %}
+                <a href="/login">Sign in</a>
+            {% endif %}
+            <a class="cart" href="/cart">{{ icon('cart') }} Cart ({{ cart.items }}) · {{ cart.subtotal|money }}</a>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+        {% for crumb in breadcrumbs %}
+            <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+        {% endfor %}
+    </nav>
+
+    {% block hero %}{% endblock %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {{ include('partials/footer.html.twig') }}
+
+    <script src="/js/site.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

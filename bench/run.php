@@ -2,15 +2,33 @@
 
 declare(strict_types=1);
 
+use Celema\Boiler\Bench\Candidate;
+use Celema\Boiler\Bench\Data;
+use Celema\Boiler\Bench\Engines;
+use Celema\Boiler\Bench\Result;
+
 require __DIR__ . '/vendor/autoload.php';
 
-const DEFAULT_RUNS = 1000;
-const LINE_LEN = 69;
+// Twig's date filter converts to the default time zone; the other engines
+// print the dates of the data as they are.
+date_default_timezone_set('UTC');
+
+const DEFAULT_RUNS = 300;
 const DEFAULT_ITERATIONS = 3;
+const DEFAULT_SCALE = 1;
 const DEFAULT_LIFECYCLE = 'both';
 const LIFECYCLE_WORKER = 'worker';
 const LIFECYCLE_REQUEST = 'request';
 const LIFECYCLE_BOTH = 'both';
+const LINE_LEN = 69;
+
+// What a meaningful run needs; benchmarkWarning() reports deviations.
+const PHP_SETTINGS = [
+	'xdebug.mode' => 'off',
+	'pcov.enabled' => '0',
+	'opcache.enable_cli' => '1',
+	'opcache.file_update_protection' => '0',
+];
 
 function resetCacheDir(string $path): void
 {
@@ -38,353 +56,12 @@ function resetCacheDir(string $path): void
 
 function resetBenchmarkCaches(): void
 {
-	resetCacheDir(__DIR__ . '/cache/twig');
-	resetCacheDir(__DIR__ . '/cache/blade');
-}
-
-function benchmarkContext(): array
-{
-	return [
-		'title' => '  Product Catalog & Deals <Spring>  ',
-		'isLoggedIn' => true,
-		'isAdmin' => false,
-		'user' => [
-			'id' => 42,
-			'name' => 'John & Jane <Doe>',
-			'email' => 'john@example.com',
-			'tier' => '  gold member  ',
-			'profile' => [
-				'bio' => '<script>alert("xss")</script>Web developer & designer',
-				'avatar' => '/img/avatars/john.jpg?size=large&crop=1',
-				'location' => 'New York & Berlin <HQ>',
-			],
-		],
-		'topCategories' => [
-			[
-				'label' => ' Electronics ',
-				'url' => '/categories/electronics?sort=popular',
-				'children' => [
-					['label' => ' Laptops ', 'url' => '/categories/electronics/laptops'],
-					['label' => ' Accessories ', 'url' => '/categories/electronics/accessories'],
-				],
-			],
-			[
-				'label' => ' Office ',
-				'url' => '/categories/office?sort=popular',
-				'children' => [
-					['label' => ' Furniture ', 'url' => '/categories/office/furniture'],
-					['label' => ' Supplies ', 'url' => '/categories/office/supplies'],
-				],
-			],
-			[
-				'label' => ' Clearance ',
-				'url' => '/categories/clearance?sort=discount',
-				'children' => [],
-			],
-		],
-		'products' => [
-			[
-				'id' => 1,
-				'sku' => ' lp-1000 ',
-				'name' => 'Laptop Pro 14"',
-				'vendor' => '  Acme Tech  ',
-				'price' => 1299.99,
-				'compareAt' => 1499.99,
-				'discountPercent' => 13,
-				'inStock' => true,
-				'stock' => 12,
-				'preorder' => false,
-				'freeShipping' => true,
-				'rating' => 5,
-				'reviews' => 231,
-				'tags' => ['electronics', 'laptops'],
-				'badges' => [' bestseller ', ' spring deal '],
-			],
-			[
-				'id' => 2,
-				'sku' => ' ms-220 ',
-				'name' => 'Wireless Mouse',
-				'vendor' => '  Pixel Works  ',
-				'price' => 49.95,
-				'compareAt' => 59.95,
-				'discountPercent' => 17,
-				'inStock' => true,
-				'stock' => 3,
-				'preorder' => false,
-				'freeShipping' => false,
-				'rating' => 4,
-				'reviews' => 87,
-				'tags' => ['electronics', 'accessories'],
-				'badges' => [' low stock '],
-			],
-			[
-				'id' => 3,
-				'sku' => ' hub-8c ',
-				'name' => 'USB-C Hub 8-in-1',
-				'vendor' => '  Dock Labs  ',
-				'price' => 79.00,
-				'compareAt' => 79.00,
-				'discountPercent' => 0,
-				'inStock' => false,
-				'stock' => 0,
-				'preorder' => true,
-				'freeShipping' => false,
-				'rating' => 4,
-				'reviews' => 64,
-				'tags' => ['electronics', 'accessories'],
-				'badges' => [' preorder '],
-			],
-			[
-				'id' => 4,
-				'sku' => ' kb-880 ',
-				'name' => 'Mechanical Keyboard',
-				'vendor' => '  Key Forge  ',
-				'price' => 159.99,
-				'compareAt' => 199.99,
-				'discountPercent' => 20,
-				'inStock' => true,
-				'stock' => 2,
-				'preorder' => false,
-				'freeShipping' => true,
-				'rating' => 5,
-				'reviews' => 142,
-				'tags' => ['electronics', 'accessories'],
-				'badges' => [' hot ', ' low stock '],
-			],
-			[
-				'id' => 5,
-				'sku' => ' mn-270 ',
-				'name' => '27" Monitor',
-				'vendor' => '  VisionX  ',
-				'price' => 399.00,
-				'compareAt' => 449.00,
-				'discountPercent' => 11,
-				'inStock' => true,
-				'stock' => 8,
-				'preorder' => false,
-				'freeShipping' => true,
-				'rating' => 4,
-				'reviews' => 118,
-				'tags' => ['electronics', 'displays'],
-				'badges' => [' free shipping '],
-			],
-			[
-				'id' => 6,
-				'sku' => ' cam-hd ',
-				'name' => 'Webcam HD',
-				'vendor' => '  Stream Co  ',
-				'price' => 89.99,
-				'compareAt' => 89.99,
-				'discountPercent' => 0,
-				'inStock' => false,
-				'stock' => 0,
-				'preorder' => false,
-				'freeShipping' => false,
-				'rating' => 3,
-				'reviews' => 59,
-				'tags' => ['electronics', 'video'],
-				'badges' => [],
-			],
-			[
-				'id' => 7,
-				'sku' => ' lamp-42 ',
-				'name' => 'Desk Lamp',
-				'vendor' => '  Lumi Home  ',
-				'price' => 45.00,
-				'compareAt' => 45.00,
-				'discountPercent' => 0,
-				'inStock' => true,
-				'stock' => 15,
-				'preorder' => false,
-				'freeShipping' => false,
-				'rating' => 4,
-				'reviews' => 39,
-				'tags' => ['office', 'lighting'],
-				'badges' => [' bundle '],
-			],
-			[
-				'id' => 8,
-				'sku' => ' chr-erg ',
-				'name' => 'Ergonomic Chair',
-				'vendor' => '  Forma Seat  ',
-				'price' => 549.00,
-				'compareAt' => 699.00,
-				'discountPercent' => 21,
-				'inStock' => true,
-				'stock' => 4,
-				'preorder' => false,
-				'freeShipping' => true,
-				'rating' => 5,
-				'reviews' => 205,
-				'tags' => ['office', 'furniture'],
-				'badges' => [' premium ', ' spring deal '],
-			],
-			[
-				'id' => 9,
-				'sku' => ' desk-std ',
-				'name' => 'Standing Desk',
-				'vendor' => '  Rise Labs  ',
-				'price' => 699.00,
-				'compareAt' => 799.00,
-				'discountPercent' => 13,
-				'inStock' => false,
-				'stock' => 0,
-				'preorder' => true,
-				'freeShipping' => true,
-				'rating' => 5,
-				'reviews' => 174,
-				'tags' => ['office', 'furniture'],
-				'badges' => [' preorder ', ' free shipping '],
-			],
-			[
-				'id' => 10,
-				'sku' => ' nt-set ',
-				'name' => 'Notebook Set',
-				'vendor' => '  Paper Mill  ',
-				'price' => 24.99,
-				'compareAt' => 29.99,
-				'discountPercent' => 17,
-				'inStock' => true,
-				'stock' => 40,
-				'preorder' => false,
-				'freeShipping' => false,
-				'rating' => 4,
-				'reviews' => 71,
-				'tags' => ['office', 'supplies'],
-				'badges' => [' value pack '],
-			],
-		],
-		'activeFilters' => [
-			['label' => 'Brand', 'value' => '  Acme Tech  '],
-			['label' => 'Price', 'value' => '  under $500  '],
-			['label' => 'Shipping', 'value' => '  free shipping  '],
-		],
-		'facets' => [
-			[
-				'title' => ' Brand ',
-				'expanded' => true,
-				'options' => [
-					['label' => ' Acme Tech ', 'count' => 12, 'selected' => true],
-					['label' => ' VisionX ', 'count' => 8, 'selected' => false],
-					['label' => ' Forma Seat ', 'count' => 5, 'selected' => false],
-				],
-			],
-			[
-				'title' => ' Price ',
-				'expanded' => true,
-				'options' => [
-					['label' => ' Under $100 ', 'count' => 31, 'selected' => false],
-					['label' => ' $100 - $500 ', 'count' => 42, 'selected' => true],
-					['label' => ' $500+ ', 'count' => 18, 'selected' => false],
-				],
-			],
-			[
-				'title' => ' Rating ',
-				'expanded' => false,
-				'options' => [
-					['label' => ' 4 stars & up ', 'count' => 63, 'selected' => true],
-					['label' => ' 3 stars & up ', 'count' => 88, 'selected' => false],
-				],
-			],
-		],
-		'recommendations' => [
-			[
-				'title' => ' Customers also bought ',
-				'items' => [
-					['name' => 'USB-C Cable 2m', 'price' => 19.99],
-					['name' => 'Laptop Sleeve & Stand', 'price' => 39.95],
-				],
-			],
-			[
-				'title' => ' Complete your office ',
-				'items' => [
-					['name' => 'Cable Organizer Kit', 'price' => 14.50],
-					['name' => 'Monitor Arm', 'price' => 129.00],
-					['name' => 'Foot Rest', 'price' => 34.00],
-				],
-			],
-		],
-		'campaign' => [
-			'title' => '  spring flash deal  ',
-			'code' => '  spring20  ',
-			'shippingThreshold' => 150.00,
-			'endsAt' => '2026-05-01T20:00:00+02:00',
-		],
-		'cart' => [
-			'items' => 3,
-			'subtotal' => 188.94,
-			'discount' => 16.95,
-			'shipping' => 0.00,
-			'total' => 171.99,
-		],
-		'stats' => [
-			'totalProducts' => 156,
-			'totalOrders' => 1247,
-			'openOrders' => 37,
-			'conversionRate' => 3.8,
-			'revenue' => 98432.50,
-		],
-		'store' => (object) [
-			'name' => 'Celema & Partners <Store>',
-			'currency' => 'USD',
-			'support' => (object) [
-				'email' => 'ernst@celema.dev',
-				'timezone' => 'Europe/Berlin',
-			],
-		],
-		'announcement' => '<p class="alert"><strong>Holiday Sale:</strong> 20% off all items!</p>',
-		'breadcrumbs' => new ArrayIterator([
-			['label' => 'Home & Garden', 'url' => '/?from=home&promo=spring'],
-			['label' => 'Products & Services', 'url' => '/products?view=grid&sort=name'],
-			['label' => 'Electronics <Featured>', 'url' => '/products/electronics?filter=audio&sale=1'],
-		]),
-	];
-}
-
-// @mago-expect lint:file-name
-class BenchResult
-{
-	public string $name;
-	public string $output;
-	public float $min = PHP_FLOAT_MAX;
-	public float $max = 0.0;
-	public float $total = 0.0;
-	public int $count = 0;
-	public int $peakMemoryDelta = 0;
-
-	public function __construct(string $name)
-	{
-		$this->name = $name;
-	}
-
-	public function add(float $time, int $memory): void
-	{
-		$this->min = min($this->min, $time);
-		$this->max = max($this->max, $time);
-		$this->total += $time;
-		$this->count++;
-		$this->peakMemoryDelta = max($this->peakMemoryDelta, $memory);
-	}
-
-	public function avg(): float
-	{
-		return $this->count > 0 ? $this->total / $this->count : 0;
-	}
-
-	public function print(): void
-	{
-		printf(
-			"%-12s avg: %6.3fs  min: %6.3fs  max: %6.3fs  peak+: %7s\n",
-			$this->name . ':',
-			$this->avg(),
-			$this->min,
-			$this->max,
-			formatBytes($this->peakMemoryDelta),
-		);
+	foreach (Engines::caches(__DIR__) as $path) {
+		resetCacheDir($path);
 	}
 }
 
-/** @return array{runs: int, iterations: int, lifecycle: string} */
+/** @return array{runs: int, iterations: int, scale: int, lifecycle: string, probe: ?string} */
 function benchmarkConfig(): array
 {
 	static $config;
@@ -393,18 +70,21 @@ function benchmarkConfig(): array
 		return $config;
 	}
 
-	$options = getopt('', ['runs:', 'iterations:', 'lifecycle:']);
+	$options = getopt('', ['runs:', 'iterations:', 'scale:', 'lifecycle:', 'probe:']);
 	assert(is_array($options), 'getopt() must return an array of CLI options');
+	$probe = $options['probe'] ?? null;
 
 	return $config = [
 		'runs' => intOption($options, 'runs', DEFAULT_RUNS),
 		'iterations' => intOption($options, 'iterations', DEFAULT_ITERATIONS),
+		'scale' => intOption($options, 'scale', DEFAULT_SCALE),
 		'lifecycle' => stringOption(
 			$options,
 			'lifecycle',
 			DEFAULT_LIFECYCLE,
 			[LIFECYCLE_WORKER, LIFECYCLE_REQUEST, LIFECYCLE_BOTH],
 		),
+		'probe' => is_string($probe) ? $probe : null,
 	];
 }
 
@@ -468,7 +148,8 @@ function benchmarkWarning(): void
 	echo 'Detected: ' . implode(', ', $detected) . "\n";
 	echo "Run with: php -d xdebug.mode=off -d pcov.enabled=0 -d opcache.enable_cli=1\n";
 	echo '          -d opcache.file_update_protection=0 ' . benchmarkScript() . "\n";
-	echo "          [--runs=N] [--iterations=N] [--lifecycle=(request|worker|both)]\n";
+	echo "          [--runs=N] [--iterations=N] [--scale=N]\n";
+	echo "          [--lifecycle=(request|worker|both)]\n";
 	echo "Tip: use composer benchmark -- [options]\n";
 	echo str_repeat('!', LINE_LEN) . "\n\n";
 }
@@ -567,6 +248,11 @@ function iterations(): int
 	return benchmarkConfig()['iterations'];
 }
 
+function scale(): int
+{
+	return benchmarkConfig()['scale'];
+}
+
 function lifecycle(): string
 {
 	return benchmarkConfig()['lifecycle'];
@@ -604,258 +290,278 @@ function lifecycleLabel(string $lifecycle): string
 	};
 }
 
+/** @return list<Candidate<object>> */
+function candidates(): array
+{
+	return Engines::all(__DIR__, Data::shared());
+}
+
 /**
- * @template TEngine
+ * Renders the pages in turn, as a site serves them, and times each page on
+ * its own.
  *
- * @param callable(): TEngine $createEngine
- * @param callable(TEngine, array): string $render
+ * @param Candidate<object> $candidate
+ * @param array<string, array<string, mixed>> $pages
  */
-function benchEngine(
-	string $name,
-	callable $createEngine,
-	callable $render,
-	string $lifecycle,
-): BenchResult {
-	$result = new BenchResult($name);
-	$context = benchmarkContext();
+function measure(Candidate $candidate, array $pages, string $lifecycle): Result
+{
+	$result = new Result($candidate);
 	$runs = runs();
-	$iterations = iterations();
-	$engine = $createEngine();
+	$engine = $candidate->engine();
 
-	// Warmup - populate caches and trigger autoloading.
-	$result->output = $render($engine, $context);
-	gc_collect_cycles();
+	// Warmup: compiles the templates and triggers autoloading.
+	foreach ($pages as $page => $context) {
+		$result->output[$page] = $candidate->render($engine, $page, $context);
+	}
 
-	for ($iter = 0; $iter < $iterations; $iter++) {
-		memory_reset_peak_usage();
-		$memBefore = memory_get_usage();
-		$start = hrtime(true);
+	for ($iteration = 0; $iteration < iterations(); $iteration++) {
+		gc_collect_cycles();
+		$times = array_fill_keys(array_keys($pages), 0);
 
-		if ($lifecycle === LIFECYCLE_WORKER) {
-			for ($i = 0; $i < $runs; $i++) {
-				$t = $render($engine, $context);
-			}
-		} else {
-			for ($i = 0; $i < $runs; $i++) {
-				$currentEngine = $createEngine();
-				$t = $render($currentEngine, $context);
-				unset($currentEngine);
+		for ($run = 0; $run < $runs; $run++) {
+			foreach ($pages as $page => $context) {
+				$start = hrtime(true);
+
+				if ($lifecycle === LIFECYCLE_REQUEST) {
+					$engine = $candidate->engine();
+				}
+
+				$candidate->render($engine, $page, $context);
+				$times[$page] += hrtime(true) - $start;
 			}
 		}
 
-		$elapsed = (hrtime(true) - $start) / 1e9;
-		$memPeak = max(0, memory_get_peak_usage() - $memBefore);
-
-		$result->add($elapsed, $memPeak);
-		$result->output = $t;
-
-		gc_collect_cycles();
+		$result->add($times, $runs);
 	}
 
 	return $result;
 }
 
-function benchTwigAutoEscaping(string $lifecycle): BenchResult
+/**
+ * @param list<Candidate<object>> $candidates
+ * @param callable(Candidate<object>): string $row
+ */
+function printGroups(array $candidates, callable $row): void
 {
-	return benchEngine(
-		'Twig',
-		static fn() => new \Twig\Environment(
-			new \Twig\Loader\FilesystemLoader(__DIR__ . '/twig'),
-			['cache' => __DIR__ . '/cache/twig'],
-		),
-		static fn(\Twig\Environment $engine, array $context): string => $engine->render(
-			'page.html',
-			$context,
-		),
-		$lifecycle,
-	);
+	foreach ([['Automatic escaping', true], ['Manual escaping', false]] as [$title, $escapes]) {
+		echo $title . "\n";
+
+		foreach ($candidates as $candidate) {
+			if ($candidate->escapes === $escapes) {
+				printf("  %-19s%s\n", $candidate->name, $row($candidate));
+			}
+		}
+	}
 }
 
 /**
- * Wires Laravel's view factory as its ViewServiceProvider does, minus the
- * application container and the engines for plain PHP and static files.
+ * @param array<string, Result> $results keyed by candidate id
+ * @param list<string> $pages
  */
-function createBlade(): \Illuminate\View\Factory
+function printTimes(array $results, array $pages): void
 {
-	$files = new \Illuminate\Filesystem\Filesystem();
-	$compiler = new \Illuminate\View\Compilers\BladeCompiler($files, __DIR__ . '/cache/blade');
-	$resolver = new \Illuminate\View\Engines\EngineResolver();
-	$resolver->register('blade', static fn() => new \Illuminate\View\Engines\CompilerEngine($compiler, $files));
+	$columns = array_map(static fn(string $column): string => sprintf('%10s', $column), [...$pages, 'total']);
 
-	$container = new \Illuminate\Container\Container();
-	$factory = new \Illuminate\View\Factory(
-		$resolver,
-		new \Illuminate\View\FileViewFinder($files, [__DIR__ . '/blade']),
-		new \Illuminate\Events\Dispatcher($container),
-	);
-	$factory->setContainer($container);
-	$factory->share('app', $container);
-
-	return $factory;
-}
-
-function benchBladeAutoEscaping(string $lifecycle): BenchResult
-{
-	return benchEngine(
-		'Blade',
-		createBlade(...),
-		static fn(\Illuminate\View\Factory $engine, array $context): string => $engine
-			->make(
-				'page',
-				$context,
-			)
-			->render(),
-		$lifecycle,
-	);
-}
-
-function benchBoilerAutoEscaping(string $lifecycle): BenchResult
-{
-	return benchEngine(
-		'Boiler',
-		static fn() => Celema\Boiler\Engine::create(__DIR__ . '/boiler'),
-		static fn(Celema\Boiler\Engine $engine, array $context): string => $engine->render(
-			'page',
-			$context,
-		),
-		$lifecycle,
-	);
-}
-
-function benchPlatesManualEscaping(string $lifecycle): BenchResult
-{
-	return benchEngine(
-		'Plates',
-		static fn() => new League\Plates\Engine(__DIR__ . '/plates'),
-		static fn(League\Plates\Engine $engine, array $context): string => $engine->render(
-			'page',
-			$context,
-		),
-		$lifecycle,
-	);
-}
-
-function benchBoilerManualEscaping(string $lifecycle): BenchResult
-{
-	return benchEngine(
-		'Boiler',
-		static fn() => Celema\Boiler\Engine::unescaped(__DIR__ . '/boiler-manual'),
-		static fn(Celema\Boiler\Engine $engine, array $context): string => $engine->render(
-			'page',
-			$context,
-		),
-		$lifecycle,
-	);
-}
-
-function fulltrim(string $text): string
-{
-	// Remove all whitespace for comparison - engines differ in indentation.
-	return preg_replace('/\s+/', '', $text);
-}
-
-/** @param list<BenchResult> $results */
-function verifyOutputs(array $results): void
-{
+	printf("%21s%s  spread\n", '', implode('', $columns));
 	echo str_repeat('-', LINE_LEN) . "\n";
-	echo 'Output verification: ';
 
-	$expected = fulltrim($results[array_key_first($results)]->output);
-	$allMatch = true;
+	printGroups(
+		array_map(static fn(Result $result): Candidate => $result->candidate, array_values($results)),
+		static function (Candidate $candidate) use ($results): string {
+			$result = $results[$candidate->id];
+			$times = $result->best();
+			$times[] = array_sum($times);
 
-	foreach ($results as $result) {
-		if (fulltrim($result->output) === $expected) {
-			continue;
-		}
+			return sprintf(
+				'%s%7.0f%%',
+				implode('', array_map(static fn(float $time): string => sprintf('%10.3f', $time), $times)),
+				$result->spread() * 100,
+			);
+		},
+	);
 
-		echo "MISMATCH in {$result->name}!\n";
-		$allMatch = false;
-	}
-
-	if ($allMatch) {
-		echo "All outputs match ✓\n";
-	}
+	echo str_repeat('-', LINE_LEN) . "\n";
+	echo 'Milliseconds per render in the fastest of ' . iterations() . " iterations. total is one\n";
+	echo "round, which renders each page once. spread is how much slower the\n";
+	echo "slowest iteration was.\n";
 }
 
-function autoEscapingMemoryNote(string $lifecycle): string
+/** @return array<string, Result> keyed by candidate id */
+function runScenario(string $lifecycle): array
 {
-	return $lifecycle === LIFECYCLE_WORKER
-		? "Note: peak+ is the additional peak memory after warmup for a reused\nengine. "
-		. 'Typical for worker mode (FrankenPHP, Roadrunner, etc.).'
-		: "Note: peak+ includes allocator overhead from recreating engines\nwithin one process. "
-		. 'Not typical for PHP-FPM.';
-}
-
-function runScenario(string $lifecycle): void
-{
-	resetBenchmarkCaches();
-
 	echo 'LIFECYCLE: ' . lifecycleLabel($lifecycle) . "\n";
 	if (count(lifecycles()) === 1) {
 		echo "           use --lifecycle=(request|worker) to change mode\n";
 	}
 	echo str_repeat('-', LINE_LEN) . "\n";
 
-	echo "Automatic Escaping:\n";
+	$pages = Data::pages(scale());
+	$results = [];
+
+	foreach (candidates() as $candidate) {
+		$results[$candidate->id] = measure($candidate, $pages, $lifecycle);
+	}
+
+	printTimes($results, array_keys($pages));
+
+	return $results;
+}
+
+/**
+ * Measures one candidate in this process, which the benchmark started for it
+ * alone, so that nothing another engine loaded counts.
+ */
+function probe(string $id): int
+{
+	$pages = Data::pages(scale());
+
+	foreach (candidates() as $candidate) {
+		if ($candidate->id !== $id) {
+			continue;
+		}
+
+		$render = static function (object $engine) use ($candidate, $pages): void {
+			foreach ($pages as $page => $context) {
+				$candidate->render($engine, $page, $context);
+			}
+		};
+
+		$before = memory_get_usage();
+		$engine = $candidate->engine();
+		$render($engine);
+		gc_collect_cycles();
+		$loaded = memory_get_usage() - $before;
+
+		memory_reset_peak_usage();
+		$before = memory_get_usage();
+		$render($engine);
+		$peak = memory_get_peak_usage() - $before;
+
+		echo json_encode(['loaded' => $loaded, 'render' => $peak]);
+
+		return 0;
+	}
+
+	fwrite(STDERR, "Unknown candidate {$id}" . PHP_EOL);
+
+	return 1;
+}
+
+/**
+ * @param Candidate<object> $candidate
+ *
+ * @return array{loaded: int, render: int}|null
+ */
+function probeInFreshProcess(Candidate $candidate): ?array
+{
+	$command = [PHP_BINARY];
+
+	foreach (PHP_SETTINGS as $name => $value) {
+		array_push($command, '-d', "{$name}={$value}");
+	}
+
+	array_push($command, __FILE__, '--probe=' . $candidate->id, '--scale=' . scale());
+	$process = proc_open($command, [1 => ['pipe', 'w']], $pipes);
+
+	if (!is_resource($process)) {
+		return null;
+	}
+
+	$memory = json_decode((string) stream_get_contents($pipes[1]), true);
+	fclose($pipes[1]);
+
+	return proc_close($process) === 0 && is_array($memory) ? $memory : null;
+}
+
+function printMemory(): void
+{
+	echo "MEMORY: one fresh process per engine\n";
+	echo str_repeat('-', LINE_LEN) . "\n";
+	printf("%31s%10s\n", 'loaded', 'render');
 	echo str_repeat('-', LINE_LEN) . "\n";
 
-	$twigAutoEscaping = benchTwigAutoEscaping($lifecycle);
-	$bladeAutoEscaping = benchBladeAutoEscaping($lifecycle);
-	$boilerAutoEscaping = benchBoilerAutoEscaping($lifecycle);
+	printGroups(candidates(), static function (Candidate $candidate): string {
+		$memory = probeInFreshProcess($candidate);
 
-	$twigAutoEscaping->print();
-	$bladeAutoEscaping->print();
-	$boilerAutoEscaping->print();
-
-	echo str_repeat('-', LINE_LEN) . "\n";
-	echo "Manual Escaping:\n";
-	echo str_repeat('-', LINE_LEN) . "\n";
-
-	$platesManualEscaping = benchPlatesManualEscaping($lifecycle);
-	$boilerManualEscaping = benchBoilerManualEscaping($lifecycle);
-
-	$platesManualEscaping->print();
-	$boilerManualEscaping->print();
+		return $memory === null
+			? sprintf('%10s%10s', 'failed', '')
+			: sprintf('%10s%10s', formatBytes($memory['loaded']), formatBytes($memory['render']));
+	});
 
 	echo str_repeat('-', LINE_LEN) . "\n";
-	printf("%s\n", autoEscapingMemoryNote($lifecycle));
+	echo "loaded is the memory still in use after each page was rendered once.\n";
+	echo "render is the additional peak while the pages render again.\n";
+}
 
-	verifyOutputs([
-		$platesManualEscaping,
-		$twigAutoEscaping,
-		$bladeAutoEscaping,
-		$boilerAutoEscaping,
-		$boilerManualEscaping,
-	]);
+/** @param list<Result> $results */
+function verifyOutputs(array $results): bool
+{
+	$normalize = static fn(string $html): string => (string) preg_replace('/\s+/', '', $html);
+	$expected = array_map($normalize, $results[0]->output);
+	$mismatches = [];
+
+	foreach ($results as $result) {
+		foreach ($result->output as $page => $html) {
+			// Engines differ in indentation, so whitespace does not count.
+			if ($normalize($html) !== $expected[$page]) {
+				$mismatches[] = "{$result->candidate->name} ({$result->candidate->id}), page {$page}";
+			}
+		}
+	}
+
+	$sizes = [];
+
+	foreach ($results[0]->output as $page => $html) {
+		$sizes[] = $page . ' ' . formatBytes(strlen($html));
+	}
+
+	echo 'Pages: ' . implode(', ', $sizes) . "\n";
+	echo 'Output verification: ';
+	echo $mismatches === [] ? "all engines render the same pages ✓\n" : "MISMATCH\n";
+
+	foreach (array_unique($mismatches) as $mismatch) {
+		echo "  differs from {$results[0]->candidate->name}: {$mismatch}\n";
+	}
+
+	return $mismatches === [];
 }
 
 function main(): int
 {
 	try {
-		$runs = runs();
-		$iterations = iterations();
+		$config = benchmarkConfig();
 	} catch (InvalidArgumentException $e) {
 		fwrite(STDERR, $e->getMessage() . PHP_EOL);
 
 		return 1;
 	}
 
+	if ($config['probe'] !== null) {
+		return probe($config['probe']);
+	}
+
 	benchmarkWarning();
 
 	echo "\n" . str_repeat('=', LINE_LEN);
-	echo "\nBenchmark: " . number_format($runs) . ' renders × ' . $iterations . ' iterations';
-	echo "\n           $ composer benchmark -- --runs=" . $runs . ' --iterations=' . $iterations . "\n";
+	echo "\nBenchmark: " . number_format(runs()) . ' rounds × ' . iterations() . ' iterations, scale ' . scale();
+	echo "\n           $ composer benchmark -- --runs=" . runs() . ' --iterations=' . iterations();
+	echo ' --scale=' . scale() . "\n";
 	echo str_repeat('=', LINE_LEN) . "\n\n\n";
 
-	foreach (lifecycles() as $index => $lifecycle) {
-		if ($index > 0) {
-			echo "\n\n" . str_repeat(' ~ ', (int) LINE_LEN / 3) . "\n\n\n";
-		}
+	// Once for the whole run: Twig writes a compiled template only when it
+	// first loads the class, and the memory probes need the files.
+	resetBenchmarkCaches();
+	$results = [];
 
-		runScenario($lifecycle);
+	foreach (lifecycles() as $lifecycle) {
+		array_push($results, ...array_values(runScenario($lifecycle)));
+		echo "\n\n";
 	}
 
-	return 0;
+	printMemory();
+	echo "\n\n";
+
+	return verifyOutputs($results) ? 0 : 1;
 }
 
 exit(main());

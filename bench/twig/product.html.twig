@@ -1,0 +1,86 @@
+{% extends 'layouts/shop.html.twig' %}
+
+{% block shop_title %}{{ product.name }}{% endblock %}
+
+{% block head %}
+    {{ parent() }}
+    <meta property="og:title" content="{{ product.name }}">
+    <meta property="og:image" content="{{ product.image.src }}">
+    <link rel="canonical" href="{{ product.url }}">
+{% endblock %}
+
+{% block hero %}{% endblock %}
+
+{% block shop_content %}
+    <article class="product" data-sku="{{ product.sku }}">
+        <div class="gallery">
+            {% for image in product.gallery %}
+                <img src="{{ image.src }}" alt="{{ image.alt }}" width="{{ image.width }}" height="{{ image.height }}">
+            {% endfor %}
+        </div>
+
+        <div class="summary">
+            <h1>{{ product.name }}</h1>
+            <p class="vendor">by <a href="/brands/{{ product.vendor|lower }}">{{ product.vendor }}</a></p>
+
+            {{ include('partials/rating.html.twig', {rating: product.rating, count: product.reviews}) }}
+            {{ include('partials/price.html.twig') }}
+
+            <form class="variants" action="/cart" method="post">
+                {% for variant in product.variants %}
+                    <label class="{{ variant.available ? 'is-available' : 'is-unavailable' }}">
+                        <input type="radio" name="sku" value="{{ variant.sku }}"{% if variant.sku == product.sku %} checked{% endif %}{% if not variant.available %} disabled{% endif %}>
+                        {{ variant.label }}
+                        <span>{{ variant.price|money }}</span>
+                    </label>
+                {% endfor %}
+                <button type="submit">{{ icon('cart') }} Add to cart</button>
+            </form>
+
+            <div class="description">{{ product.description|raw }}</div>
+        </div>
+
+        <table class="specs">
+            <caption>Specifications</caption>
+            {% for name, value in product.specs %}
+                <tr>
+                    <th scope="row">{{ name }}</th>
+                    <td>{{ value }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </article>
+
+    <section class="reviews" id="reviews">
+        <h2>Reviews ({{ reviews|length }})</h2>
+        {% for review in reviews %}
+            {% embed 'components/card.html.twig' with {title: review.title, tone: review.verified ? 'verified' : 'plain'} %}
+                {% block body %}
+                    {{ include('partials/rating.html.twig', {rating: review.rating}) }}
+                    <p class="byline">
+                        {{ review.author }} ·
+                        <time datetime="{{ review.date|date('Y-m-d') }}">{{ review.date|date('M j, Y') }}</time>
+                        {% if review.verified %}
+                            · <span class="verified">Verified purchase</span>
+                        {% endif %}
+                    </p>
+                    <p>{{ review.body }}</p>
+                {% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </section>
+
+    <section class="related">
+        <h2>Customers also bought</h2>
+        <div class="grid">
+            {% for item in related %}
+                {{ include('partials/product-card.html.twig', {product: item}) }}
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="/js/product.js" data-sku="{{ product.sku }}"></script>
+{% endblock %}

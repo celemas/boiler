@@ -1,0 +1,38 @@
+<nav class="category-tree" aria-label="Categories">
+    <h2>Categories</h2>
+    <ul>
+        {% for entry in categories %}
+            <li class="{{ entry.current ? 'is-current' : 'is-other' }}">
+                <a href="{{ entry.url }}">{{ entry.name }}</a>
+                <small>({{ entry.count }})</small>
+            </li>
+        {% endfor %}
+    </ul>
+</nav>
+
+{% embed 'components/card.html.twig' with {title: 'Your cart', tone: 'cart'} %}
+    {% block body %}
+        {% if cart.lines %}
+            <ul class="cart-lines">
+                {% for line in cart.lines %}
+                    <li>{{ line.qty }} × {{ line.name }} <span>{{ line.total|money }}</span></li>
+                {% endfor %}
+            </ul>
+            <p class="cart-total">Subtotal: {{ cart.subtotal|money }}</p>
+            {% if cart.subtotal >= campaign.threshold %}
+                <p class="cart-shipping">You get free shipping.</p>
+            {% else %}
+                <p class="cart-shipping">Add {{ (campaign.threshold - cart.subtotal)|money }} for free shipping.</p>
+            {% endif %}
+        {% else %}
+            <p>Your cart is empty.</p>
+        {% endif %}
+    {% endblock %}
+{% endembed %}
+
+{% embed 'components/card.html.twig' with {title: 'Need help?', tone: 'support'} %}
+    {% block body %}
+        <p><a href="mailto:{{ site.support.email }}">{{ site.support.email }}</a></p>
+        <p>{{ site.support.phone }} · {{ site.support.hours }}</p>
+    {% endblock %}
+{% endembed %}

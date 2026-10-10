@@ -1,8 +1,0 @@
-<section class="promo-banner">
-    <h2>{{ campaign.title|trim|upper }}</h2>
-    <p>
-        Use code <strong>{{ campaign.code|trim|upper }}</strong>
-        for free shipping above ${{ campaign.shippingThreshold|number_format(2) }}.
-    </p>
-    <p>Ends at {{ campaign.endsAt }}</p>
-</section>

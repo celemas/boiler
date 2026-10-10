@@ -2,7 +2,7 @@ php-version = "8.5.0"
 
 [source]
 workspace = "."
-paths = ["src", "tests", "bench/run.php"]
+paths = ["src", "tests", "bench/run.php", "bench/src"]
 includes = ["vendor"]
 excludes = ["tests/templates"]
 

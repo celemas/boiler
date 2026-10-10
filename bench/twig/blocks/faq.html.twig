@@ -1,0 +1,10 @@
+<section class="block-faq">
+    <h3>{{ block.title }}</h3>
+    {% for item in block.items %}
+        {% embed 'components/card.html.twig' with {title: item.question, tone: 'faq'} %}
+            {% block body %}
+                <p>{{ item.answer }}</p>
+            {% endblock %}
+        {% endembed %}
+    {% endfor %}
+</section>

@@ -1,0 +1,30 @@
+{% embed 'components/card.html.twig' with {
+    title: product.name,
+    href: product.url,
+    tone: product.onSale ? 'sale' : 'plain',
+} %}
+    {% block body %}
+        <img src="{{ product.image.src }}" alt="{{ product.image.alt }}" width="{{ product.image.width }}" height="{{ product.image.height }}" loading="lazy">
+        <p class="vendor">{{ product.vendor|upper }} · <span class="sku">{{ product.sku }}</span></p>
+        {% if 'new' in product.tags %}
+            <span class="flag">New</span>
+        {% endif %}
+
+        {{ include('partials/price.html.twig') }}
+        {{ include('partials/rating.html.twig', {rating: product.rating, count: product.reviews}) }}
+
+        {% if product.badges %}
+            <ul class="badges">
+                {% for badge in product.badges %}
+                    <li>{{ badge|upper }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <ul class="tags">
+            {% for tag in product.tags %}
+                <li><a href="/tags/{{ tag }}">{{ tag }}</a></li>
+            {% endfor %}
+        </ul>
+        <button type="button" data-add="{{ product.sku }}">{{ icon('cart') }} Add to cart</button>
+    {% endblock %}
+{% endembed %}

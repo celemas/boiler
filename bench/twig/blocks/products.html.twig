@@ -1,0 +1,8 @@
+<section class="block-products">
+    <h3>{{ block.title }}</h3>
+    <div class="grid">
+        {% for product in block.products %}
+            {{ include('partials/product-card.html.twig') }}
+        {% endfor %}
+    </div>
+</section>

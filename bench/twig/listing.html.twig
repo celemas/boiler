@@ -1,0 +1,61 @@
+{% extends 'layouts/shop.html.twig' %}
+
+{% block shop_title %}{{ category.name }}{% endblock %}
+
+{% block head %}
+    {{ parent() }}
+    <meta name="description" content="{{ category.description }}">
+    <link rel="canonical" href="{{ category.url }}">
+{% endblock %}
+
+{% block sidebar %}
+    {{ include('partials/facets.html.twig') }}
+    {{ parent() }}
+{% endblock %}
+
+{% block shop_content %}
+    <section class="listing">
+        <header>
+            <h1>{{ category.name }}</h1>
+            <p class="lead">{{ category.description }}</p>
+            <p class="count">Showing {{ pagination.from }}–{{ pagination.to }} of {{ pagination.total }} products</p>
+        </header>
+
+        <div class="toolbar">
+            {% if activeFilters %}
+                <ul class="active-filters">
+                    {% for filter in activeFilters %}
+                        <li>
+                            {{ filter.label }}: <strong>{{ filter.value }}</strong>
+                            <a href="{{ filter.remove }}" aria-label="Remove filter {{ filter.label }}">×</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="active-filters">No filters selected.</p>
+            {% endif %}
+
+            <label>
+                Sort by
+                <select name="sort">
+                    {% for value, label in sortOptions %}
+                        <option value="{{ value }}"{% if value == sort %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+
+        <div class="grid">
+            {% for product in products %}
+                {{ include('partials/product-card.html.twig') }}
+            {% endfor %}
+        </div>
+
+        {{ include('partials/pagination.html.twig') }}
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="/js/listing.js" data-category="{{ category.slug }}" data-page="{{ pagination.page }}"></script>
+{% endblock %}

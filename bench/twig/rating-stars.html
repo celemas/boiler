@@ -1,6 +1,0 @@
-<span class="rating" aria-label="{{ product.rating }} stars">
-    {% for i in 1..5 %}
-        {{ i <= product.rating ? '★' : '☆' }}
-    {% endfor %}
-</span>
-<small>({{ product.reviews }})</small>

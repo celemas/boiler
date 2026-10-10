@@ -11,6 +11,12 @@
 		"illuminate/filesystem": "^13",
 		"illuminate/view": "^13"
 	},
+	"autoload": {
+		"psr-4": {
+			"Celema\\Boiler\\Bench\\": "src/"
+		},
+		"files": ["src/helpers.php"]
+	},
 	"repositories": [
 		{
 			"type": "path",
