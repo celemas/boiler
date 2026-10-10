@@ -1,6 +1,6 @@
 # Boiler benchmark
 
-This benchmark measures one feature-rich page render across Boiler, Twig, Laravel Blade, BladeOne, and Plates. It is meant to approximate a realistic steady-state page render and is used mainly internally to catch regressions, not to benchmark every feature in isolation.
+This benchmark measures one feature-rich page render across Boiler, Twig, Laravel Blade, and Plates. It is meant to approximate a realistic steady-state page render and is used mainly internally to catch regressions, not to benchmark every feature in isolation.
 
 ## What it covers
 
@@ -33,6 +33,7 @@ Keep these limits in mind:
 - one benchmark cannot represent every template structure or application architecture
 - the numbers are useful for internal regression checks and local comparisons, not as universal rankings or proofs that one engine always wins
 - `worker` results are usually the more representative steady-state numbers
+- Blade runs on `illuminate/view` without a Laravel application, so its `request` results leave out the framework bootstrap that a Laravel request pays for
 - `request` time results are useful, but `request` memory results should be read only as a comparative stress signal for repeated fresh engine construction in one process, not as per-request php-fpm memory usage
 
 ## Run the benchmark

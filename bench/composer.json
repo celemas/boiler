@@ -6,8 +6,10 @@
 		"celema/boiler": "@dev",
 		"league/plates": "^3",
 		"twig/twig": "^3",
-		"eftec/bladeone": "^4",
-		"tempest/blade": "^0.1"
+		"illuminate/container": "^13",
+		"illuminate/events": "^13",
+		"illuminate/filesystem": "^13",
+		"illuminate/view": "^13"
 	},
 	"repositories": [
 		{

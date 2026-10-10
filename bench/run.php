@@ -40,7 +40,6 @@ function resetBenchmarkCaches(): void
 {
 	resetCacheDir(__DIR__ . '/cache/twig');
 	resetCacheDir(__DIR__ . '/cache/blade');
-	resetCacheDir(__DIR__ . '/cache/bladeone');
 }
 
 function benchmarkContext(): array
@@ -645,28 +644,36 @@ function benchTwigAutoEscaping(string $lifecycle): BenchResult
 	);
 }
 
+/**
+ * Wires Laravel's view factory as its ViewServiceProvider does, minus the
+ * application container and the engines for plain PHP and static files.
+ */
+function createBlade(): \Illuminate\View\Factory
+{
+	$files = new \Illuminate\Filesystem\Filesystem();
+	$compiler = new \Illuminate\View\Compilers\BladeCompiler($files, __DIR__ . '/cache/blade');
+	$resolver = new \Illuminate\View\Engines\EngineResolver();
+	$resolver->register('blade', static fn() => new \Illuminate\View\Engines\CompilerEngine($compiler, $files));
+
+	$container = new \Illuminate\Container\Container();
+	$factory = new \Illuminate\View\Factory(
+		$resolver,
+		new \Illuminate\View\FileViewFinder($files, [__DIR__ . '/blade']),
+		new \Illuminate\Events\Dispatcher($container),
+	);
+}
+
 function benchBladeAutoEscaping(string $lifecycle): BenchResult
 {
 	return benchEngine(
 		'Blade',
-		static fn() => new \Tempest\Blade\Blade(__DIR__ . '/blade', __DIR__ . '/cache/blade'),
-		static fn(\Tempest\Blade\Blade $engine, array $context): string => $engine->render(
-			'page',
-			$context,
-		),
-		$lifecycle,
-	);
-}
-
-function benchBladeOneAutoEscaping(string $lifecycle): BenchResult
-{
-	return benchEngine(
-		'BladeOne',
-		static fn() => new \eftec\bladeone\BladeOne(__DIR__ . '/bladeone', __DIR__ . '/cache/bladeone'),
-		static fn(\eftec\bladeone\BladeOne $engine, array $context): string => $engine->run(
-			'page',
-			$context,
-		),
+		createBlade(...),
+		static fn(\Illuminate\View\Factory $engine, array $context): string => $engine
+			->make(
+				'page',
+				$context,
+			)
+			->render(),
 		$lifecycle,
 	);
 }
@@ -683,6 +690,10 @@ function benchBoilerAutoEscaping(string $lifecycle): BenchResult
 		$lifecycle,
 	);
 }
+	$factory->setContainer($container);
+	$factory->share('app', $container);
+
+	return $factory;
 
 function benchPlatesManualEscaping(string $lifecycle): BenchResult
 {
@@ -763,12 +774,10 @@ function runScenario(string $lifecycle): void
 
 	$twigAutoEscaping = benchTwigAutoEscaping($lifecycle);
 	$bladeAutoEscaping = benchBladeAutoEscaping($lifecycle);
-	$bladeOneAutoEscaping = benchBladeOneAutoEscaping($lifecycle);
 	$boilerAutoEscaping = benchBoilerAutoEscaping($lifecycle);
 
 	$twigAutoEscaping->print();
 	$bladeAutoEscaping->print();
-	$bladeOneAutoEscaping->print();
 	$boilerAutoEscaping->print();
 
 	echo str_repeat('-', LINE_LEN) . "\n";
@@ -787,7 +796,6 @@ function runScenario(string $lifecycle): void
 	verifyOutputs([
 		$platesManualEscaping,
 		$twigAutoEscaping,
-		$bladeOneAutoEscaping,
 		$bladeAutoEscaping,
 		$boilerAutoEscaping,
 		$boilerManualEscaping,
