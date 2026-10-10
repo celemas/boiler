@@ -9,6 +9,9 @@ use Throwable;
 /** @api */
 final readonly class Location
 {
+	/** Covers the template helpers, whose call from the template is at most the fourth frame. */
+	private const int NEAREST_FRAMES = 5;
+
 	public function __construct(
 		public string $path,
 		public ?int $line = null,
@@ -33,12 +36,16 @@ final readonly class Location
 
 	public static function fromBacktrace(string $path): self
 	{
-		foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
-			if (($frame['file'] ?? null) !== $path) {
-				continue;
-			}
+		// A full backtrace costs more with every nested include, so the nearest
+		// frames are searched first; 0 lifts the limit.
+		foreach ([self::NEAREST_FRAMES, 0] as $limit) {
+			foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit) as $frame) {
+				if (($frame['file'] ?? null) !== $path) {
+					continue;
+				}
 
-			return new self($path, self::normalizeLine($frame['line'] ?? null));
+				return new self($path, self::normalizeLine($frame['line'] ?? null));
+			}
 		}
 
 		return new self($path);

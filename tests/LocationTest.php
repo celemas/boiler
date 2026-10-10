@@ -29,6 +29,16 @@ final class LocationTest extends TestCase
 		$this->assertNull($location->line);
 	}
 
+	public function testFromBacktraceFindsADistantFrame(): void
+	{
+		// Each call_user_func() puts a frame without a file between the lookup and this method.
+		$calls = array_fill(0, 8, 'call_user_func');
+		$location = call_user_func(...$calls, ...[Location::fromBacktrace(...), __FILE__]);
+
+		$this->assertSame(__FILE__, $location->path);
+		$this->assertSame(__LINE__ - 3, $location->line);
+	}
+
 	public function testRenderExceptionWithoutTemplateFrameReportsPathOnly(): void
 	{
 		$path = '/not/in/trace.php';

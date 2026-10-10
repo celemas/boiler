@@ -49,6 +49,11 @@
 		LogicalOr: {
 			ignore: ['Celema\\Boiler\\Wrapper::isTrusted'],
 		},
+		// Likewise the search of the nearest frames, which the full backtrace
+		// repeats.
+		ArrayItemRemoval: {
+			ignore: ['Celema\\Boiler\\Location::fromBacktrace'],
+		},
 
 		// Casts of values that are already strings: ob_get_clean() inside an
 		// active buffer, interpolated keys, and Stringable concatenation.
