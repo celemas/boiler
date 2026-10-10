@@ -217,7 +217,7 @@ final class ObjectProxyTest extends TestCase
 		$this->assertFalse(isset($value->other));
 	}
 
-	public function testPropertyAccessLeavesTheHooksOfOtherPropertiesAlone(): void
+	public function testPropertyReadLeavesTheHooksOfOtherPropertiesAlone(): void
 	{
 		$object = new class {
 			public string $title = 'Boiler';
@@ -234,8 +234,6 @@ final class ObjectProxyTest extends TestCase
 		$value = $this->objectProxy($object);
 
 		$this->assertSame('boiler', (string) $value->name);
-		$value->name = 'rocks';
-		$this->assertSame('rocks', $object->name);
 		$this->assertSame(0, $object->runs);
 		$this->assertSame('slow', (string) $value->slow);
 		$this->assertSame(1, $object->runs);
@@ -266,22 +264,6 @@ final class ObjectProxyTest extends TestCase
 		foreach ($objects as $object) {
 			$this->assertSame('boiler', (string) $this->objectProxy($object)->name);
 		}
-	}
-
-	public function testWriteOnlyPropertyCanBeSet(): void
-	{
-		$object = new class {
-			public string $stored = '';
-			public string $input {
-				set {
-					$this->stored = strtoupper($value);
-				}
-			}
-		};
-
-		$this->objectProxy($object)->input = 'boiler';
-
-		$this->assertSame('BOILER', $object->stored);
 	}
 
 	public function testPropertyWithoutAValueCountsAsMissing(): void

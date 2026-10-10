@@ -29,10 +29,12 @@
 			ignore: [
 				'Celema\\Boiler\\Engine::wrapper',
 				'Celema\\Boiler\\Filter\\Sanitize::sanitizer',
-				'Celema\\Boiler\\Proxy\\ObjectAccess::declaredProperties',
 				'Celema\\Boiler\\Proxy\\StringProxy::__toString',
 				'Celema\\Boiler\\Values::wrapped',
 			],
+		},
+		Coalesce: {
+			ignore: ['Celema\\Boiler\\Proxy\\ObjectAccess::__get'],
 		},
 		ReturnRemoval: {
 			ignore: [

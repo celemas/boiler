@@ -22,11 +22,7 @@ use Stringable;
  */
 trait ObjectAccess
 {
-	/**
-	 * The public instance properties each wrapped class declares.
-	 *
-	 * @var array<class-string, array<string, ReflectionProperty>>
-	 */
+	/** @var array<class-string, array<string, ReflectionProperty>> public instance properties by class */
 	private static array $declared = [];
 
 	public function __toString(): string
@@ -40,7 +36,12 @@ trait ObjectAccess
 
 	public function __get(string $name): mixed
 	{
-		if ($this->hasPublicProperty($name)) {
+		// Reflection spares the full lookup, which copies all properties and runs
+		// their get hooks. Dynamic properties and lazy proxies still need it.
+		$declared = self::$declared[$this->value::class] ?? $this->declaredProperties();
+		$readable = isset($declared[$name]) && $declared[$name]->isInitialized($this->value);
+
+		if ($readable || $this->hasPublicProperty($name)) {
 			return $this->wrapper->wrap($this->value->{$name});
 		}
 
@@ -96,31 +97,15 @@ trait ObjectAccess
 		return $this->value;
 	}
 
-	/**
-	 * Whether code outside the object can read the property: it is public and
-	 * initialized, or dynamic.
-	 *
-	 * get_object_vars() answers that for every case, but it copies all
-	 * properties of the object and runs the get hook of each hooked one. A
-	 * template reads many properties, so declared ones are answered from
-	 * reflection, and only dynamic properties, lazy proxies, and misses take
-	 * the full lookup.
-	 */
 	private function hasPublicProperty(string $name): bool
 	{
-		$declared = $this->declaredProperties();
-
-		if (isset($declared[$name]) && $declared[$name]->isInitialized($this->value)) {
-			return true;
-		}
-
 		return array_key_exists($name, get_object_vars($this->value));
 	}
 
 	/** @return array<string, ReflectionProperty> */
 	private function declaredProperties(): array
 	{
-		return self::$declared[$this->value::class] ??= array_column(
+		return self::$declared[$this->value::class] = array_column(
 			array_filter(
 				new ReflectionClass($this->value)->getProperties(ReflectionProperty::IS_PUBLIC),
 				static fn(ReflectionProperty $property): bool => !$property->isStatic(),
