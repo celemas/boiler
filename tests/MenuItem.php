@@ -7,20 +7,27 @@ namespace Celema\Boiler\Tests;
 use ArrayIterator;
 use IteratorAggregate;
 use Override;
+use Stringable;
 
 /**
  * A traversable object with methods, like a menu item that iterates its
- * children.
+ * children and prints as its title.
  *
  * @implements IteratorAggregate<int, MenuItem>
  */
-final class MenuItem implements IteratorAggregate
+final class MenuItem implements IteratorAggregate, Stringable
 {
 	/** @param list<MenuItem> $children */
 	public function __construct(
 		private readonly string $title,
 		private readonly array $children = [],
 	) {}
+
+	#[Override]
+	public function __toString(): string
+	{
+		return $this->title;
+	}
 
 	public function title(): string
 	{

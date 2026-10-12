@@ -7,6 +7,7 @@ namespace Celema\Boiler;
 use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Proxy\IteratorProxy;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Closure;
@@ -70,14 +71,15 @@ final class Context
 	}
 
 	public function escape(
-		StringProxy|ObjectProxy|string|Stringable $value,
+		StringProxy|ObjectProxy|IteratorProxy|string|Stringable $value,
 		?string $escaper = null,
 	): string {
 		if ($value instanceof StringProxy) {
 			return $this->values->wrapper->escape($value->unwrap(), $escaper);
 		}
 
-		if ($value instanceof ObjectProxy) {
+		// Unwrapped first: the string conversion of these proxies escapes already.
+		if ($value instanceof ObjectProxy || $value instanceof IteratorProxy) {
 			$value = $value->unwrap();
 
 			if (!$value instanceof Stringable) {

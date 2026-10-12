@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use ArrayIterator;
 use Celema\Boiler\Context;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Engine;
@@ -133,6 +134,31 @@ final class ContextTest extends TestCase
 		assert($value instanceof StringProxy, 'wrap() must return a string proxy for string input');
 
 		$this->assertSame('&LT;B&GT;TAG&LT;/B&GT;', $tmplContext->escape($value->sanitize(), 'caps'));
+	}
+
+	public function testEscapeCanUseExplicitEscaperForWrappedTraversable(): void
+	{
+		$engine = Engine::create($this->templates)
+			->escape('caps', new class implements Escaper {
+				public function escape(string $value): string
+				{
+					return strtoupper(htmlspecialchars($value));
+				}
+			});
+		$tmplContext = $this->context(engine: $engine);
+
+		$this->assertSame(
+			'BEER &AMP; WINE',
+			$tmplContext->escape($this->iteratorProxy(new MenuItem('Beer & Wine')), 'caps'),
+		);
+	}
+
+	public function testEscapeRejectsNonStringableWrappedTraversables(): void
+	{
+		$this->throws(RuntimeException::class, 'cannot be escaped as string');
+
+		$tmplContext = $this->context();
+		$tmplContext->escape($this->iteratorProxy(new ArrayIterator([])));
 	}
 
 	public function testEscapeRejectsNonStringableWrappedObjects(): void

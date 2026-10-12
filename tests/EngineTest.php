@@ -394,6 +394,19 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	public function testEscapeEscapesAStringableTraversableOnce(): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'<p>Beer &amp; Wine</p>',
+			$this->fullTrim($engine->render(
+				'escapevalue',
+				['wrapped' => new MenuItem('Beer & Wine')],
+			)),
+		);
+	}
+
 	public function testEscapeAlwaysEscapesSafeWrappedProxy(): void
 	{
 		$engine = Engine::create($this->templates());
