@@ -287,6 +287,35 @@ final class StringProxyTest extends TestCase
 		$this->assertSame('boiler', (string) $stripped);
 	}
 
+	public function testFilterGetsTheOriginalValuesOfWrappedArguments(): void
+	{
+		$filter = new class implements Contract\Filter {
+			/** @var array<array-key, mixed> */
+			public array $args = [];
+
+			public function apply(string $value, mixed ...$args): string
+			{
+				$this->args = $args;
+
+				return $value;
+			}
+
+			public function safe(): bool
+			{
+				return false;
+			}
+		};
+		$proxy = $this->stringProxy('boiler', new \Celema\Boiler\Filters(['spy' => $filter]));
+
+		$proxy->spy(
+			$this->stringProxy('<b>'),
+			['nested' => $this->stringProxy('&')],
+			tags: $this->arrayProxy(['i', 'u']),
+		);
+
+		$this->assertSame(['<b>', ['nested' => '&'], 'tags' => ['i', 'u']], $filter->args);
+	}
+
 	public function testUnknownFilterThrows(): void
 	{
 		$this->throws(UnexpectedValueException::class, 'Unknown filter `nope`');

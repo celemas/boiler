@@ -1708,6 +1708,31 @@ final class EngineTest extends TestCase
 		);
 	}
 
+	#[DataProvider('allowedTags')]
+	public function testFiltersTakeArgumentsFromTheContext(mixed $allowed): void
+	{
+		$engine = Engine::create($this->templates());
+
+		$this->assertSame(
+			'&lt;b&gt;bold&lt;/b&gt;italic|map',
+			trim($engine->render('filterargs', [
+				'html' => '<b>bold</b><i>italic</i>',
+				'allowed' => $allowed,
+				'text' => '&map&',
+				'mask' => '&',
+			])),
+		);
+	}
+
+	/** @return array<string, array{mixed}> */
+	public static function allowedTags(): array
+	{
+		return [
+			'string' => ['<b>'],
+			'array' => [['b']],
+		];
+	}
+
 	public function testRegisterFilterFluent(): void
 	{
 		$engine = Engine::create($this->templates());

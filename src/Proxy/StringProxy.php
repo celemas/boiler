@@ -34,12 +34,16 @@ final class StringProxy implements Proxy
 
 	/**
 	 * Dispatch filters as virtual methods: $title->sanitize(), $title->stripTags('<b>'), etc.
+	 * A filter gets the original values of wrapped arguments, as it gets the string itself.
 	 *
 	 * @param array<array-key, mixed> $args
 	 */
 	public function __call(string $name, array $args): self
 	{
 		$filter = $this->wrapper->filter($name);
+
+		/** @var array<array-key, mixed> $args */
+		$args = $this->wrapper->unwrap($args);
 		$filtered = $filter->apply($this->value, ...$args);
 		$proxy = new self($filtered, $this->wrapper);
 		$proxy->safe = $filter->safe() || $this->safe && $filter instanceof PreservesSafety;

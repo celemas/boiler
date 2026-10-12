@@ -281,6 +281,8 @@ A filter implements `Celema\Boiler\Contract\Filter` with two methods:
 
 When a filter should keep already-safe HTML safe without claiming to sanitize arbitrary input, implement `Celema\Boiler\Contract\PreservesSafety` as well.
 
+`$args` holds the arguments of the call in the template. Like the value, they arrive unwrapped: a filter gets the original strings, arrays, and objects, whether the template passed a literal or a variable from its context. A filter whose `safe()` returns `true` must therefore escape the arguments it puts into its output.
+
 Use filters for transformations. When you need a different escaping context, register a named escaper instead.
 
 Filters are available as virtual methods on wrapped string values in templates:

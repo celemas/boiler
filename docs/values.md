@@ -181,6 +181,12 @@ Filters are value transformations applied as virtual methods on wrapped string v
 
 In escaped renders, string values from template context are already wrapped. In unescaped renders, or when you start from a literal string in the template, call `$this->wrap()` first.
 
+An argument can be a literal or a value from the context. The filter gets its original value either way:
+
+```php
+<?= $body->stripTags($allowedTags) ?>
+```
+
 Filters can be chained. Safe output only stays safe through filters that explicitly preserve safety. Boiler's built-in `lower`, `upper`, `stripTags`, and `trim` filters preserve already-safe HTML without claiming to sanitize arbitrary input:
 
 ```php
@@ -196,7 +202,7 @@ Boiler ships with built-in filters:
 - `stripTags` removes HTML tags via `strip_tags()`. This filter is not safe on arbitrary input, but it preserves already-safe output from earlier safe filters.
 - `trim` trims leading and trailing characters via `trim()`. This filter is not safe on arbitrary input, but it preserves already-safe output from earlier safe filters.
 
-When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
+When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. That includes its arguments, which arrive unwrapped: a safe filter escapes the ones it prints. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
 
 Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `matches`, `contains`, `startsWith`, `endsWith`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
 
