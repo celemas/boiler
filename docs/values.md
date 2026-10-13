@@ -145,10 +145,11 @@ A wrapped string passed to a `string` parameter then raises a `TypeError`. The d
 ```php
 <?= mb_strlen($title->unwrap()) ?>
 <?= $this->escape(mb_strimwidth($title->unwrap(), 0, 40, '…')) ?>
-<?php $this->include($partial->unwrap()) ?>
 ```
 
-The result of such a function is a plain string, which Boiler prints as is, so escape it when it can contain markup. Boiler's own helpers, such as `include()`, `layout()`, and the default of `yield()`, take plain strings too and need the original value under strict types. Template methods, filters, and methods of wrapped objects unwrap their arguments themselves. Printing, concatenation, interpolation, and comparison with `==` are not function calls and work as before.
+The result of such a function is a plain string, which Boiler prints as is, so escape it when it can contain markup. Printing, concatenation, interpolation, and comparison with `==` are not function calls and work as before.
+
+You unwrap a value only when it leaves Boiler for a PHP function. Boiler itself takes wrapped values: its helpers accept wrapped paths, names, and arrays of values, as in `$this->include($partial, $row)` or `$this->yield('title', $siteName)`, and template methods, filters, and methods of wrapped objects unwrap their arguments themselves.
 
 A function that expects an array or an object of a specific class raises a `TypeError` for a proxy with or without strict types.
 

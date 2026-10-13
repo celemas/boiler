@@ -1505,6 +1505,30 @@ final class EngineTest extends TestCase
 		$this->assertSame('engine', trim($engine->render('who')));
 	}
 
+	public function testHelpersTakeWrappedArgumentsUnderStrictTypes(): void
+	{
+		$engine = Engine::create(self::DEFAULT_DIR);
+
+		// Names and paths count as their original values: the layout finds the section as `side & bar`.
+		$this->assertSame(
+			'Tom &amp; Jerry:[prepended+section+appended]:[a &amp; b][a &amp; b:slot]'
+				. '&lt;b&gt;fallback&lt;/b&gt;|Tom &amp; Jerry|Tom &amp; Jerry|added|2',
+			trim($engine->render('wrappedargs', [
+				'layout' => 'wrappedargslayout',
+				'layoutValues' => ['site' => 'Tom & Jerry'],
+				'section' => 'side & bar',
+				'partial' => 'wrappedargspartial',
+				'row' => ['label' => 'a & b'],
+				'fallback' => '<b>fallback</b>',
+				'title' => 'Tom & Jerry',
+				'escaper' => 'html',
+				'key' => 'added',
+				'numbers' => [2, 1],
+				'mode' => 'r',
+			])),
+		);
+	}
+
 	public function testTemplateRendersWithEngineDefaultsAndTrustedClasses(): void
 	{
 		$engine = Engine::create(self::DEFAULT_DIR, ['content' => 'default'], [TrustedValue::class]);

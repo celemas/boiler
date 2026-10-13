@@ -1,0 +1,1 @@
+[<?= $label ?><?= $this->hasSlot() ? ':' . $this->slot() : '' ?>]

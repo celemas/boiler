@@ -7,6 +7,7 @@ namespace Celema\Boiler;
 use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Proxy\ArrayProxy;
 use Celema\Boiler\Proxy\IteratorProxy;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
@@ -55,7 +56,7 @@ final class Context
 		return $this->values->output(($method->callable)(...$args), safe: $method->safe);
 	}
 
-	public function get(array $values = []): array
+	public function get(ArrayProxy|array $values = []): array
 	{
 		return $this->values->get($values);
 	}
@@ -65,15 +66,17 @@ final class Context
 		return $this->values->wrapper->unwrap($value);
 	}
 
-	public function add(string $key, mixed $value): mixed
+	public function add(StringProxy|string $key, mixed $value): mixed
 	{
 		return $this->values->add($key, $value);
 	}
 
 	public function escape(
 		StringProxy|ObjectProxy|IteratorProxy|string|Stringable $value,
-		?string $escaper = null,
+		StringProxy|string|null $escaper = null,
 	): string {
+		$escaper = $escaper === null ? null : Values::plain($escaper);
+
 		if ($value instanceof StringProxy) {
 			return $this->values->wrapper->escape($value->unwrap(), $escaper);
 		}
@@ -96,11 +99,11 @@ final class Context
 	}
 
 	/**
-	 * @param non-empty-string $path
+	 * @param non-empty-string|StringProxy $path
 	 */
-	public function layout(string $path, array $context = []): void
+	public function layout(StringProxy|string $path, ArrayProxy|array $context = []): void
 	{
-		$this->rendering->setLayout(new LayoutSpec($path, $this->rendering->location(), $context));
+		$this->rendering->setLayout(new LayoutSpec(Values::plain($path), $this->rendering->location(), $context));
 	}
 
 	/**
@@ -108,11 +111,13 @@ final class Context
 	 *
 	 * If no context is passed it shares the context of the calling template.
 	 *
-	 * @param non-empty-string $path
+	 * @param non-empty-string|StringProxy $path
 	 */
-	public function include(string $path, array $context = []): void
+	public function include(StringProxy|string $path, ArrayProxy|array $context = []): void
 	{
-		echo $this->rendering->include($this->rendering->engine->resolve($path), $this->get($context));
+		$file = $this->rendering->engine->resolve(Values::plain($path));
+
+		echo $this->rendering->include($file, $this->get($context));
 	}
 
 	/**
@@ -122,10 +127,11 @@ final class Context
 	 * The block runs at the call site, before the included template renders.
 	 * If no context is passed it shares the context of the calling template.
 	 *
-	 * @param non-empty-string $path
+	 * @param non-empty-string|StringProxy $path
 	 */
-	public function component(string $path, array $context = []): void
+	public function component(StringProxy|string $path, ArrayProxy|array $context = []): void
 	{
+		$path = Values::plain($path);
 		// Resolved before the block runs, so a missing template fails at this call.
 		$file = $this->rendering->engine->resolve($path);
 		$context = $this->get($context);
@@ -167,18 +173,21 @@ final class Context
 	 * In a layout, the capture is a default for the templates it wraps. Any
 	 * other second capture fails the render at `end()`.
 	 */
-	public function section(string $name): void
+	public function section(StringProxy|string $name): void
 	{
+		$name = Values::plain($name);
 		$this->rendering->capture('section', $name, $this->rendering->sections->capture($name));
 	}
 
-	public function append(string $name): void
+	public function append(StringProxy|string $name): void
 	{
+		$name = Values::plain($name);
 		$this->rendering->capture('section', $name, $this->rendering->sections->append($name));
 	}
 
-	public function prepend(string $name): void
+	public function prepend(StringProxy|string $name): void
 	{
+		$name = Values::plain($name);
 		$this->rendering->capture('section', $name, $this->rendering->sections->prepend($name));
 	}
 
@@ -188,8 +197,9 @@ final class Context
 	 * content. Inside, `yield()` returns that content, so a layout can build
 	 * on what the page wrote: `<?= $this->yield('title') ?> – Blog`.
 	 */
-	public function rewrite(string $name): void
+	public function rewrite(StringProxy|string $name): void
 	{
+		$name = Values::plain($name);
 		$this->rendering->capture('section', $name, $this->rendering->sections->rewrite($name));
 	}
 
@@ -199,9 +209,9 @@ final class Context
 	 * With a name, the render fails unless that is the section or component
 	 * being closed, as passed to `section()` or `component()`.
 	 */
-	public function end(?string $name = null): void
+	public function end(StringProxy|string|null $name = null): void
 	{
-		$this->rendering->close($name);
+		$this->rendering->close($name === null ? null : Values::plain($name));
 	}
 
 	/**
@@ -213,11 +223,16 @@ final class Context
 	 * its content, such as an include, and runs only when no main content was
 	 * captured.
 	 *
-	 * @param string|Closure(): mixed|null $default
+	 * @param Stringable|string|Closure(): mixed|null $default
 	 */
-	public function yield(string $name, string|Closure|null $default = null): string
+	public function yield(StringProxy|string $name, Stringable|string|Closure|null $default = null): string
 	{
+		$name = Values::plain($name);
 		$sections = $this->rendering->sections;
+
+		if ($default instanceof Stringable) {
+			$default = (string) $default;
+		}
 
 		if ($sections->writing($name)) {
 			throw new LogicException(

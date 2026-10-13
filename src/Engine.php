@@ -118,11 +118,7 @@ final class Engine
 		return $this->template($path)->renderUnescaped($context);
 	}
 
-	/**
-	 * @param non-empty-string $path
-	 *
-	 * @return non-empty-string
-	 */
+	/** @return non-empty-string */
 	public function resolve(string $path): string
 	{
 		return $this->resolver->resolve($path);

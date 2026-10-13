@@ -36,7 +36,7 @@ Rendering `page` produces:
 
 ## Context inheritance
 
-Included templates share the current template context by default. Any values you pass as the second argument are merged on top of that shared context.
+Included templates share the current template context by default. Any values you pass as the second argument are merged on top of that shared context. They can be an array from the context, which a template gets wrapped: `$this->include('row', $row)`.
 
 ```php
 <?php

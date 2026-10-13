@@ -6,6 +6,7 @@ namespace Celema\Boiler;
 
 use Celema\Boiler\Contract\Wrapper;
 use Celema\Boiler\Exception\RuntimeException;
+use Celema\Boiler\Proxy\ArrayProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Stringable;
 
@@ -34,8 +35,18 @@ final class Values
 		$this->wrapped = $wrapped ? $context : null;
 	}
 
-	public function get(array $values = []): array
+	/** The original string of a path, name, or key, which a template may pass wrapped. */
+	public static function plain(StringProxy|string $value): string
 	{
+		return $value instanceof StringProxy ? $value->unwrap() : $value;
+	}
+
+	public function get(ArrayProxy|array $values = []): array
+	{
+		if ($values instanceof ArrayProxy) {
+			$values = $values->unwrap();
+		}
+
 		if (!$this->autoescape) {
 			return $values === []
 				? $this->context
@@ -49,9 +60,9 @@ final class Values
 		return array_merge($this->wrapped(), $this->wrapAll($values));
 	}
 
-	public function add(string $key, mixed $value): mixed
+	public function add(StringProxy|string $key, mixed $value): mixed
 	{
-		$this->context[$key] = $value;
+		$this->context[self::plain($key)] = $value;
 		$this->wrapped = null;
 
 		return $this->output($value);

@@ -54,9 +54,9 @@ final class StringProxy implements JsonSerializable, Proxy
 		return $this->escaped ??= $this->wrapper->escape($this->value);
 	}
 
-	public function escape(?string $escaper = null): string
+	public function escape(self|string|null $escaper = null): string
 	{
-		return $this->wrapper->escape($this->value, $escaper);
+		return $this->wrapper->escape($this->value, $escaper instanceof self ? $escaper->value : $escaper);
 	}
 
 	#[Override]

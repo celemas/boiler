@@ -49,6 +49,19 @@ final class ContextTest extends TestCase
 		$this->assertSame('<h1>headline</h1>', (string) $context['value']);
 	}
 
+	public function testWrappedKeyAndValuesCountAsTheirOriginals(): void
+	{
+		$tmplContext = $this->context(['value' => 'boiler']);
+		$tmplContext->add($this->stringProxy('a & b'), 'added');
+
+		$this->assertSame('added', (string) $tmplContext->get()['a & b']);
+
+		$merged = $tmplContext->get($this->arrayProxy(['extra' => '<b>extra</b>']));
+
+		$this->assertSame('boiler', (string) $merged['value']);
+		$this->assertSame('&lt;b&gt;extra&lt;/b&gt;', (string) $merged['extra']);
+	}
+
 	public function testAddingToContext(): void
 	{
 		$tmplContext = $this->context(['value1' => 'Value 1']);

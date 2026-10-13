@@ -174,9 +174,9 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Jso
 	}
 
 	/** @psalm-param ArrayCallable $callable */
-	public function sorted(string $mode = '', ?callable $callable = null): self
+	public function sorted(StringProxy|string $mode = '', ?callable $callable = null): self
 	{
-		$mode = strtolower(trim($mode));
+		$mode = strtolower(trim($mode instanceof StringProxy ? $mode->unwrap() : $mode));
 
 		if (str_starts_with($mode, 'u')) {
 			if (!is_callable($callable)) {
