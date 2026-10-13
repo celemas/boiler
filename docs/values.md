@@ -130,6 +130,8 @@ Converting a wrapped value to a string escapes it. Printing relies on that, and 
 
 Build such a string from the original values, with `->unwrap()` or `$this->unwrap()`. A string that goes straight to the output, as in `<?= "News: {$title}" ?>`, is escaped once and needs nothing.
 
+Boiler escapes the entities in a string again on purpose. If it left them alone, it could not tell an escaped `<` from an `&lt;` that belongs to the content, so HTML source in an edit form or JSON in a `data-` attribute would come back changed.
+
 ## Passing wrapped values to PHP functions
 
 A PHP function that expects a string converts a wrapped string first, so it works on the escaped text: `strlen($title)` counts `&amp;` as five characters, `substr($title, 0, 7)` can cut an entity in half, and `rawurlencode($title)` encodes the entity instead of the character. Nothing reports this.
