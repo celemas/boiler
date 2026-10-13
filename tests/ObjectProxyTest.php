@@ -217,6 +217,29 @@ final class ObjectProxyTest extends TestCase
 		$this->assertFalse(isset($value->other));
 	}
 
+	public function testPropertyReadUsesTheObjectsOwnGet(): void
+	{
+		$value = $this->objectProxy(new class {
+			public string $name = 'boiler';
+
+			public function __get(string $name): string
+			{
+				return "<b>{$name}</b>";
+			}
+
+			public function __isset(string $name): bool
+			{
+				return $name === 'virtual';
+			}
+		});
+
+		$this->assertInstanceOf(StringProxy::class, $value->virtual);
+		$this->assertSame('&lt;b&gt;virtual&lt;/b&gt;', (string) $value->virtual);
+		$this->assertSame('&lt;b&gt;virtual&lt;/b&gt;', (string) ($value->virtual ?? 'fallback'));
+		$this->assertSame('fallback', $value->other ?? 'fallback');
+		$this->assertSame('boiler', (string) $value->name);
+	}
+
 	public function testPropertyReadLeavesTheHooksOfOtherPropertiesAlone(): void
 	{
 		$object = new class {

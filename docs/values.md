@@ -238,6 +238,8 @@ That means this stays escaped in a normal render:
 
 The same applies when values come from object properties, object methods, or iterator items.
 
+Reading a property that a wrapped object does not have fails the render. An object that defines `__get()` answers for such properties itself, as it does outside a template.
+
 ### Traversable objects
 
 An object you can loop over, such as a collection or a menu item with children, keeps its properties and methods. Loop over it and call its methods in the same template; both return wrapped values:

@@ -160,6 +160,11 @@ final class IteratorProxyTest extends TestCase
 				return "<{$value}>";
 			}
 
+			public function __get(string $name): string
+			{
+				return "<{$name}>";
+			}
+
 			#[Override]
 			public function getIterator(): ArrayIterator
 			{
@@ -168,6 +173,7 @@ final class IteratorProxyTest extends TestCase
 		};
 		$iterval = $this->iteratorProxy($object);
 
+		$this->assertSame('&lt;virtual&gt;', (string) $iterval->virtual);
 		$this->assertInstanceOf(StringProxy::class, $iterval->title($this->stringProxy('!')));
 		$this->assertSame('Beer &amp; Wine!', (string) $iterval->title('!'));
 		$this->assertSame('&lt;b&gt;label&lt;/b&gt;', (string) $iterval->label);

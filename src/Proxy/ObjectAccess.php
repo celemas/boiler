@@ -41,7 +41,9 @@ trait ObjectAccess
 		$declared = self::$declared[$this->value::class] ?? $this->declaredProperties();
 		$readable = isset($declared[$name]) && $declared[$name]->isInitialized($this->value);
 
-		if ($readable || $this->hasPublicProperty($name)) {
+		// An object with `__get()` answers for the properties it does not expose,
+		// as it does outside a template.
+		if ($readable || method_exists($this->value, '__get') || $this->hasPublicProperty($name)) {
 			return $this->wrapper->wrap($this->value->{$name});
 		}
 
