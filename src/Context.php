@@ -92,11 +92,7 @@ final class Context
 
 	public function wrap(mixed $value): mixed
 	{
-		// Explicit wrapping bypasses the trusted list. Deliberately not the
-		// wrapper of the values: that one honors trust, which would turn this
-		// call into a no-op for an instance of a trusted class and leave the
-		// template no way to get a proxy at all.
-		return $this->rendering->engine->wrapper()->wrap($value);
+		return $this->values->wrapper->wrap($value);
 	}
 
 	/**

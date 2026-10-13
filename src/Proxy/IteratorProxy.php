@@ -25,10 +25,14 @@ final class IteratorProxy implements IteratorAggregate, Proxy
 {
 	use ObjectAccess;
 
-	/** @param Traversable<mixed, mixed> $value */
+	/**
+	 * @param Traversable<mixed, mixed> $value
+	 * @param bool $safe whether the object's string conversion is safe HTML and skips escaping
+	 */
 	public function __construct(
 		private readonly Traversable $value,
 		private readonly Wrapper $wrapper,
+		private readonly bool $safe = false,
 	) {}
 
 	/**

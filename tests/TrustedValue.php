@@ -6,6 +6,8 @@ namespace Celema\Boiler\Tests;
 
 class TrustedValue extends TrustedBase
 {
+	public string $note = '<i>note</i>';
+
 	public function __toString(): string
 	{
 		return '<h1>headline</h1>';
@@ -14,5 +16,10 @@ class TrustedValue extends TrustedBase
 	public function paragraph(string $content): string
 	{
 		return "<p>{$content}</p>";
+	}
+
+	public function copy(): self
+	{
+		return new self();
 	}
 }

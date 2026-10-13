@@ -8,8 +8,9 @@ namespace Celema\Boiler\Contract;
 interface Wrapper
 {
 	/**
-	 * A wrapper that leaves instances of the given classes unwrapped, at
-	 * any depth of the value it wraps.
+	 * A wrapper that treats the string conversion of instances of the given
+	 * classes as safe HTML and prints it unescaped. It wraps the instances
+	 * and what their properties, methods, and items return like other values.
 	 *
 	 * @param list<class-string> $trusted
 	 */

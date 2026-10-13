@@ -73,20 +73,12 @@ final class Wrapper implements Contract\Wrapper
 			return $value;
 		}
 
-		// Trust applies at any depth: an object of a trusted class is left
-		// alone whether it sits in the context, in an array, or behind an
-		// iterator. Checked before Traversable so trusted collections stay
-		// unwrapped too.
-		if ($this->isTrusted($value)) {
-			return $value;
-		}
-
 		if ($value instanceof Traversable) {
-			return new IteratorProxy($value, $this);
+			return new IteratorProxy($value, $this, safe: $this->isTrusted($value));
 		}
 
 		if (is_object($value)) {
-			return new ObjectProxy($value, $this);
+			return new ObjectProxy($value, $this, safe: $this->isTrusted($value));
 		}
 
 		throw new UnexpectedValueException('Unsupported template value type');
@@ -139,12 +131,8 @@ final class Wrapper implements Contract\Wrapper
 		return $this->filters ??= new Filters();
 	}
 
-	private function isTrusted(mixed $value): bool
+	private function isTrusted(object $value): bool
 	{
-		if ($this->trusted === [] || !is_object($value)) {
-			return false;
-		}
-
 		foreach ($this->trusted as $class) {
 			if ($value instanceof $class) {
 				return true;

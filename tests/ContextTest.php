@@ -45,7 +45,8 @@ final class ContextTest extends TestCase
 		$tmplContext = $this->context(['value' => $value], [\stdClass::class, TrustedBase::class]);
 		$context = $tmplContext->get();
 
-		$this->assertSame($value, $context['value']);
+		$this->assertSame($value, $context['value']->unwrap());
+		$this->assertSame('<h1>headline</h1>', (string) $context['value']);
 	}
 
 	public function testAddingToContext(): void

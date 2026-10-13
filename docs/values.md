@@ -9,7 +9,7 @@ Read this page if you want to understand when Boiler escapes values and when you
 In escaped renders, Boiler escapes:
 
 - strings
-- `Stringable` values
+- `Stringable` values, unless their class is [trusted](#trusted-classes)
 - strings returned from wrapped objects, arrays, and iterators during template access
 - keys of wrapped arrays and iterators in `foreach` loops
 
@@ -150,7 +150,7 @@ This is most useful when you want string filter methods on a literal or raw stri
 <?= $this->wrap('<b>Boiler</b>')->stripTags('<b>') ?>
 ```
 
-`$this->wrap()` always uses the wrapper directly, so it still returns proxies even when the engine is rendering unescaped output, and for instances of [trusted classes](#trusted-classes). Trust governs automatic wrapping; asking for a proxy explicitly overrides it.
+`$this->wrap()` returns what an escaped render passes to a template, so it still returns proxies when the engine is rendering unescaped output. That includes [trusted classes](#trusted-classes): the proxy of a trusted object prints unescaped. Use `$this->escape()` to escape it anyway.
 
 ## Return safe HTML from a method
 
@@ -210,9 +210,7 @@ Use filters when you want to transform wrapped values. Use named escapers when y
 
 ## Trusted classes
 
-By default, Boiler wraps objects in escaped renders. If a specific class should stay unwrapped, add it to the trusted list when creating the `Engine` or when rendering a standalone `Template`.
-
-Trust applies at any depth: an instance of a trusted class stays unwrapped whether it is a context value itself, an element of an array, or yielded by an iterator.
+In escaped renders, Boiler escapes the string conversion of objects. If the objects of a class print safe HTML, such as a value object for sanitized rich text, add the class to the trusted list when creating the `Engine` or when rendering a standalone `Template`. Listing a base class or an interface trusts the classes that extend or implement it.
 
 ```php
 $engine = \Celema\Boiler\Engine::create(
@@ -222,7 +220,17 @@ $engine = \Celema\Boiler\Engine::create(
 );
 ```
 
-Use this carefully. Trusted objects bypass Boiler's normal wrapping and can output unescaped string content.
+Trust covers the string conversion only. Boiler still wraps a trusted object, so what its properties, methods, and items return is escaped like any other value:
+
+```php
+<?= $html ?>              <?php /* printed as is */ ?>
+<?= $html->source ?>      <?php /* escaped */ ?>
+<?= $html->excerpt(80) ?> <?php /* escaped, unless excerpt() returns a trusted object */ ?>
+```
+
+A method that produces HTML therefore returns an object of a trusted class instead of a string. Trust applies wherever such an object appears: as a context value, as an element of an array, yielded by an iterator, or returned by another object.
+
+Use this carefully: Boiler prints the string conversion of a trusted object as is. `$this->escape($html)` still escapes it.
 
 ## Working with arrays, iterators, and objects
 

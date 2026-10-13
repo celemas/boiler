@@ -1510,15 +1510,18 @@ final class EngineTest extends TestCase
 		$engine = Engine::create(self::DEFAULT_DIR, ['content' => 'default'], [TrustedValue::class]);
 		$template = $engine->template('trusted');
 		$context = ['wl' => new TrustedValue()];
-		$expected = '<h1>headline</h1><p>default</p>';
+		$expected = '<h1>headline</h1>&lt;p&gt;default&lt;/p&gt;';
 
 		$this->assertSame($expected, $this->fullTrim($engine->render('trusted', $context)));
 		$this->assertSame($expected, $this->fullTrim($template->render($context)));
-		$this->assertSame($expected, $this->fullTrim($template->renderUnescaped($context)));
+		$this->assertSame(
+			'<h1>headline</h1><p>default</p>',
+			$this->fullTrim($template->renderUnescaped($context)),
+		);
 		// Classes passed to the render call add to the engine's.
 		$this->assertSame($expected, $this->fullTrim($template->render($context, [\stdClass::class])));
 		$this->assertSame(
-			'<h1>headline</h1><p>given</p>',
+			'<h1>headline</h1>&lt;p&gt;given&lt;/p&gt;',
 			$this->fullTrim($template->render(['content' => 'given', ...$context])),
 		);
 	}

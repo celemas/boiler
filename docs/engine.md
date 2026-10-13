@@ -118,7 +118,7 @@ Per-render context overrides defaults with the same key. These values become par
 
 ## Configure trusted classes
 
-Pass a list of class names as the third argument when specific objects should be left unwrapped in escaped renders:
+Pass a list of class names as the third argument when the objects of specific classes print safe HTML that escaped renders should not escape:
 
 ```php
 $engine = \Celema\Boiler\Engine::create(
@@ -128,7 +128,7 @@ $engine = \Celema\Boiler\Engine::create(
 );
 ```
 
-Use this only for values you fully trust. Trusted objects bypass Boiler's normal object wrapping and can output unescaped string content from methods such as `__toString()`. The list applies wherever such an object appears in the context, including inside arrays and iterators.
+Use this only for classes whose string conversion you fully trust: Boiler prints the result of `__toString()` as is. What the properties and methods of a trusted object return is still escaped. The list applies wherever such an object appears in the context, including inside arrays and iterators.
 
 Read [displaying values](values.md) for the escaping model.
 

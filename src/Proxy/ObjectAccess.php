@@ -15,8 +15,8 @@ use Stringable;
  * plain and traversable objects, so a collection or a menu item with children
  * offers the same access as any other object.
  *
- * Requires the using class to hold the object in `$value` and its wrapper in
- * `$wrapper`.
+ * Requires the using class to hold the object in `$value`, its wrapper in
+ * `$wrapper`, and whether its string conversion skips escaping in `$safe`.
  *
  * @internal
  */
@@ -31,7 +31,9 @@ trait ObjectAccess
 			throw new RuntimeException('Wrapped object is not stringable');
 		}
 
-		return $this->wrapper->escape((string) $this->value);
+		$string = (string) $this->value;
+
+		return $this->safe ? $string : $this->wrapper->escape($string);
 	}
 
 	public function __get(string $name): mixed

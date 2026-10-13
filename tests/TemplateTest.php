@@ -34,13 +34,13 @@ final class TemplateTest extends TestCase
 		);
 	}
 
-	public function testTrustedValueStaysUnwrapped(): void
+	public function testTrustedValuePrintsUnescaped(): void
 	{
 		$path = $this->templates . 'trusted.php';
 		$template = new Template($path);
 
 		$this->assertSame(
-			'<h1>headline</h1><p>test</p>',
+			'<h1>headline</h1>&lt;p&gt;test&lt;/p&gt;',
 			$this->fullTrim($template->render(
 				[
 					'wl' => new TrustedValue(),
@@ -51,13 +51,13 @@ final class TemplateTest extends TestCase
 		);
 	}
 
-	public function testTrustedBaseClassStaysUnwrapped(): void
+	public function testValueOfTrustedBaseClassPrintsUnescaped(): void
 	{
 		$path = $this->templates . 'trusted.php';
 		$template = new Template($path);
 
 		$this->assertSame(
-			'<h1>headline</h1><p>test</p>',
+			'<h1>headline</h1>&lt;p&gt;test&lt;/p&gt;',
 			$this->fullTrim($template->render(
 				[
 					'wl' => new TrustedValue(),
@@ -85,13 +85,13 @@ final class TemplateTest extends TestCase
 		);
 	}
 
-	public function testTrustedValueStaysUnwrappedInsideArraysAndIterators(): void
+	public function testTrustedValuePrintsUnescapedInsideArraysAndIterators(): void
 	{
 		$path = $this->templates . 'trustednested.php';
 		$template = new Template($path);
 
 		$this->assertSame(
-			'<h1>headline</h1>|<p>a</p><h1>headline</h1><p>b</p>',
+			'<h1>headline</h1>|<h1>headline</h1>|<h1>headline</h1>',
 			$this->fullTrim($template->render(
 				[
 					'list' => [new TrustedValue()],
@@ -103,13 +103,13 @@ final class TemplateTest extends TestCase
 		);
 	}
 
-	public function testUntrustedValueStaysWrappedInsideArrays(): void
+	public function testUntrustedValueIsEscapedInsideArraysAndIterators(): void
 	{
 		$path = $this->templates . 'trustednested.php';
 		$template = new Template($path);
 
 		$this->assertSame(
-			'&lt;h1&gt;headline&lt;/h1&gt;|&lt;p&gt;a&lt;/p&gt;&lt;h1&gt;headline&lt;/h1&gt;&lt;p&gt;b&lt;/p&gt;',
+			'&lt;h1&gt;headline&lt;/h1&gt;|&lt;h1&gt;headline&lt;/h1&gt;|&lt;h1&gt;headline&lt;/h1&gt;',
 			$this->fullTrim($template->render([
 				'list' => [new TrustedValue()],
 				'deep' => ['outer' => ['inner' => new TrustedValue()]],
@@ -118,18 +118,30 @@ final class TemplateTest extends TestCase
 		);
 	}
 
-	public function testExplicitWrapProxiesTrustedValue(): void
+	public function testTrustCoversOnlyTheStringConversionOfAValue(): void
 	{
-		$path = $this->templates . 'trustedexplicit.php';
+		$path = $this->templates . 'trustedmembers.php';
 		$template = new Template($path);
 
+		// A property or method result prints unescaped only as a trusted value itself.
 		$this->assertSame(
-			'<h1>headline</h1>|&lt;h1&gt;headline&lt;/h1&gt;',
+			'&lt;i&gt;note&lt;/i&gt;|&lt;p&gt;a&lt;/p&gt;|<h1>headline</h1>|&lt;i&gt;note&lt;/i&gt;',
 			$this->fullTrim($template->render(
 				['wl' => new TrustedValue()],
 				[TrustedValue::class],
 			)),
 		);
+	}
+
+	public function testExplicitWrapTreatsTrustedValueLikeAutomaticWrapping(): void
+	{
+		$path = $this->templates . 'trustedexplicit.php';
+		$template = new Template($path);
+		$context = ['wl' => new TrustedValue()];
+		$expected = '<h1>headline</h1>|&lt;p&gt;a&lt;/p&gt;';
+
+		$this->assertSame($expected, $this->fullTrim($template->render($context, [TrustedValue::class])));
+		$this->assertSame($expected, $this->fullTrim($template->renderUnescaped($context, [TrustedValue::class])));
 	}
 
 	public function testUntrustedValueIsWrapped(): void

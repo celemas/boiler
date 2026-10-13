@@ -18,9 +18,11 @@ final class ObjectProxy implements Proxy
 {
 	use ObjectAccess;
 
+	/** @param bool $safe whether the object's string conversion is safe HTML and skips escaping */
 	public function __construct(
 		private readonly object $value,
 		private readonly Wrapper $wrapper,
+		private readonly bool $safe = false,
 	) {
 		if ($this->value instanceof Traversable) {
 			throw new UnexpectedValueException('Traversable objects must be wrapped as iterator proxies');

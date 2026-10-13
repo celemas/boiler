@@ -77,6 +77,31 @@ final class WrapperTest extends TestCase
 		$this->assertInstanceOf(ObjectProxy::class, new Wrapper()->wrap($obj));
 	}
 
+	public function testWithTrustedLeavesTheOriginalWrapperUnchanged(): void
+	{
+		$wrapper = new Wrapper();
+		$trusting = $wrapper->withTrusted([TrustedValue::class]);
+		$value = new TrustedValue();
+
+		$this->assertSame('<h1>headline</h1>', (string) $trusting->wrap($value));
+		$this->assertSame('&lt;h1&gt;headline&lt;/h1&gt;', (string) $wrapper->wrap($value));
+	}
+
+	public function testTrustedTraversablePrintsUnescapedAndWrapsItsItems(): void
+	{
+		$menu = new MenuItem('<b>menu</b>', [new MenuItem('<i>child</i>')]);
+		$wmenu = new Wrapper()->withTrusted([MenuItem::class])->wrap($menu);
+
+		$this->assertInstanceOf(IteratorProxy::class, $wmenu);
+		$this->assertSame('<b>menu</b>', (string) $wmenu);
+		$this->assertSame('&lt;b&gt;menu&lt;/b&gt;', (string) $wmenu->title());
+
+		foreach ($wmenu as $child) {
+			$this->assertSame('<i>child</i>', (string) $child);
+			$this->assertSame('&lt;i&gt;child&lt;/i&gt;', (string) $child->title());
+		}
+	}
+
 	public function testWrapResourcePassthrough(): void
 	{
 		$wrapper = new Wrapper();

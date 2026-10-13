@@ -40,14 +40,8 @@
 			ignore: [
 				'Celema\\Boiler\\Resolver::resolve',
 				'Celema\\Boiler\\Wrapper::withTrusted',
-				// Also skips the killed `return true` in the loop; the trusted
-				// class tests cover it.
-				'Celema\\Boiler\\Wrapper::isTrusted',
 			],
 			ignoreSourceCodeByRegex: ['return \\$this->wrapped\\(\\);'],
-		},
-		LogicalOr: {
-			ignore: ['Celema\\Boiler\\Wrapper::isTrusted'],
 		},
 		// Likewise the search of the nearest frames, which the full backtrace
 		// repeats.
