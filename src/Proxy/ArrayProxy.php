@@ -12,6 +12,7 @@ use Celema\Boiler\Exception\UnexpectedValueException;
 use Countable;
 use Generator;
 use IteratorAggregate;
+use JsonSerializable;
 use Override;
 
 /**
@@ -26,8 +27,10 @@ use Override;
  * @template-implements IteratorAggregate<mixed, mixed>
  * @implements Proxy<array<array-key, mixed>>
  */
-final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy
+final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, JsonSerializable, Proxy
 {
+	use RefusesJson;
+
 	/**
 	 * @param array<array-key, mixed> $array
 	 */

@@ -119,6 +119,17 @@ Wrapped strings and arrays are objects, though, so they are always truthy, even 
 <?php if ($this->unwrap($summary)) : ?>
 ```
 
+## Encoding values as JSON
+
+`json_encode()` fails the render for a wrapped value, also for one inside a plain array, because PHP would encode the proxy as `{}` instead of the value. Encode the original value:
+
+```php
+<script type="application/json"><?= json_encode($this->unwrap($items), JSON_HEX_TAG) ?></script>
+<div data-items="<?= $this->escape(json_encode($this->unwrap($items))) ?>"></div>
+```
+
+The result is a plain string, which Boiler prints as is. Inside a `<script>` element, pass `JSON_HEX_TAG` so that a `</script>` in the data cannot end the element. In an attribute, escape the result.
+
 ## Escape a value explicitly
 
 Use `$this->escape()` when you need to escape a value manually, or when you want to select a named escaper:
@@ -204,7 +215,7 @@ Boiler ships with built-in filters:
 
 When you write a custom filter, return `true` from `safe()` only when the filter output is safe HTML from arbitrary input. That includes its arguments, which arrive unwrapped: a safe filter escapes the ones it prints. When it should keep already-safe HTML safe, implement `Celema\Boiler\Contract\PreservesSafety` instead.
 
-Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `matches`, `contains`, `startsWith`, `endsWith`, `escape`, and `unwrap` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
+Register custom filters on the engine with the fluent `filter()` method. Read [the engine](engine.md) for details. Real proxy methods take precedence over filter dispatch, so `is`, `in`, `matches`, `contains`, `startsWith`, `endsWith`, `escape`, `unwrap`, and `jsonSerialize` are reserved names: a filter registered under one of them is never reachable on wrapped strings.
 
 Use filters when you want to transform wrapped values. Use named escapers when you intentionally need a different escaping context. Use normal escaped output or `$this->escape()` when plain text output is enough.
 
@@ -262,7 +273,7 @@ An object you can loop over, such as a collection or a menu item with children, 
 <?php endforeach; ?>
 ```
 
-The wrapped iterator's own methods take precedence over same-named methods of the object: `toArray()`, `getIterator()`, `unwrap()`, `is()`, and `in()`. Call such a method on `$this->unwrap($item)` when you need the object's own version.
+The wrapped iterator's own methods take precedence over same-named methods of the object: `toArray()`, `getIterator()`, `unwrap()`, `is()`, `in()`, and `jsonSerialize()`. Call such a method on `$this->unwrap($item)` when you need the object's own version.
 
 ### Loop keys
 

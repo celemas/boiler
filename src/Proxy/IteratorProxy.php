@@ -7,6 +7,7 @@ namespace Celema\Boiler\Proxy;
 use Celema\Boiler\Contract\Wrapper;
 use Generator;
 use IteratorAggregate;
+use JsonSerializable;
 use Override;
 use Traversable;
 
@@ -21,9 +22,10 @@ use Traversable;
  * @template-implements IteratorAggregate<mixed, mixed>
  * @implements Proxy<Traversable<mixed, mixed>>
  */
-final class IteratorProxy implements IteratorAggregate, Proxy
+final class IteratorProxy implements IteratorAggregate, JsonSerializable, Proxy
 {
 	use ObjectAccess;
+	use RefusesJson;
 
 	/**
 	 * @param Traversable<mixed, mixed> $value

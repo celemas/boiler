@@ -7,6 +7,7 @@ namespace Celema\Boiler\Proxy;
 use Celema\Boiler\Contract\PreservesSafety;
 use Celema\Boiler\Contract\Wrapper;
 use Celema\Boiler\Exception\UnexpectedValueException;
+use JsonSerializable;
 use Override;
 
 /**
@@ -14,8 +15,10 @@ use Override;
  *
  * @implements Proxy<string>
  */
-final class StringProxy implements Proxy
+final class StringProxy implements JsonSerializable, Proxy
 {
+	use RefusesJson;
+
 	private ?string $escaped = null;
 
 	/** @param bool $safe whether the string is safe HTML and skips escaping */

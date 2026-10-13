@@ -6,6 +6,7 @@ namespace Celema\Boiler\Proxy;
 
 use Celema\Boiler\Contract\Wrapper;
 use Celema\Boiler\Exception\UnexpectedValueException;
+use JsonSerializable;
 use Override;
 use Traversable;
 
@@ -14,9 +15,10 @@ use Traversable;
  *
  * @implements Proxy<object>
  */
-final class ObjectProxy implements Proxy
+final class ObjectProxy implements JsonSerializable, Proxy
 {
 	use ObjectAccess;
+	use RefusesJson;
 
 	/** @param bool $safe whether the object's string conversion is safe HTML and skips escaping */
 	public function __construct(

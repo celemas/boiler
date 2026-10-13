@@ -321,6 +321,20 @@ final class TemplateTest extends TestCase
 		$template->render();
 	}
 
+	public function testJsonEncodingAContextValueFailsUnlessUnwrapped(): void
+	{
+		$context = ['items' => ['a & b']];
+
+		$this->assertSame(
+			'<script type="application/json">["a & b"]</script>',
+			trim(new Template($this->templates . 'jsonencodeunwrapped.php')->render($context)),
+		);
+
+		$this->throws(RenderException::class, 'cannot be encoded as JSON');
+
+		new Template($this->templates . 'jsonencode.php')->render($context);
+	}
+
 	public function testRenderError(): void
 	{
 		$this->throws(RenderException::class, 'Template rendering error');

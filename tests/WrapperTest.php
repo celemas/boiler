@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Tests;
 
+use ArrayIterator;
 use Celema\Boiler\Contract;
 use Celema\Boiler\Contract\Escaper;
 use Celema\Boiler\Escapers;
+use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Exception\UnexpectedValueException;
 use Celema\Boiler\Proxy\ArrayProxy;
 use Celema\Boiler\Proxy\IteratorProxy;
 use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Celema\Boiler\Wrapper;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Traversable;
 
 final class WrapperTest extends TestCase
@@ -100,6 +103,26 @@ final class WrapperTest extends TestCase
 			$this->assertSame('<i>child</i>', (string) $child);
 			$this->assertSame('&lt;i&gt;child&lt;/i&gt;', (string) $child->title());
 		}
+	}
+
+	/** @return iterable<string, array{mixed}> */
+	public static function wrappedValues(): iterable
+	{
+		$wrapper = new Wrapper();
+
+		yield 'string' => [$wrapper->wrap('boiler')];
+		yield 'array' => [$wrapper->wrap(['boiler'])];
+		yield 'object' => [$wrapper->wrap(new \stdClass())];
+		yield 'traversable' => [$wrapper->wrap(new ArrayIterator(['boiler']))];
+		yield 'value inside a plain array' => [['items' => $wrapper->wrap('boiler')]];
+	}
+
+	#[DataProvider('wrappedValues')]
+	public function testJsonEncodingAWrappedValueFails(mixed $value): void
+	{
+		$this->throws(RuntimeException::class, 'cannot be encoded as JSON');
+
+		json_encode($value);
 	}
 
 	public function testWrapResourcePassthrough(): void
