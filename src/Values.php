@@ -69,11 +69,11 @@ final class Values
 		}
 
 		if ($value instanceof StringProxy) {
-			return StringProxy::safe($value->unwrap(), $this->wrapper);
+			return new StringProxy($value->unwrap(), $this->wrapper, safe: true);
 		}
 
 		if (is_string($value) || $value instanceof Stringable) {
-			return StringProxy::safe((string) $value, $this->wrapper);
+			return new StringProxy((string) $value, $this->wrapper, safe: true);
 		}
 
 		throw new RuntimeException('Safe template methods must return string or Stringable values');

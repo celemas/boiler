@@ -51,6 +51,7 @@ A leftover `insert()` call fails the render as an unknown template method, and a
 
 - `$this->has()` is gone. Check the result of `yield()` instead: `<?php if ($sidebar = $this->yield('sidebar', '')) : ?><aside><?= $sidebar ?></aside><?php endif ?>`, or pass a default when the check only guarded a missing section. `has()` was also true for a section that held only appended or prepended content or only whitespace, so it answered neither whether main content was captured nor whether there was anything to print. `has` is free as a template method name.
 - Closure slots, `Slot::template()`, and the `Slot` class are gone, `include()` (formerly `insert()`) no longer takes a `slot` argument, and `slot()` no longer takes data. Pass a block with `component()` … `end()` instead. To repeat a block per row, write the loop at the call site with a component per row, or pass the name of a row template to the partial, which includes it per row. See [slots](docs/slots.md#repeat-a-block).
+- `StringProxy::safe()` is gone. Pass `safe: true` to the constructor instead, as for `ObjectProxy` and `IteratorProxy`: `new StringProxy($html, $wrapper, safe: true)`.
 - The `TemplateContext` class is gone. Templates run in `Context`, which is now final; replace `TemplateContext` type hints, such as `/** @var TemplateContext $this */`, with `Context`. `Template::__construct()` no longer takes the internal `$sections` parameter, so `engine` is now the second parameter. The constructor of `Context` is internal; templates receive their context and never create one.
 
 ### Fixed

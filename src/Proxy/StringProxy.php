@@ -17,20 +17,13 @@ use Override;
 final class StringProxy implements Proxy
 {
 	private ?string $escaped = null;
-	private bool $safe = false;
 
+	/** @param bool $safe whether the string is safe HTML and skips escaping */
 	public function __construct(
 		private readonly string $value,
 		private readonly Wrapper $wrapper,
+		private readonly bool $safe = false,
 	) {}
-
-	public static function safe(string $value, Wrapper $wrapper): self
-	{
-		$proxy = new self($value, $wrapper);
-		$proxy->safe = true;
-
-		return $proxy;
-	}
 
 	/**
 	 * Dispatch filters as virtual methods: $title->sanitize(), $title->stripTags('<b>'), etc.
@@ -44,11 +37,9 @@ final class StringProxy implements Proxy
 
 		/** @var array<array-key, mixed> $args */
 		$args = $this->wrapper->unwrap($args);
-		$filtered = $filter->apply($this->value, ...$args);
-		$proxy = new self($filtered, $this->wrapper);
-		$proxy->safe = $filter->safe() || $this->safe && $filter instanceof PreservesSafety;
+		$safe = $filter->safe() || $this->safe && $filter instanceof PreservesSafety;
 
-		return $proxy;
+		return new self($filter->apply($this->value, ...$args), $this->wrapper, $safe);
 	}
 
 	public function __toString(): string
