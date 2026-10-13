@@ -72,7 +72,7 @@ Wrapped strings also expose `matches()`, which runs `preg_match()` on the raw va
 
 An invalid pattern throws instead of quietly returning false.
 
-Native string functions share the problem of `==`: in a template without `strict_types`, `str_contains($title, '...')` coerces the proxy via `__toString()` and searches the escaped text. Wrapped strings expose raw-value predicates instead, and all of them accept a wrapped needle:
+Native string functions share the problem of `==`: in a template without [`strict_types`](#passing-wrapped-values-to-php-functions), `str_contains($title, '...')` coerces the proxy via `__toString()` and searches the escaped text. Wrapped strings expose raw-value predicates instead, and all of them accept a wrapped needle:
 
 ```php
 <?php if ($title->contains('&')) : ?>
@@ -118,6 +118,39 @@ Wrapped strings and arrays are objects, though, so they are always truthy, even 
 <?php if (count($items) > 0) : ?>
 <?php if ($this->unwrap($summary)) : ?>
 ```
+
+## Building strings from wrapped values
+
+Converting a wrapped value to a string escapes it. Printing relies on that, and it also happens when you concatenate or interpolate a value. The result is a plain string, which Boiler cannot tell from text that still needs escaping. It is escaped a second time when it goes back through Boiler: as a value passed to `include()`, `component()`, or `layout()`, as an argument of a template method or of a method of a wrapped object, or as a value given to `$this->add()`.
+
+```php
+<?php $this->include('heading', ['text' => "News: {$title}"]) ?>           <?php /* News: Tom &amp;amp; Jerry */ ?>
+<?php $this->include('heading', ['text' => "News: {$title->unwrap()}"]) ?> <?php /* News: Tom &amp; Jerry */ ?>
+```
+
+Build such a string from the original values, with `->unwrap()` or `$this->unwrap()`. A string that goes straight to the output, as in `<?= "News: {$title}" ?>`, is escaped once and needs nothing.
+
+## Passing wrapped values to PHP functions
+
+A PHP function that expects a string converts a wrapped string first, so it works on the escaped text: `strlen($title)` counts `&amp;` as five characters, `substr($title, 0, 7)` can cut an entity in half, and `rawurlencode($title)` encodes the entity instead of the character. Nothing reports this.
+
+Declare strict types as the first statement of a template to turn these cases into errors:
+
+```php
+<?php declare(strict_types=1) ?>
+```
+
+A wrapped string passed to a `string` parameter then raises a `TypeError`. The declaration covers the calls in its own file, so layouts and included templates declare it for themselves. Pass the original value instead:
+
+```php
+<?= mb_strlen($title->unwrap()) ?>
+<?= $this->escape(mb_strimwidth($title->unwrap(), 0, 40, '…')) ?>
+<?php $this->include($partial->unwrap()) ?>
+```
+
+The result of such a function is a plain string, which Boiler prints as is, so escape it when it can contain markup. Boiler's own helpers, such as `include()`, `layout()`, and the default of `yield()`, take plain strings too and need the original value under strict types. Template methods, filters, and methods of wrapped objects unwrap their arguments themselves. Printing, concatenation, interpolation, and comparison with `==` are not function calls and work as before.
+
+A function that expects an array or an object of a specific class raises a `TypeError` for a proxy with or without strict types.
 
 ## Encoding values as JSON
 
@@ -179,7 +212,7 @@ In escaped renders, `<?= $this->icon('check') ?>` then skips auto-escaping. Boil
 <?= $this->icon('check')->trim() ?>
 ```
 
-Use this only when the helper itself guarantees safe HTML. In escaped renders, safe methods must return `string` or `Stringable`.
+Use this only when the helper itself guarantees safe HTML. It gets the original values of its arguments, like every template method, so it must escape the ones it prints: with a helper that does not, `$this->icon($name)` puts `$name` into the markup unescaped. In escaped renders, safe methods must return `string` or `Stringable`.
 
 ## Filters
 

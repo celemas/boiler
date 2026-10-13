@@ -385,7 +385,7 @@ That lets you render the helper directly in an escaped template:
 
 In escaped renders, safe methods must return `string` or `Stringable`. Boiler exposes that return value as a safe wrapped string, so direct output skips auto-escaping and safety-preserving string filters can still be chained. In unescaped renders, Boiler still returns the unwrapped value.
 
-Use `safe: true` only when the helper itself guarantees safe HTML for the values it accepts.
+Use `safe: true` only when the helper itself guarantees safe HTML for the values it accepts. Its arguments arrive unwrapped, like those of every method, so it must escape the ones it prints.
 
 ## Useful methods
 
