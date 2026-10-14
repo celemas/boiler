@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 use Celema\Boiler\Exception\LogicException;
+use Celema\Boiler\Proxy\ArrayProxy;
+use Celema\Boiler\Proxy\IteratorProxy;
+use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\Proxy;
+use Celema\Boiler\Proxy\StringProxy;
 use Celema\Boiler\TemplateFunctions;
 
 use function Celema\Boiler\unwrap;
@@ -12,6 +17,12 @@ use function Celema\Boiler\unwrap;
  * itself: conditions, comparisons, `match`, and native functions. Unwraps the
  * items of a plain array and returns other values as they are, like
  * `Celema\Boiler\unwrap()`, which PHP code uses.
+ *
+ * @template T
+ *
+ * @param T $value
+ *
+ * @return (T is StringProxy ? string : (T is ArrayProxy ? array<array-key, mixed> : (T is IteratorProxy ? Traversable<mixed, mixed> : (T is ObjectProxy ? object : (T is array ? array<key-of<T>, mixed> : T)))))
  */
 function u(mixed $value): mixed
 {
@@ -24,6 +35,12 @@ function u(mixed $value): mixed
  * an unescaped render.
  *
  * @psalm-suppress InternalMethod the template functions are part of Boiler
+ *
+ * @template T
+ *
+ * @param T $value
+ *
+ * @return (T is string ? StringProxy : (T is array ? ArrayProxy : (T is Proxy ? T : (T is Traversable ? IteratorProxy : (T is object ? ObjectProxy : T)))))
  */
 function w(mixed $value): mixed
 {

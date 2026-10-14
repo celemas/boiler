@@ -59,6 +59,7 @@ final class Wrapper implements Contract\Wrapper
 			return new ArrayProxy($value, $this);
 		}
 
+		/** @psalm-suppress DocblockTypeContradiction Psalm does not narrow a template type to resource */
 		if (
 			$value === null
 			|| is_int($value)

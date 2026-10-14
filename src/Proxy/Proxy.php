@@ -8,6 +8,8 @@ namespace Celema\Boiler\Proxy;
  * @api
  *
  * @template-covariant TValue
+ *
+ * @psalm-inheritors ArrayProxy|IteratorProxy|ObjectProxy|StringProxy
  */
 interface Proxy
 {

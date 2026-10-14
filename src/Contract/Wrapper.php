@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Celema\Boiler\Contract;
 
+use Celema\Boiler\Proxy\ArrayProxy;
+use Celema\Boiler\Proxy\IteratorProxy;
+use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\Proxy;
+use Celema\Boiler\Proxy\StringProxy;
+use Traversable;
+
 /** @api */
 interface Wrapper
 {
@@ -16,6 +23,13 @@ interface Wrapper
 	 */
 	public function withTrusted(array $trusted): static;
 
+	/**
+	 * @template T
+	 *
+	 * @param T $value
+	 *
+	 * @return (T is string ? StringProxy : (T is array ? ArrayProxy : (T is Proxy ? T : (T is Traversable ? IteratorProxy : (T is object ? ObjectProxy : T)))))
+	 */
 	public function wrap(mixed $value): mixed;
 
 	public function unwrap(mixed $value): mixed;
