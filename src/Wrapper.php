@@ -90,6 +90,7 @@ final class Wrapper implements Contract\Wrapper
 	{
 		// Repeats unwrap() instead of calling it: the call would cost every template method and filter call.
 		if ($value instanceof Proxy) {
+			/** @var ArrayProxy|IteratorProxy|ObjectProxy|StringProxy $value */
 			return $value->unwrap();
 		}
 

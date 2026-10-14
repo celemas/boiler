@@ -38,7 +38,6 @@ final class StringProxy implements JsonSerializable, Proxy
 	{
 		$filter = $this->wrapper->filter($name);
 
-		/** @var array<array-key, mixed> $args */
 		$args = $this->wrapper->unwrap($args);
 		$safe = $filter->safe() || $this->safe && $filter instanceof PreservesSafety;
 

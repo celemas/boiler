@@ -32,6 +32,13 @@ interface Wrapper
 	 */
 	public function wrap(mixed $value): mixed;
 
+	/**
+	 * @template T
+	 *
+	 * @param T $value
+	 *
+	 * @return (T is StringProxy ? string : (T is ArrayProxy ? array<array-key, mixed> : (T is IteratorProxy ? Traversable<mixed, mixed> : (T is ObjectProxy ? object : (T is array ? array<key-of<T>, mixed> : T)))))
+	 */
 	public function unwrap(mixed $value): mixed;
 
 	public function escape(

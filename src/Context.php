@@ -51,7 +51,6 @@ final class Context
 	{
 		$method = $this->rendering->methods->get($name);
 
-		/** @var array<array-key, mixed> $args */
 		$args = $this->values->wrapper->unwrap($args);
 
 		return $this->values->output(($method->callable)(...$args), safe: $method->safe);
