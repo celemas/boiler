@@ -13,6 +13,7 @@ final class StripTags implements Contract\Filter, Contract\PreservesSafety
 	#[Override]
 	public function apply(string $value, mixed ...$args): string
 	{
+		// strip_tags() throws a TypeError for other types and converts array items to strings.
 		/** @var array<array-key, string>|null|string $allowed */
 		$allowed = $args[0] ?? null;
 
