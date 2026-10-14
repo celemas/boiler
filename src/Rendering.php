@@ -51,6 +51,7 @@ final class Rendering
 	 * A template can appear only once in the chain, as a layout that wraps a
 	 * template of its own chain would wrap forever.
 	 *
+	 * @param array<array-key, mixed> $context
 	 * @param bool $wrapped whether the context comes from a template of this render, as that of an include does
 	 */
 	public function render(array $context, bool $wrapped): string
@@ -89,6 +90,7 @@ final class Rendering
 	 * component.
 	 *
 	 * @param non-empty-string $file
+	 * @param array<array-key, mixed> $context
 	 */
 	public function include(string $file, array $context, ?string $slot = null): string
 	{
@@ -177,6 +179,7 @@ final class Rendering
 		);
 	}
 
+	/** @param array<array-key, mixed> $context */
 	private function run(array $context, bool $wrapped): Content
 	{
 		$templateContext = new Context($this, $context, $wrapped);

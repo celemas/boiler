@@ -25,7 +25,10 @@ final class Values
 	/** @var array<array-key, mixed>|null */
 	private ?array $wrapped;
 
-	/** @param bool $wrapped whether the context holds its values as a template gets them, like that of a layout or include */
+	/**
+	 * @param array<array-key, mixed> $context
+	 * @param bool $wrapped whether the context holds its values as a template gets them, like that of a layout or include
+	 */
 	public function __construct(
 		private array $context,
 		public readonly Wrapper $wrapper,
@@ -41,6 +44,10 @@ final class Values
 		return $value instanceof StringProxy ? $value->unwrap() : $value;
 	}
 
+	/**
+	 * @param ArrayProxy|array<array-key, mixed> $values
+	 * @return array<array-key, mixed>
+	 */
 	public function get(ArrayProxy|array $values = []): array
 	{
 		if ($values instanceof ArrayProxy) {

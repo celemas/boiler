@@ -33,6 +33,7 @@ final class Context
 	/**
 	 * @internal Templates receive their context; they never create one.
 	 *
+	 * @param array<array-key, mixed> $context
 	 * @param bool $wrapped whether the context comes from a template of the render, with the values as that template got them
 	 */
 	public function __construct(
@@ -45,6 +46,7 @@ final class Context
 		$this->values = new Values($context, $rendering->wrapper, $rendering->autoescape, $wrapped);
 	}
 
+	/** @param array<array-key, mixed> $args */
 	public function __call(string $name, array $args): mixed
 	{
 		$method = $this->rendering->methods->get($name);
@@ -55,6 +57,10 @@ final class Context
 		return $this->values->output(($method->callable)(...$args), safe: $method->safe);
 	}
 
+	/**
+	 * @param ArrayProxy|array<array-key, mixed> $values
+	 * @return array<array-key, mixed>
+	 */
 	public function get(ArrayProxy|array $values = []): array
 	{
 		return $this->values->get($values);
@@ -82,6 +88,7 @@ final class Context
 
 	/**
 	 * @param non-empty-string|StringProxy $path
+	 * @param ArrayProxy|array<array-key, mixed> $context
 	 */
 	public function layout(StringProxy|string $path, ArrayProxy|array $context = []): void
 	{
@@ -94,6 +101,7 @@ final class Context
 	 * If no context is passed it shares the context of the calling template.
 	 *
 	 * @param non-empty-string|StringProxy $path
+	 * @param ArrayProxy|array<array-key, mixed> $context
 	 */
 	public function include(StringProxy|string $path, ArrayProxy|array $context = []): void
 	{
@@ -110,6 +118,7 @@ final class Context
 	 * If no context is passed it shares the context of the calling template.
 	 *
 	 * @param non-empty-string|StringProxy $path
+	 * @param ArrayProxy|array<array-key, mixed> $context
 	 */
 	public function component(StringProxy|string $path, ArrayProxy|array $context = []): void
 	{

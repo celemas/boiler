@@ -18,7 +18,10 @@ final class Engine
 	private readonly Methods $methods;
 	private ?Contract\Wrapper $wrapper = null;
 
-	/** @param list<class-string> $trusted */
+	/**
+	 * @param array<string, mixed> $defaults
+	 * @param list<class-string> $trusted
+	 */
 	public function __construct(
 		Contract\Resolver $resolver,
 		Contract\Environment $environment,
@@ -33,6 +36,7 @@ final class Engine
 
 	/**
 	 * @psalm-param DirsInput $dirs
+	 * @param array<string, mixed> $defaults
 	 * @param list<class-string> $trusted
 	 */
 	public static function create(
@@ -45,6 +49,7 @@ final class Engine
 
 	/**
 	 * @psalm-param DirsInput $dirs
+	 * @param array<string, mixed> $defaults
 	 * @param list<class-string> $trusted
 	 */
 	public static function unescaped(
@@ -94,7 +99,10 @@ final class Engine
 		return new Template($this->resolve($path), engine: $this);
 	}
 
-	/** @param non-empty-string $path */
+	/**
+	 * @param non-empty-string $path
+	 * @param array<string, mixed> $context
+	 */
 	public function render(
 		string $path,
 		array $context = [],
@@ -102,7 +110,10 @@ final class Engine
 		return $this->template($path)->render($context);
 	}
 
-	/** @param non-empty-string $path */
+	/**
+	 * @param non-empty-string $path
+	 * @param array<string, mixed> $context
+	 */
 	public function renderEscaped(
 		string $path,
 		array $context = [],
@@ -110,7 +121,10 @@ final class Engine
 		return $this->template($path)->renderEscaped($context);
 	}
 
-	/** @param non-empty-string $path */
+	/**
+	 * @param non-empty-string $path
+	 * @param array<string, mixed> $context
+	 */
 	public function renderUnescaped(
 		string $path,
 		array $context = [],

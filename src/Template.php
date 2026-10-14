@@ -40,19 +40,28 @@ final class Template
 		$this->methods = new Methods($engine->methods());
 	}
 
-	/** @param list<class-string> $trusted */
+	/**
+	 * @param array<string, mixed> $context
+	 * @param list<class-string> $trusted
+	 */
 	public function render(array $context = [], array $trusted = []): string
 	{
 		return $this->renderWith($context, $trusted, $this->engine->autoescape);
 	}
 
-	/** @param list<class-string> $trusted */
+	/**
+	 * @param array<string, mixed> $context
+	 * @param list<class-string> $trusted
+	 */
 	public function renderEscaped(array $context = [], array $trusted = []): string
 	{
 		return $this->renderWith($context, $trusted, true);
 	}
 
-	/** @param list<class-string> $trusted */
+	/**
+	 * @param array<string, mixed> $context
+	 * @param list<class-string> $trusted
+	 */
 	public function renderUnescaped(array $context = [], array $trusted = []): string
 	{
 		return $this->renderWith($context, $trusted, false);
@@ -66,7 +75,10 @@ final class Template
 		return $this;
 	}
 
-	/** @param list<class-string> $trusted */
+	/**
+	 * @param array<string, mixed> $context
+	 * @param list<class-string> $trusted
+	 */
 	private function renderWith(array $context, array $trusted, bool $autoescape): string
 	{
 		// Applied here rather than in Engine::render(), so that a template from

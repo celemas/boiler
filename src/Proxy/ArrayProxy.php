@@ -147,6 +147,7 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Jso
 		return in_array($value instanceof Proxy ? $value->unwrap() : $value, $this->array, true);
 	}
 
+	/** @param array<array-key, mixed>|self $array */
 	public function merge(array|self $array): self
 	{
 		return new self(array_merge(
@@ -189,6 +190,7 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Jso
 		return $this->sort($this->array, $mode);
 	}
 
+	/** @param array<array-key, mixed> $array */
 	private function sort(array $array, string $mode): self
 	{
 		match ($mode) {
@@ -204,7 +206,10 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Jso
 		return new self($array, $this->wrapper);
 	}
 
-	/** @psalm-param ArrayCallable $callable */
+	/**
+	 * @param array<array-key, mixed> $array
+	 * @psalm-param ArrayCallable $callable
+	 */
 	private function usort(array $array, string $mode, callable $callable): self
 	{
 		match ($mode) {

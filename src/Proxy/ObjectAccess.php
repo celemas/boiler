@@ -72,6 +72,7 @@ trait ObjectAccess
 		throw new RuntimeException('No such property');
 	}
 
+	/** @param array<array-key, mixed> $args */
 	public function __call(string $name, array $args): mixed
 	{
 		if (is_callable([$this->value, $name])) {
