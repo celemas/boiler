@@ -9,6 +9,7 @@ use Celema\Boiler\Engine;
 use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Template;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use stdClass;
@@ -89,15 +90,25 @@ final class FunctionsTest extends TestCase
 		w('value');
 	}
 
+	/** @return iterable<string, array{string}> */
+	public static function templateFunctions(): iterable
+	{
+		yield 'u()' => ['u'];
+		yield 'w()' => ['w'];
+	}
+
 	#[RunInSeparateProcess]
 	#[PreserveGlobalState(false)]
-	public function testAGlobalFunctionOfTheSameNameFailsTheRender(): void
+	#[DataProvider('templateFunctions')]
+	public function testAGlobalFunctionOfTheSameNameFailsTheRender(string $name): void
 	{
-		$file = self::ROOT_DIR . 'clash.php';
+		$file = self::ROOT_DIR . "clash-{$name}.php";
 		require $file;
 
 		$this->expectException(LogicException::class);
-		$this->expectExceptionMessage("Boiler's template function w() clashes with the global function w() in {$file}");
+		$this->expectExceptionMessage(
+			"Boiler's template function {$name}() clashes with the global function {$name}() in {$file}",
+		);
 
 		new Template(self::DEFAULT_DIR . '/unwrapfunction.php')->render(self::CONTEXT);
 	}
