@@ -58,8 +58,8 @@ final readonly class Location
 			: "{$this->path}:{$this->line}";
 	}
 
-	private static function normalizeLine(mixed $line): ?int
+	private static function normalizeLine(?int $line): ?int
 	{
-		return is_int($line) && $line > 0 ? $line : null;
+		return $line !== null && $line > 0 ? $line : null;
 	}
 }
