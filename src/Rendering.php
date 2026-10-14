@@ -191,7 +191,7 @@ final class Rendering
 			// are obscure to leave common names such as `$context` to the caller.
 			extract($____template_context____, EXTR_SKIP);
 
-			/** @psalm-suppress UnresolvableInclude */
+			/** @psalm-suppress UnresolvableInclude the template file is known only at render time */
 			include $____template_path____;
 		};
 
