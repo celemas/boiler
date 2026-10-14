@@ -39,6 +39,7 @@ final class ArrayProxy implements ArrayAccess, IteratorAggregate, Countable, Jso
 		private readonly Wrapper $wrapper,
 	) {}
 
+	/** @return array<array-key, mixed> */
 	#[Override]
 	public function unwrap(): array
 	{
