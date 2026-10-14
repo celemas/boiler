@@ -387,6 +387,30 @@ In escaped renders, safe methods must return `string` or `Stringable`. Boiler ex
 
 Use `safe: true` only when the helper itself guarantees safe HTML for the values it accepts. Its arguments arrive unwrapped, like those of every method, so it must escape the ones it prints.
 
+### Type hints for template methods
+
+Templates call custom methods through `__call()`, so a `@var \Celema\Boiler\Context $this` comment, as shown in the [quick start](quickstart.md#editor-support), gives editors and static analysers no information about them. Declare a class that lists them with `@method` tags and takes Boiler's helpers from `Context` with `@mixin`:
+
+```php
+namespace App;
+
+/**
+ * @mixin \Celema\Boiler\Context
+ * @method \Celema\Boiler\Proxy\StringProxy|string upper(\Celema\Boiler\Proxy\StringProxy|string $value)
+ * @method \Celema\Boiler\Proxy\StringProxy|string icon(\Celema\Boiler\Proxy\StringProxy|string $name)
+ */
+final class TemplateScope {}
+```
+
+Declare the types as templates see them. In an escaped render, a template passes wrapped values and gets the result back wrapped; in an unescaped render, both are plain. A method that takes and returns a string therefore has `StringProxy|string` on both sides. Nothing instantiates the class; keep it in a stub file that your editor indexes. Templates then declare it as `$this`:
+
+```php
+<?php /** @var \App\TemplateScope $this */ ?>
+<h2><?= $this->upper($title) ?></h2>
+```
+
+Psalm needs the stub file under `<stubs>` and `usePhpDocMethodsWithoutMagicCall="true"` in its configuration, because the class has no `__call()`.
+
 ## Useful methods
 
 ### Check whether a template exists

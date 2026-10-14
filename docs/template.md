@@ -63,6 +63,8 @@ In escaped renders, safe methods must return `string` or `Stringable`. Boiler ex
 
 Use `safe: true` only when the helper itself guarantees safe HTML for the values it accepts.
 
+To make your methods known to editors and static analysers, see [type hints for template methods](engine.md#type-hints-for-template-methods).
+
 ## Layouts, includes, sections, and slots
 
 Standalone templates can use the same composition helpers as engine-backed renders:
