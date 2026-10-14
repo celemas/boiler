@@ -27,7 +27,7 @@ class TestCase extends BaseTestCase
 	public const DEFAULT_DIR = self::ROOT_DIR . 'default';
 	public const DS = DIRECTORY_SEPARATOR;
 
-	public function fulltrim(string $text): string
+	public function fullTrim(string $text): string
 	{
 		return trim(
 			preg_replace(
