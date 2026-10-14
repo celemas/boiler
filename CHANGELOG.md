@@ -1,8 +1,14 @@
 # Changelog
 
-## [Unreleased](https://codefloe.com/celema/boiler/compare/0.9.0...HEAD)
+## [Unreleased](https://codefloe.com/celema/boiler/compare/0.9.1...HEAD)
 
 No notable changes since the last release.
+
+## [0.9.1](https://codefloe.com/celema/boiler/src/tag/0.9.1) (2026-10-14)
+
+### Changed
+
+- Maintenance release without changes to public behavior: the tests cover a global `u()` that clashes with Boiler's own, and the mutation testing configuration ignores three equivalent mutants, so the full mutation run passes again.
 
 ## [0.9.0](https://codefloe.com/celema/boiler/src/tag/0.9.0) (2026-10-14)
 
