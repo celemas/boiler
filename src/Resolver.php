@@ -53,7 +53,7 @@ final class Resolver implements Contract\Resolver
 			return [null, $path];
 		}
 
-		$segments = array_map(static fn($seg) => trim($seg), explode(':', $path));
+		$segments = array_map(trim(...), explode(':', $path));
 
 		if (count($segments) === 2) {
 			[$namespace, $file] = $segments;
@@ -129,11 +129,6 @@ final class Resolver implements Contract\Resolver
 			throw new LookupException('At least one template directory must be configured');
 		}
 
-		return array_map(
-			static function ($dir) use ($preparePath) {
-				return $preparePath($dir);
-			},
-			$dirs,
-		);
+		return array_map($preparePath, $dirs);
 	}
 }
