@@ -39,9 +39,13 @@
 		ReturnRemoval: {
 			ignore: [
 				'Celema\\Boiler\\Resolver::resolve',
+				'Celema\\Boiler\\TemplateFunctions::load',
 				'Celema\\Boiler\\Wrapper::withTrusted',
 			],
 			ignoreSourceCodeByRegex: ['return \\$this->wrapped\\(\\);'],
+		},
+		TrueValue: {
+			ignoreSourceCodeByRegex: ['self::\\$loaded = true;'],
 		},
 		// Likewise the search of the nearest frames, which the full backtrace
 		// repeats.
@@ -50,12 +54,14 @@
 		},
 
 		// Casts of values that are already strings: ob_get_clean() inside an
-		// active buffer, interpolated keys, and Stringable concatenation.
+		// active buffer, interpolated keys, Stringable concatenation, and the
+		// file name of a function defined in PHP code.
 		CastString: {
 			ignore: [
 				'Celema\\Boiler\\Proxy\\ArrayProxy::offsetGet',
 				'Celema\\Boiler\\Rendering::output',
 				'Celema\\Boiler\\Rendering::run',
+				'Celema\\Boiler\\TemplateFunctions::load',
 			],
 		},
 
