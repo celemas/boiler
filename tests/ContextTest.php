@@ -128,8 +128,7 @@ final class ContextTest extends TestCase
 	public function testEscapeAlwaysEscapesSafeStringProxy(): void
 	{
 		$tmplContext = $this->context();
-		$value = $tmplContext->wrap('<b>Value</b>');
-		assert($value instanceof StringProxy, 'wrap() must return a string proxy for string input');
+		$value = $this->stringProxy('<b>Value</b>');
 
 		$this->assertSame('&lt;b&gt;Value&lt;/b&gt;', $tmplContext->escape($value->sanitize()));
 	}
@@ -144,8 +143,7 @@ final class ContextTest extends TestCase
 				}
 			});
 		$tmplContext = $this->context(engine: $engine);
-		$value = $tmplContext->wrap('<b>tag</b>');
-		assert($value instanceof StringProxy, 'wrap() must return a string proxy for string input');
+		$value = $this->stringProxy('<b>tag</b>');
 
 		$this->assertSame('&LT;B&GT;TAG&LT;/B&GT;', $tmplContext->escape($value->sanitize(), 'caps'));
 	}
@@ -181,15 +179,6 @@ final class ContextTest extends TestCase
 
 		$tmplContext = $this->context();
 		$tmplContext->escape($this->objectProxy(new class {}));
-	}
-
-	public function testWrapReturnsWrappedValueInUnescapedContext(): void
-	{
-		$tmplContext = $this->context(autoescape: false);
-		$wrapped = $tmplContext->wrap('<b>Value</b>');
-
-		$this->assertInstanceOf(StringProxy::class, $wrapped);
-		$this->assertSame('&lt;b&gt;Value&lt;/b&gt;', (string) $wrapped);
 	}
 
 	/** @param list<class-string> $trusted */

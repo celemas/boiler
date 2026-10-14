@@ -84,6 +84,9 @@ final class Template
 			$autoescape,
 		);
 
-		return $rendering->render($context, wrapped: false);
+		return TemplateFunctions::run(
+			$rendering->wrapper,
+			static fn(): string => $rendering->render($context, wrapped: false),
+		);
 	}
 }

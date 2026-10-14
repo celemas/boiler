@@ -51,7 +51,7 @@ final class Context
 		$method = $this->rendering->methods->get($name);
 
 		/** @var array<array-key, mixed> $args */
-		$args = $this->unwrap($args);
+		$args = $this->values->wrapper->unwrap($args);
 
 		return $this->values->output(($method->callable)(...$args), safe: $method->safe);
 	}
@@ -59,11 +59,6 @@ final class Context
 	public function get(ArrayProxy|array $values = []): array
 	{
 		return $this->values->get($values);
-	}
-
-	public function unwrap(mixed $value): mixed
-	{
-		return $this->values->wrapper->unwrap($value);
 	}
 
 	public function add(StringProxy|string $key, mixed $value): mixed
@@ -91,11 +86,6 @@ final class Context
 		}
 
 		return $this->values->wrapper->escape((string) $value, $escaper);
-	}
-
-	public function wrap(mixed $value): mixed
-	{
-		return $this->values->wrapper->wrap($value);
 	}
 
 	/**

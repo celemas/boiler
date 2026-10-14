@@ -1,1 +1,1 @@
-<?= $this->wrap($wl) ?>|<?= $this->wrap($wl)->paragraph('a') ?>
+<?= w($wl) ?>|<?= w($wl)->paragraph('a') ?>

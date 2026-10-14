@@ -1,6 +1,6 @@
-<?php if ($this->unwrap($empty) !== '') { ?>
+<?php if (u($empty) !== '') { ?>
     <b>empty</b>
 <?php } ?>
-<?php if ($this->unwrap($notempty) !== '') { ?>
+<?php if (u($notempty) !== '') { ?>
     <?= $notempty; ?>
 <?php } ?>

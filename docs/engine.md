@@ -293,10 +293,10 @@ Filters are available as virtual methods on wrapped string values in templates:
 <?= $body->stripTags('<b>') ?>
 ```
 
-In escaped renders, Boiler wraps string values for you. When you need filters on a raw value or in an unescaped render, call `$this->wrap($value)` first:
+In escaped renders, Boiler wraps string values for you. When you need filters on a raw value or in an unescaped render, call `w($value)` first:
 
 ```php
-<?= $this->wrap($html)->sanitize() ?>
+<?= w($html)->sanitize() ?>
 ```
 
 Filters can be chained. Safe output only stays safe through filters that explicitly preserve safety:

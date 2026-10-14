@@ -1,1 +1,1 @@
-<?= $this->wrap($html)->stripTags('<br>') ?>
+<?= w($html)->stripTags('<br>') ?>

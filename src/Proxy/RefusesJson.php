@@ -22,7 +22,7 @@ trait RefusesJson
 	public function jsonSerialize(): never
 	{
 		throw new RuntimeException(
-			'A wrapped value cannot be encoded as JSON; encode the original: json_encode($this->unwrap($value))',
+			'A wrapped value cannot be encoded as JSON; encode the original: json_encode(u($value))',
 		);
 	}
 }

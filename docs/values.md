@@ -2,7 +2,7 @@
 
 In escaped renders, Boiler wraps strings and most objects before exposing them to templates. This gives you automatic escaping while still allowing objects, arrays, and iterators to be used naturally in template code.
 
-Read this page if you want to understand when Boiler escapes values and when you need `->is()`, `$this->unwrap()`, `$this->escape()`, or `$this->wrap()`.
+Read this page if you want to understand when Boiler escapes values and when you need `u()`, `w()`, or `$this->escape()`.
 
 ## What Boiler escapes automatically
 
@@ -20,17 +20,36 @@ Boiler uses PHP's `htmlspecialchars()` with these defaults:
 
 Integers, floats, booleans, `null`, resources, and similar scalar values are not converted into escaped string wrappers ahead of time.
 
-## Unwrap values
+## Template functions
 
-Use `$this->unwrap($value)` when you need the original value instead of the wrapped proxy object.
-
-This is mainly useful for explicit checks or when you need the original array of arguments inside your own helper logic.
+Wrapped values are objects, so whatever PHP does with a value itself sees the proxy instead: a condition, a comparison, `match`, or a function call. Boiler defines two global functions for these places. `u()` takes a value out of Boiler for PHP, and `w()` brings what PHP made of it back:
 
 ```php
-<?php if ($this->unwrap($title) !== '') : ?>
-    <h1><?= $title ?></h1>
+<?php if (u($subtitle)) : ?>
+    <h2><?= $subtitle ?></h2>
 <?php endif; ?>
+
+<?= w(mb_strimwidth(u($title), 0, 40, '…')) ?>
 ```
+
+Boiler defines the functions when it renders its first template. If another package has defined a global `u()` or `w()`, the render fails with a `LogicException` that names the file of that function.
+
+### Get the original value with `u()`
+
+`u()` returns the original of a wrapped string, array, object, or iterator. It unwraps the items of a plain array, so `u(['title' => $title])` holds the original title, and returns other values as they are. Integers, floats, booleans, and `null` are never wrapped, and an unescaped render wraps nothing, so `u()` returns those unchanged: a template that uses `u()` works in escaped and unescaped renders alike.
+
+Never print the result of `u()`. `<?= u($title) ?>` prints the original value unescaped, like `{!! $title !!}` in Blade or `{{ title|raw }}` in Twig.
+
+### Print what PHP made of a value with `w()`
+
+A PHP function returns a plain string, which Boiler prints as is. `w()` wraps it again, so it prints escaped like any value from the context:
+
+```php
+<?= w(mb_strtoupper(u($title))) ?>
+<?= $title |> u(...) |> mb_strtoupper(...) |> w(...) ?>
+```
+
+The result of `w()` is what an escaped render passes to a template, with the escapers, filters, and trusted classes of the render. Filters work on it, and an included template that gets it escapes it only once. See [wrap a value explicitly](#wrap-a-value-explicitly).
 
 ## Comparing wrapped values
 
@@ -47,7 +66,29 @@ Loose comparison is not a fix either. `==` converts the proxy via `__toString()`
 $title == 'Tom & Jerry' // false: compares against 'Tom &amp; Jerry'
 ```
 
-Use the proxy's `is()` method instead. It compares the raw value with `===` and unwraps the other side first when it is a proxy too:
+Compare the original value instead. This works in unescaped renders too, and for values that are never wrapped:
+
+```php
+<?php if (u($item->status) === 'active') : ?>
+<?php if (u($item->status) === Status::Active) : ?>
+<?php if (u($title) === u($subtitle)) : ?>
+<?php if (in_array(u($item->status), ['draft', 'pending'], true)) : ?>
+```
+
+`match` compares with `===` as well, so match on the original value:
+
+```php
+<?= match (u($item->status)) {
+    'active' => 'Active',
+    'blocked' => 'Blocked',
+} ?>
+```
+
+### Shortcuts on wrapped values
+
+Wrapped values also offer methods for common checks, which work on the original value. They exist only on wrapped values: integers, floats, booleans, and `null` are never wrapped, and neither is anything in an unescaped render, so calling one of these methods there fails with a PHP error. Use `u()` in a template that renders both ways.
+
+`is()` compares the raw value with `===` and unwraps the other side first when it is a proxy too:
 
 ```php
 <?php if ($item->status->is('active')) : ?>
@@ -72,7 +113,7 @@ Wrapped strings also expose `matches()`, which runs `preg_match()` on the raw va
 
 An invalid pattern throws instead of quietly returning false.
 
-Native string functions share the problem of `==`: in a template without [`strict_types`](#passing-wrapped-values-to-php-functions), `str_contains($title, '...')` coerces the proxy via `__toString()` and searches the escaped text. Wrapped strings expose raw-value predicates instead, and all of them accept a wrapped needle:
+Native string functions share the problem of `==`: in a template without [`strict_types`](#passing-wrapped-values-to-php-functions), `str_contains($title, '...')` coerces the proxy via `__toString()` and searches the escaped text. Pass `u($title)`, or use the predicates of wrapped strings, which work on the raw value and accept a wrapped needle:
 
 ```php
 <?php if ($title->contains('&')) : ?>
@@ -88,17 +129,6 @@ Wrapped arrays offer the reverse check. `contains()` tests strict element member
 
 Wrapped iterators deliberately have no `contains()`, because checking would consume a single-pass generator.
 
-Integers, floats, booleans, and `null` are never wrapped, so they keep native comparison: `$item->count === 3` works as written. Calling `->is()` on one of them fails with a PHP error rather than silently returning false.
-
-`match` compares with `===` internally, so no method can help there; match on the unwrapped value:
-
-```php
-<?= match ($item->status->unwrap()) {
-    'active' => 'Active',
-    'blocked' => 'Blocked',
-} ?>
-```
-
 ## Checking for values
 
 `isset()` and `??` work on wrapped objects and arrays as they do on plain ones: a missing property, a missing key, and `null` count as not set.
@@ -111,12 +141,12 @@ Integers, floats, booleans, and `null` are never wrapped, so they keep native co
 
 Use `exists()` on a wrapped array when a key with a `null` value should count as present.
 
-Wrapped strings and arrays are objects, though, so they are always truthy, even when empty, and `empty()` is false for them. Test the raw value instead:
+Wrapped strings and arrays are objects, though, so they are always truthy, even when empty, and `empty()` is false for them. Test the original value instead:
 
 ```php
-<?php if (!$subtitle->is('')) : ?>
+<?php if (u($summary)) : ?>
+<?php if (!u($items)) : ?>
 <?php if (count($items) > 0) : ?>
-<?php if ($this->unwrap($summary)) : ?>
 ```
 
 ## Building strings from wrapped values
@@ -124,11 +154,11 @@ Wrapped strings and arrays are objects, though, so they are always truthy, even 
 Converting a wrapped value to a string escapes it. Printing relies on that, and it also happens when you concatenate or interpolate a value. The result is a plain string, which Boiler cannot tell from text that still needs escaping. It is escaped a second time when it goes back through Boiler: as a value passed to `include()`, `component()`, or `layout()`, as an argument of a template method or of a method of a wrapped object, or as a value given to `$this->add()`.
 
 ```php
-<?php $this->include('heading', ['text' => "News: {$title}"]) ?>           <?php /* News: Tom &amp;amp; Jerry */ ?>
-<?php $this->include('heading', ['text' => "News: {$title->unwrap()}"]) ?> <?php /* News: Tom &amp; Jerry */ ?>
+<?php $this->include('heading', ['text' => "News: {$title}"]) ?>     <?php /* News: Tom &amp;amp; Jerry */ ?>
+<?php $this->include('heading', ['text' => 'News: ' . u($title)]) ?> <?php /* News: Tom &amp; Jerry */ ?>
 ```
 
-Build such a string from the original values, with `->unwrap()` or `$this->unwrap()`. A string that goes straight to the output, as in `<?= "News: {$title}" ?>`, is escaped once and needs nothing.
+Build such a string from the original values with `u()`. A string that goes straight to the output, as in `<?= "News: {$title}" ?>`, is escaped once and needs nothing.
 
 Boiler escapes the entities in a string again on purpose. If it left them alone, it could not tell an escaped `<` from an `&lt;` that belongs to the content, so HTML source in an edit form or JSON in a `data-` attribute would come back changed.
 
@@ -145,13 +175,13 @@ Declare strict types as the first statement of a template to turn these cases in
 A wrapped string passed to a `string` parameter then raises a `TypeError`. The declaration covers the calls in its own file, so layouts and included templates declare it for themselves. Pass the original value instead:
 
 ```php
-<?= mb_strlen($title->unwrap()) ?>
-<?= $this->escape(mb_strimwidth($title->unwrap(), 0, 40, '…')) ?>
+<?= mb_strlen(u($title)) ?>
+<?= w(mb_strimwidth(u($title), 0, 40, '…')) ?>
 ```
 
-The result of such a function is a plain string, which Boiler prints as is, so escape it when it can contain markup. Printing, concatenation, interpolation, and comparison with `==` are not function calls and work as before.
+The result of such a function is a plain string, which Boiler prints as is, so wrap it with `w()` when it can contain markup. Printing, concatenation, interpolation, and comparison with `==` are not function calls and work as before.
 
-You unwrap a value only when it leaves Boiler for a PHP function. Boiler itself takes wrapped values: its helpers accept wrapped paths, names, and arrays of values, as in `$this->include($partial, $row)` or `$this->yield('title', $siteName)`, and template methods, filters, and methods of wrapped objects unwrap their arguments themselves.
+You unwrap a value only when it leaves Boiler for PHP. Boiler itself takes wrapped values: its helpers accept wrapped paths, names, and arrays of values, as in `$this->include($partial, $row)` or `$this->yield('title', $siteName)`, and template methods, filters, and methods of wrapped objects unwrap their arguments themselves.
 
 A function that expects an array or an object of a specific class raises a `TypeError` for a proxy with or without strict types.
 
@@ -160,15 +190,15 @@ A function that expects an array or an object of a specific class raises a `Type
 `json_encode()` fails the render for a wrapped value, also for one inside a plain array, because PHP would encode the proxy as `{}` instead of the value. Encode the original value:
 
 ```php
-<script type="application/json"><?= json_encode($this->unwrap($items), JSON_HEX_TAG) ?></script>
-<div data-items="<?= $this->escape(json_encode($this->unwrap($items))) ?>"></div>
+<script type="application/json"><?= json_encode(u($items), JSON_HEX_TAG) ?></script>
+<div data-items="<?= w(json_encode(u($items))) ?>"></div>
 ```
 
-The result is a plain string, which Boiler prints as is. Inside a `<script>` element, pass `JSON_HEX_TAG` so that a `</script>` in the data cannot end the element. In an attribute, escape the result.
+The result is a plain string, which Boiler prints as is. Inside a `<script>` element, pass `JSON_HEX_TAG` so that a `</script>` in the data cannot end the element. In an attribute, wrap the result with `w()` to escape it.
 
 ## Escape a value explicitly
 
-Use `$this->escape()` when you need to escape a value manually, or when you want to select a named escaper:
+To print the result of a PHP function escaped, [`w()`](#print-what-php-made-of-a-value-with-w) is enough. Use `$this->escape()` when you want to select a named escaper, or to escape a value that would otherwise print as is, such as a trusted object or the output of a safe filter:
 
 ```php
 $this->escape($value);
@@ -188,16 +218,16 @@ Boiler ships with the `html` escaper. It uses PHP's `htmlspecialchars()` with `E
 
 ## Wrap a value explicitly
 
-Use `$this->wrap()` when you need Boiler's proxy behavior for a raw value inside a template.
-
-This is most useful when you want string filter methods on a literal or raw string value, especially in unescaped renders:
+Use `w()` when you need Boiler's proxy behavior for a raw value inside a template: to print it escaped, or for string filter methods on a literal or raw string value, especially in unescaped renders:
 
 ```php
-<?= $this->wrap($html)->sanitize() ?>
-<?= $this->wrap('<b>Boiler</b>')->stripTags('<b>') ?>
+<?= w($html)->sanitize() ?>
+<?= w('<b>Boiler</b>')->stripTags('<b>') ?>
 ```
 
-`$this->wrap()` returns what an escaped render passes to a template, so it still returns proxies when the engine is rendering unescaped output. That includes [trusted classes](#trusted-classes): the proxy of a trusted object prints unescaped. Use `$this->escape()` to escape it anyway.
+`w()` returns what an escaped render passes to a template, so it still returns proxies when the engine is rendering unescaped output. That includes [trusted classes](#trusted-classes): the proxy of a trusted object prints unescaped. Use `$this->escape()` to escape it anyway. A value that is wrapped already comes back as it is.
+
+`w()` uses the escapers, filters, and trusted classes of the render in progress, so it works only while a template renders. Called elsewhere, such as in a closure that runs after the render, it throws a `LogicException`.
 
 ## Return safe HTML from a method
 
@@ -226,7 +256,7 @@ Filters are value transformations applied as virtual methods on wrapped string v
 <?= $title->stripTags('<b>') ?>
 ```
 
-In escaped renders, string values from template context are already wrapped. In unescaped renders, or when you start from a literal string in the template, call `$this->wrap()` first.
+In escaped renders, string values from template context are already wrapped. In unescaped renders, or when you start from a literal string in the template, call `w()` first.
 
 An argument can be a literal or a value from the context. The filter gets its original value either way:
 
@@ -309,7 +339,7 @@ An object you can loop over, such as a collection or a menu item with children, 
 <?php endforeach; ?>
 ```
 
-The wrapped iterator's own methods take precedence over same-named methods of the object: `toArray()`, `getIterator()`, `unwrap()`, `is()`, `in()`, and `jsonSerialize()`. Call such a method on `$this->unwrap($item)` when you need the object's own version.
+The wrapped iterator's own methods take precedence over same-named methods of the object: `toArray()`, `getIterator()`, `unwrap()`, `is()`, `in()`, and `jsonSerialize()`. Call such a method on `u($item)` when you need the object's own version.
 
 ### Loop keys
 
@@ -321,7 +351,7 @@ Loops over wrapped arrays and iterators wrap keys like values, so a key is escap
 <?php endforeach; ?>
 ```
 
-A wrapped key follows the rules from [comparing wrapped values](#comparing-wrapped-values): compare it with `$key->is('name')`, and use `$this->unwrap($key)` where you need the raw string, such as an offset into an unwrapped array. Wrapped arrays accept wrapped keys directly, so `$items[$key]` works. `iterator_to_array()` cannot collect wrapped string keys; use `$this->unwrap($items)` or `iterator_to_array($items, false)` instead.
+A wrapped key follows the rules from [comparing wrapped values](#comparing-wrapped-values): compare `u($key)`, and pass it where you need the raw string, such as an offset into an unwrapped array. Wrapped arrays accept wrapped keys directly, so `$items[$key]` works. `iterator_to_array()` cannot collect wrapped string keys; use `u($items)` or `iterator_to_array($items, false)` instead.
 
 Nested loops over the same wrapped array or `IteratorAggregate` each get their own cursor, as with the plain value. A wrapped generator or other `Iterator` keeps its single cursor, as it does without Boiler.
 
@@ -332,6 +362,6 @@ When you use `Engine::unescaped()` or `renderUnescaped()`, Boiler stops wrapping
 In that mode:
 
 - `<?= $value ?>` outputs unescaped string content
-- `$this->unwrap()` usually returns the same value you already have
-- `$this->wrap()` is still available when you need proxy behavior such as string filters
+- `u()` returns values as they are, so templates that use it work in both kinds of render
+- `w()` still returns proxies when you need proxy behavior such as string filters or escaped output
 - string filter methods such as `->sanitize()` only exist on wrapped string proxies, so plain strings in unescaped renders do not expose them automatically

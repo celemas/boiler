@@ -146,7 +146,7 @@ $engine = Engine::create('/path/to/templates')
     });
 ```
 
-Filters are available as virtual methods on wrapped string values in templates. In escaped renders, Boiler wraps string values for you. When you need filters on a raw value inside a template, call `$this->wrap($value)` first. Boiler ships with built-in `lower`, `upper`, `stripTags`, and `trim` filters, and registers `sanitize` automatically when `symfony/html-sanitizer` is installed.
+Filters are available as virtual methods on wrapped string values in templates. In escaped renders, Boiler wraps string values for you. When you need filters on a raw value inside a template, call `w($value)` first. Boiler ships with built-in `lower`, `upper`, `stripTags`, and `trim` filters, and registers `sanitize` automatically when `symfony/html-sanitizer` is installed.
 
 For filter safety rules and advanced wrapper, filter, and escaper customization, see [displaying values](docs/values.md), [engine](docs/engine.md), and [template](docs/template.md).
 
@@ -159,10 +159,14 @@ Template helpers available via `$this` inside templates:
 - `$this->section('name')`, `$this->append('name')`, or `$this->prepend('name')` … `$this->end()` to write a section
 - `$this->rewrite('name')` … `$this->end()` to replace a section with content built on it, which `yield()` returns inside the block
 - `<?= $this->yield('name', 'default') ?>` to print a section; for a default made of markup, pass a closure that prints it, such as `fn() => $this->include('partial')`. With `''` as the default, the result is `''` when there is nothing to print
-- `$this->unwrap($value)` when you need the original value instead of the escaped wrapper
-- `$this->escape($value)` and `$this->wrap($value)` when you need proxy behavior such as string filters on a raw value
+- `$this->escape($value)` to escape a value explicitly, optionally with a named escaper
 
-Wrapped values are proxy objects, and so are string keys in loops over wrapped arrays. `===` against a plain value is therefore always false, wrapped strings and arrays are truthy even when empty, and native string functions such as `str_contains()` silently operate on the escaped text. Compare and test through the proxy's predicate methods instead, which work on the raw value: `$item->status->is(Status::Active)`, `$status->in(['draft', 'pending'])`, `$title->contains('&')`, `$url->startsWith('https://')`, `$file->endsWith('.pdf')`, `$slug->matches('/^[a-z0-9-]+$/')`, and `$tags->contains('featured')` on wrapped arrays. See [comparing wrapped values](docs/values.md#comparing-wrapped-values).
+Wrapped values are proxy objects, and so are string keys in loops over wrapped arrays. `===` against a plain value is therefore always false, wrapped strings and arrays are truthy even when empty, and native string functions such as `str_contains()` silently operate on the escaped text. Boiler defines two global functions for templates:
+
+- `u($value)` returns the original value for what PHP does with it: `if (u($subtitle))`, `u($item->status) === Status::Active`, `match (u($status))`, or `json_encode(u($items))`. Never print its result, which is unescaped.
+- `w($value)` wraps a value again, so the result of a PHP function prints escaped: `<?= w(mb_strtoupper(u($title))) ?>`.
+
+Wrapped values also offer predicate shortcuts that work on the raw value, such as `$item->status->is(Status::Active)`, `$status->in(['draft', 'pending'])`, `$title->contains('&')`, and `$tags->contains('featured')` on wrapped arrays. See [template functions](docs/values.md#template-functions) and [comparing wrapped values](docs/values.md#comparing-wrapped-values).
 
 ## Error handling
 
