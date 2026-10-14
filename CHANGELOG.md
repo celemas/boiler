@@ -84,6 +84,7 @@ A leftover `insert()`, `unwrap()`, or `wrap()` call fails the render as an unkno
 - A directory whose name matches a template name no longer counts as a template. `exists()` returned true for it, and rendering it emitted include warnings and returned an empty string; it now raises `LookupException` like a missing template.
 - The docs promised `LookupException` for an include that cannot be resolved. Like every error raised while a template runs, it arrives as `RenderException` with the `LookupException` as `getPrevious()`; the docs now describe this contract.
 - The PHPDoc callback types of `ArrayProxy::map()` and `reduce()` described a sort comparator returning `int`, so Psalm rejected valid callbacks in code that calls them.
+- `ObjectProxy` and `IteratorProxy` declare `Stringable`, which PHP already added at runtime for their `__toString()`, so Psalm accepts a wrapped object for `$this->escape()` and other `Stringable` parameters.
 
 ## [0.8.0](https://codefloe.com/celema/boiler/src/tag/0.8.0) (2026-08-14)
 

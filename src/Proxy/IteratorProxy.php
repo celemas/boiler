@@ -9,6 +9,7 @@ use Generator;
 use IteratorAggregate;
 use JsonSerializable;
 use Override;
+use Stringable;
 use Traversable;
 
 /**
@@ -22,7 +23,7 @@ use Traversable;
  * @template-implements IteratorAggregate<mixed, mixed>
  * @implements Proxy<Traversable<mixed, mixed>>
  */
-final class IteratorProxy implements IteratorAggregate, JsonSerializable, Proxy
+final class IteratorProxy implements IteratorAggregate, JsonSerializable, Proxy, Stringable
 {
 	use ObjectAccess;
 	use RefusesJson;

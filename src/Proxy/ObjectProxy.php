@@ -8,6 +8,7 @@ use Celema\Boiler\Contract\Wrapper;
 use Celema\Boiler\Exception\UnexpectedValueException;
 use JsonSerializable;
 use Override;
+use Stringable;
 use Traversable;
 
 /**
@@ -15,7 +16,7 @@ use Traversable;
  *
  * @implements Proxy<object>
  */
-final class ObjectProxy implements JsonSerializable, Proxy
+final class ObjectProxy implements JsonSerializable, Proxy, Stringable
 {
 	use ObjectAccess;
 	use RefusesJson;
