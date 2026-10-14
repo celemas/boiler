@@ -11,6 +11,9 @@ use Celema\Boiler\Exception\RenderException;
 use Celema\Boiler\Template;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use stdClass;
+
+use function Celema\Boiler\unwrap;
 
 final class FunctionsTest extends TestCase
 {
@@ -28,6 +31,29 @@ final class FunctionsTest extends TestCase
 
 		$this->assertSame($expected, trim($template->render(self::CONTEXT)));
 		$this->assertSame($expected, trim($template->renderUnescaped(self::CONTEXT)));
+	}
+
+	public function testUnwrapReturnsTheOriginalValuesOutsideARender(): void
+	{
+		$object = new stdClass();
+
+		$this->assertSame(
+			[
+				'title' => 'Tom & Jerry',
+				'items' => ['a', 'b' => ['c']],
+				'object' => $object,
+				'nested' => ['title' => 'Tom & Jerry'],
+				'count' => 2,
+			],
+			unwrap([
+				'title' => $this->stringProxy('Tom & Jerry'),
+				'items' => $this->arrayProxy(['a', 'b' => ['c']]),
+				'object' => $this->objectProxy($object),
+				'nested' => ['title' => $this->stringProxy('Tom & Jerry')],
+				'count' => 2,
+			]),
+		);
+		$this->assertSame('plain', unwrap('plain'));
 	}
 
 	public function testWrapUsesTheFiltersOfTheRenderInEscapedAndUnescapedRenders(): void

@@ -66,7 +66,7 @@ A wrapped value is a proxy object, so `instanceof`, `is_string()`, `is_array()`,
 <?php if (is_array(u($value))) : ?>
 ```
 
-A PHP function or one of your own that declares an `array` or class parameter raises a `TypeError` for a proxy. Pass `u($value)`. Template methods, filters, and the methods of wrapped objects unwrap their arguments themselves.
+A PHP function or one of your own that declares an `array` or class parameter raises a `TypeError` for a proxy. Pass `u($value)`. Template methods, filters, and the methods of wrapped objects unwrap their arguments themselves. For helpers of your own, see [your own PHP code](values.md#your-own-php-code).
 
 ## A function counts, cuts, or searches the escaped text
 

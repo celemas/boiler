@@ -164,7 +164,7 @@ Template helpers available via `$this` inside templates:
 
 Wrapped values are proxy objects, and so are string keys in loops over wrapped arrays. `===` against a plain value is therefore always false, wrapped strings and arrays are truthy even when empty, and native string functions such as `str_contains()` silently operate on the escaped text. Boiler defines two global functions for templates:
 
-- `u($value)` returns the original value for what PHP does with it: `if (u($subtitle))`, `u($item->status) === Status::Active`, `match (u($status))`, or `json_encode(u($items))`. Never print its result, which is unescaped.
+- `u($value)` returns the original value for what PHP does with it: `if (u($subtitle))`, `u($item->status) === Status::Active`, `match (u($status))`, or `json_encode(u($items))`. Never print its result, which is unescaped. PHP code outside templates uses the same function as `Celema\Boiler\unwrap()`.
 - `w($value)` wraps a value again, so the result of a PHP function prints escaped: `<?= w(mb_strtoupper(u($title))) ?>`.
 
 Wrapped values also offer predicate shortcuts that work on the raw value, such as `$item->status->is(Status::Active)`, `$status->in(['draft', 'pending'])`, `$title->contains('&')`, and `$tags->contains('featured')` on wrapped arrays. See [common pitfalls](docs/pitfalls.md) for the mistakes wrapped values lead to, and [template functions](docs/values.md#template-functions) for the details.

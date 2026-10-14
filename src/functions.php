@@ -5,16 +5,17 @@ declare(strict_types=1);
 use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\TemplateFunctions;
 
+use function Celema\Boiler\unwrap;
+
 /**
  * Returns the original of a wrapped value, for what PHP does with the value
  * itself: conditions, comparisons, `match`, and native functions. Unwraps the
- * items of a plain array and returns other values as they are.
- *
- * @psalm-suppress InternalMethod the template functions are part of Boiler
+ * items of a plain array and returns other values as they are, like
+ * `Celema\Boiler\unwrap()`, which PHP code uses.
  */
 function u(mixed $value): mixed
 {
-	return TemplateFunctions::unwrap($value);
+	return unwrap($value);
 }
 
 /**

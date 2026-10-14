@@ -87,6 +87,7 @@ final class Wrapper implements Contract\Wrapper
 	#[Override]
 	public function unwrap(mixed $value): mixed
 	{
+		// Repeats unwrap() instead of calling it: the call would cost every template method and filter call.
 		if ($value instanceof Proxy) {
 			return $value->unwrap();
 		}

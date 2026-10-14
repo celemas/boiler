@@ -38,6 +38,8 @@ Boiler defines the functions when it renders its first template. If another pack
 
 `u()` returns the original of a wrapped string, array, object, or iterator. It unwraps the items of a plain array, so `u(['title' => $title])` holds the original title, and returns other values as they are. Integers, floats, booleans, and `null` are never wrapped, and an unescaped render wraps nothing, so `u()` returns those unchanged: a template that uses `u()` works in escaped and unescaped renders alike.
 
+`u()` is the template form of `Celema\Boiler\unwrap()`, which PHP code uses; see [your own PHP code](#your-own-php-code).
+
 Never print the result of `u()`. `<?= u($title) ?>` prints the original value unescaped, like `{!! $title !!}` in Blade or `{{ title|raw }}` in Twig.
 
 ### Print what PHP made of a value with `w()`
@@ -184,6 +186,33 @@ The result of such a function is a plain string, which Boiler prints as is, so w
 You unwrap a value only when it leaves Boiler for PHP. Boiler itself takes wrapped values: its helpers accept wrapped paths, names, and arrays of values, as in `$this->include($partial, $row)` or `$this->yield('title', $siteName)`, and template methods, filters, and methods of wrapped objects unwrap their arguments themselves.
 
 A function that expects an array or an object of a specific class raises a `TypeError` for a proxy with or without strict types.
+
+## Your own PHP code
+
+Your own PHP functions and classes get wrapped values from a template, like PHP's functions do. Boiler unwraps arguments only for its own helpers, template methods, filters, and methods of wrapped objects.
+
+Register a helper that exists for templates as a [template method](engine.md#register-custom-template-methods). It gets the original values of its arguments, and what it returns is escaped like any other value:
+
+```php
+$engine->method('stationTitle', App\station_title(...));
+```
+
+```php
+<h2><?= $this->stationTitle($station) ?></h2>
+```
+
+PHP code that gets template values anyway, such as a class a template creates or a function shared with the rest of the application, unwraps them with `Celema\Boiler\unwrap()`. It works like `u()` and is loaded with Boiler, so it also works outside a render, in a console command or a test:
+
+```php
+use function Celema\Boiler\unwrap;
+
+function station_title(mixed $station): string
+{
+    $station = unwrap($station);
+
+    // ...
+}
+```
 
 ## Encoding values as JSON
 

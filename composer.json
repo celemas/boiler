@@ -18,7 +18,10 @@
 	"autoload": {
 		"psr-4": {
 			"Celema\\Boiler\\": "src/"
-		}
+		},
+		"files": [
+			"src/unwrap.php"
+		]
 	},
 	"autoload-dev": {
 		"psr-4": {

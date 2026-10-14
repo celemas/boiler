@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Celema\Boiler;
 
 use Celema\Boiler\Exception\LogicException;
-use Celema\Boiler\Proxy\Proxy;
 use Closure;
 use ReflectionFunction;
 
@@ -42,16 +41,6 @@ final class TemplateFunctions
 	public static function wrapper(): ?Contract\Wrapper
 	{
 		return self::$wrappers === [] ? null : self::$wrappers[array_key_last(self::$wrappers)];
-	}
-
-	/** The original of a wrapped value, with the items of a plain array unwrapped. */
-	public static function unwrap(mixed $value): mixed
-	{
-		if ($value instanceof Proxy) {
-			return $value->unwrap();
-		}
-
-		return is_array($value) ? array_map(self::unwrap(...), $value) : $value;
 	}
 
 	private static function load(): void
