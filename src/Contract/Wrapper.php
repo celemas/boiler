@@ -28,7 +28,7 @@ interface Wrapper
 	 *
 	 * @param T $value
 	 *
-	 * @return (T is string ? StringProxy : (T is array ? ArrayProxy : (T is Proxy ? T : (T is Traversable ? IteratorProxy : (T is object ? ObjectProxy : T)))))
+	 * @return (T is string ? StringProxy : (T is array ? ArrayProxy : (T is Proxy<mixed> ? T : (T is Traversable ? IteratorProxy : (T is object ? ObjectProxy : T)))))
 	 */
 	public function wrap(mixed $value): mixed;
 
