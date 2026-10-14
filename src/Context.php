@@ -8,8 +8,7 @@ use Celema\Boiler\Exception\LogicException;
 use Celema\Boiler\Exception\LookupException;
 use Celema\Boiler\Exception\RuntimeException;
 use Celema\Boiler\Proxy\ArrayProxy;
-use Celema\Boiler\Proxy\IteratorProxy;
-use Celema\Boiler\Proxy\ObjectProxy;
+use Celema\Boiler\Proxy\Proxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Closure;
 use Stringable;
@@ -66,26 +65,19 @@ final class Context
 		return $this->values->add($key, $value);
 	}
 
-	public function escape(
-		StringProxy|ObjectProxy|IteratorProxy|string|Stringable $value,
-		StringProxy|string|null $escaper = null,
-	): string {
-		$escaper = $escaper === null ? null : Values::plain($escaper);
+	public function escape(Stringable|string $value, StringProxy|string|null $escaper = null): string
+	{
+		// A proxy's string conversion escapes already, so escape its original.
+		$original = $value instanceof Proxy ? $value->unwrap() : $value;
 
-		if ($value instanceof StringProxy) {
-			return $this->values->wrapper->escape($value->unwrap(), $escaper);
+		if (!is_string($original) && !$original instanceof Stringable) {
+			throw new RuntimeException('Value cannot be escaped as string');
 		}
 
-		// Unwrapped first: the string conversion of these proxies escapes already.
-		if ($value instanceof ObjectProxy || $value instanceof IteratorProxy) {
-			$value = $value->unwrap();
-
-			if (!$value instanceof Stringable) {
-				throw new RuntimeException('Value cannot be escaped as string');
-			}
-		}
-
-		return $this->values->wrapper->escape((string) $value, $escaper);
+		return $this->values->wrapper->escape(
+			(string) $original,
+			$escaper === null ? null : Values::plain($escaper),
+		);
 	}
 
 	/**
