@@ -85,6 +85,7 @@ A leftover `insert()`, `unwrap()`, or `wrap()` call fails the render as an unkno
 - The docs promised `LookupException` for an include that cannot be resolved. Like every error raised while a template runs, it arrives as `RenderException` with the `LookupException` as `getPrevious()`; the docs now describe this contract.
 - The PHPDoc callback types of `ArrayProxy::map()` and `reduce()` described a sort comparator returning `int`, so Psalm rejected valid callbacks in code that calls them.
 - `ObjectProxy` and `IteratorProxy` declare `Stringable`, which PHP already added at runtime for their `__toString()`, so Psalm accepts a wrapped object for `$this->escape()` and other `Stringable` parameters.
+- The PHPDoc type of the template directories for `Engine::create()`, `Engine::unescaped()`, and `Resolver` accepts named and unnamed directories in one array. Boiler always supported such an array, but static analysis rejected it.
 
 ## [0.8.0](https://codefloe.com/celema/boiler/src/tag/0.8.0) (2026-08-14)
 

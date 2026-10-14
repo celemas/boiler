@@ -9,8 +9,8 @@ use Celema\Boiler\Exception\UnexpectedValueException;
 use Override;
 
 /**
- * @psalm-type DirsInput = non-empty-string|list<non-empty-string>|array<non-empty-string, non-empty-string>
- * @psalm-type Dirs = non-empty-list<non-empty-string>|non-empty-array<non-empty-string, non-empty-string>
+ * @psalm-type DirsInput = non-empty-string|array<array-key, non-empty-string>
+ * @psalm-type Dirs = non-empty-array<array-key, non-empty-string>
  */
 final class Resolver implements Contract\Resolver
 {

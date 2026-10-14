@@ -9,7 +9,7 @@ use Celema\Boiler\Exception\UnexpectedValueException;
 
 /**
  * @api
- * @psalm-type DirsInput = non-empty-string|list<non-empty-string>|array<non-empty-string, non-empty-string>
+ * @psalm-type DirsInput = non-empty-string|array<array-key, non-empty-string>
  */
 final class Engine
 {

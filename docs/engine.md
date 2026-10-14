@@ -51,6 +51,15 @@ You can later target a specific directory with `namespace:template`:
 $engine->render('second:page');
 ```
 
+Named directories take part in lookups without a namespace too, in the order of the array, so you can name only some of them:
+
+```php
+$engine = \Celema\Boiler\Engine::create([
+    'theme' => '/path/to/theme',
+    '/path/to/templates',
+]);
+```
+
 Read [rendering templates](rendering.md) for the lookup rules.
 
 ## Customize template lookup
