@@ -10,7 +10,7 @@
 
 <?php $this->section('hero') ?>
 <section class="promo">
-    <h2><?= $campaign['title']->upper() ?></h2>
+    <h2><?= w(mb_strtoupper(u($campaign['title']))) ?></h2>
     <p>
         Use code <strong><?= $campaign['code'] ?></strong>
         for free shipping above <?= $this->money($campaign['threshold']) ?>.

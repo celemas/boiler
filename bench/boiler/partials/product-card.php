@@ -12,7 +12,7 @@
     <?php $this->include('partials/price', ['product' => $product]) ?>
     <?php $this->include('partials/rating', ['rating' => $product->rating, 'count' => $product->reviews]) ?>
 
-    <?php if (count($product->badges) > 0): ?>
+    <?php if (u($product->badges)): ?>
         <ul class="badges">
             <?php foreach ($product->badges as $badge): ?>
                 <li><?= $badge->upper() ?></li>

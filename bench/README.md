@@ -39,6 +39,7 @@ All engines receive the same data and must produce the same HTML; only the white
 | Partials | `include()` | `include()` | `@include` | `insert()` with the values it needs |
 | Site-wide data | engine defaults | globals | `share()` | `addData()` |
 | Helpers for prices and icons | `method()` | a filter and a function | global functions | `registerFunction()` |
+| Conditions on strings, arrays, and enums | `u()`, and `is()` or `contains()` on the wrapped value | `==`, `in`, and truthiness | plain PHP | plain PHP |
 | Trusted markup | a trusted class | `raw` | `{!! !!}` | printed as is |
 
 Boiler is measured twice: with automatic escaping, next to Twig and Blade, and with `Engine::unescaped()` and `$this->escape()` calls, next to Plates.

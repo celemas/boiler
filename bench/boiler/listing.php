@@ -19,7 +19,7 @@
     </header>
 
     <div class="toolbar">
-        <?php if (count($activeFilters) > 0): ?>
+        <?php if (u($activeFilters)): ?>
             <ul class="active-filters">
                 <?php foreach ($activeFilters as $filter): ?>
                     <li>

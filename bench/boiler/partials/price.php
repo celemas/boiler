@@ -7,11 +7,11 @@
     <?php endif ?>
 </p>
 <p class="stock stock-<?= $product->stock->value ?>">
-    <?php if ($product->stock->is(Stock::InStock)): ?>
+    <?php if (u($product->stock) === Stock::InStock): ?>
         In stock
-    <?php elseif ($product->stock->is(Stock::Low)): ?>
+    <?php elseif (u($product->stock) === Stock::Low): ?>
         Only <?= $product->stockCount ?> left
-    <?php elseif ($product->stock->is(Stock::Preorder)): ?>
+    <?php elseif (u($product->stock) === Stock::Preorder): ?>
         Preorder
     <?php else: ?>
         Sold out

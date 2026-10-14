@@ -25,7 +25,7 @@
         <h2>Contents</h2>
         <ol>
             <?php foreach ($blocks as $block): ?>
-                <?php if ($block['type']->is('heading')): ?>
+                <?php if (u($block['type']) === 'heading'): ?>
                     <li class="toc-level-<?= $block['level'] ?>"><a href="#<?= $block['id'] ?>"><?= $block['text'] ?></a></li>
                 <?php endif ?>
             <?php endforeach ?>
