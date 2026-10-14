@@ -2,7 +2,7 @@
 
 In escaped renders, Boiler wraps strings and most objects before exposing them to templates. This gives you automatic escaping while still allowing objects, arrays, and iterators to be used naturally in template code.
 
-Read this page if you want to understand when Boiler escapes values and when you need `u()`, `w()`, or `$this->escape()`.
+Read this page if you want to understand when Boiler escapes values and when you need `u()`, `w()`, or `$this->escape()`. For a checklist of the mistakes wrapped values lead to, see [common pitfalls](pitfalls.md).
 
 ## What Boiler escapes automatically
 

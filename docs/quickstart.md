@@ -54,10 +54,13 @@ HTML);
 
 Boiler escapes strings automatically. If `id` were `'<b>13</b>'`, the output would contain `&lt;b&gt;13&lt;/b&gt;`.
 
+Boiler escapes by passing strings, arrays, and objects to templates as wrapped values. Printing them needs nothing, but conditions and comparisons on them do: `if ($title)` is always true, for example, and `if (u($title))` tests the value. Read [common pitfalls](pitfalls.md) before you write your first condition.
+
 In templates, prefer PHP's alternative control structure syntax such as `if (...) : ... endif;` and `foreach (...) : ... endforeach;`. It reads better in mixed PHP and HTML files, and the docs use that style in template examples.
 
 ## Next steps
 
 - Read [the engine](engine.md) to learn about multiple template directories, namespaces, default values, and escape modes.
+- Read [common pitfalls](pitfalls.md) for what wrapped values change in conditions, comparisons, and PHP functions.
 - Read [displaying values](values.md) to learn when to use `u()`, `w()`, and `$this->escape()`.
 - Read [layouts](layouts.md), [includes](includes.md), [sections](sections.md), and [slots](slots.md) for the main composition features.

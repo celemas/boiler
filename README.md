@@ -43,6 +43,7 @@ Start here: [docs/index.md](docs/index.md).
 - [Engine](docs/engine.md)
 - [Rendering templates](docs/rendering.md)
 - [Displaying values](docs/values.md)
+- [Common pitfalls](docs/pitfalls.md)
 - [Layouts](docs/layouts.md)
 - [Includes](docs/includes.md)
 - [Sections](docs/sections.md)
@@ -166,7 +167,7 @@ Wrapped values are proxy objects, and so are string keys in loops over wrapped a
 - `u($value)` returns the original value for what PHP does with it: `if (u($subtitle))`, `u($item->status) === Status::Active`, `match (u($status))`, or `json_encode(u($items))`. Never print its result, which is unescaped.
 - `w($value)` wraps a value again, so the result of a PHP function prints escaped: `<?= w(mb_strtoupper(u($title))) ?>`.
 
-Wrapped values also offer predicate shortcuts that work on the raw value, such as `$item->status->is(Status::Active)`, `$status->in(['draft', 'pending'])`, `$title->contains('&')`, and `$tags->contains('featured')` on wrapped arrays. See [template functions](docs/values.md#template-functions) and [comparing wrapped values](docs/values.md#comparing-wrapped-values).
+Wrapped values also offer predicate shortcuts that work on the raw value, such as `$item->status->is(Status::Active)`, `$status->in(['draft', 'pending'])`, `$title->contains('&')`, and `$tags->contains('featured')` on wrapped arrays. See [common pitfalls](docs/pitfalls.md) for the mistakes wrapped values lead to, and [template functions](docs/values.md#template-functions) for the details.
 
 ## Error handling
 
