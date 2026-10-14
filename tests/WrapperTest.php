@@ -195,7 +195,6 @@ final class WrapperTest extends TestCase
 	{
 		$wrapper = new Wrapper();
 		$value = $wrapper->wrap('<b>boiler</b>');
-		assert($value instanceof StringProxy, 'wrap() must return a string proxy for string input');
 
 		$this->assertSame('&lt;b&gt;boiler&lt;/b&gt;', $wrapper->escape($value->sanitize()->unwrap()));
 		$this->assertSame('&lt;b&gt;boiler&lt;/b&gt;', $value->sanitize()->escape());

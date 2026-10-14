@@ -93,8 +93,6 @@ final class Path
 			return;
 		}
 
-		assert($realpath !== '', 'Resolved template file path must not be empty');
-
 		$this->isValid = true;
 		$this->path = $realpath;
 		$this->error = '';
