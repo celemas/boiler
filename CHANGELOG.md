@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased](https://codefloe.com/celema/boiler/compare/0.8.0...HEAD)
+## [Unreleased](https://codefloe.com/celema/boiler/compare/0.9.0...HEAD)
+
+No notable changes since the last release.
+
+## [0.9.0](https://codefloe.com/celema/boiler/src/tag/0.9.0) (2026-10-14)
 
 ### Migration
 
