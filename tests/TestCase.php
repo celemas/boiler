@@ -13,6 +13,7 @@ use Celema\Boiler\Proxy\ObjectProxy;
 use Celema\Boiler\Proxy\StringProxy;
 use Celema\Boiler\Wrapper;
 use PHPUnit\Framework\TestCase as BaseTestCase;
+use Throwable;
 use Traversable;
 
 /**
@@ -41,11 +42,19 @@ class TestCase extends BaseTestCase
 		);
 	}
 
+	/**
+	 * @param array<array-key, non-empty-string> $templates
+	 * @return array<array-key, non-empty-string>
+	 */
 	public function templates(array $templates = []): array
 	{
 		return array_merge($templates, [self::DEFAULT_DIR]);
 	}
 
+	/**
+	 * @param array<array-key, non-empty-string> $templates
+	 * @return array<array-key, non-empty-string>
+	 */
 	public function namespaced(array $templates = []): array
 	{
 		return array_merge($templates, [
@@ -53,6 +62,7 @@ class TestCase extends BaseTestCase
 		]);
 	}
 
+	/** @return array<non-empty-string, non-empty-string> */
 	public function additional(): array
 	{
 		return [
@@ -70,6 +80,7 @@ class TestCase extends BaseTestCase
 		};
 	}
 
+	/** @param class-string<Throwable> $exception */
 	public function throws(string $exception, ?string $message = null): void
 	{
 		$this->expectException($exception);
